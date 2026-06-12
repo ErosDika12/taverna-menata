@@ -1,0 +1,190 @@
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const Database = require('better-sqlite3');
+const seed = require('./seed-data');
+
+function resolveDbPath() {
+  const bundled = path.join(__dirname, 'menata.db');
+  if (!process.env.VERCEL) return bundled;
+
+  const tmp = path.join('/tmp', 'menata.db');
+  if (!fs.existsSync(tmp) && fs.existsSync(bundled)) {
+    fs.copyFileSync(bundled, tmp);
+  }
+  return tmp;
+}
+
+const db = new Database(resolveDbPath());
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS categories (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    name    TEXT NOT NULL,
+    name_en TEXT,
+    type    TEXT NOT NULL DEFAULT 'food' CHECK (type IN ('food', 'drinks')),
+    note    TEXT,
+    note_en TEXT,
+    sort    INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS items (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id    INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    name           TEXT NOT NULL,
+    name_en        TEXT,
+    description    TEXT,
+    description_en TEXT,
+    price          REAL NOT NULL,
+    image          TEXT,
+    available      INTEGER NOT NULL DEFAULT 1,
+    sort           INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS gallery (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    image    TEXT NOT NULL,
+    thumb    TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'food'
+      CHECK (category IN ('food', 'interior', 'exterior', 'atmosphere')),
+    alt      TEXT,
+    alt_en   TEXT,
+    sort     INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS videos (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    src      TEXT NOT NULL,
+    thumb    TEXT,
+    category TEXT NOT NULL DEFAULT 'food'
+      CHECK (category IN ('food', 'interior', 'exterior', 'atmosphere')),
+    title    TEXT,
+    title_en TEXT,
+    sort     INTEGER NOT NULL DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_sessions (
+    token      TEXT PRIMARY KEY,
+    created_at INTEGER NOT NULL
+  );
+`);
+
+// Add columns on existing databases without wiping data.
+const migrations = [
+  'ALTER TABLE categories ADD COLUMN name_en TEXT',
+  'ALTER TABLE categories ADD COLUMN note_en TEXT',
+  'ALTER TABLE items ADD COLUMN name_en TEXT',
+  'ALTER TABLE items ADD COLUMN description_en TEXT',
+  'ALTER TABLE items ADD COLUMN available INTEGER NOT NULL DEFAULT 1',
+  'ALTER TABLE gallery ADD COLUMN alt_en TEXT'
+];
+for (const sql of migrations) {
+  try { db.exec(sql); } catch { /* already applied */ }
+}
+
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(password).digest('hex');
+}
+
+function seedIfEmpty() {
+  if (db.prepare('SELECT COUNT(*) AS n FROM categories').get().n > 0) return;
+  reseed();
+}
+
+function reseed() {
+  db.exec('DELETE FROM items; DELETE FROM categories; DELETE FROM gallery; DELETE FROM videos; DELETE FROM settings;');
+
+  const insertCategory = db.prepare(
+    'INSERT INTO categories (name, name_en, type, note, note_en, sort) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  const insertItem = db.prepare(
+    `INSERT INTO items (category_id, name, name_en, description, description_en, price, image, available, sort)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  );
+  const insertPhoto = db.prepare(
+    'INSERT INTO gallery (image, thumb, category, alt, alt_en, sort) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  const insertVideo = db.prepare(
+    'INSERT INTO videos (src, thumb, category, title, title_en, sort) VALUES (?, ?, ?, ?, ?, ?)'
+  );
+  const insertSetting = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
+
+  db.transaction(() => {
+    seed.categories.forEach((category, ci) => {
+      const tr = seed.categoryTranslations[category.name] || {};
+      const { lastInsertRowid } = insertCategory.run(
+        category.name,
+        tr.name_en || null,
+        category.type,
+        category.note || null,
+        tr.note_en || null,
+        ci
+      );
+      category.items.forEach((item, ii) => {
+        insertItem.run(
+          lastInsertRowid,
+          item.name,
+          item.name_en || null,
+          item.description || null,
+          item.description_en || null,
+          item.price,
+          item.image || null,
+          item.available !== undefined ? item.available : 1,
+          ii
+        );
+      });
+    });
+
+    seed.gallery.forEach((photo, i) => {
+      insertPhoto.run(
+        `/uploads/gallery/${photo.file}`,
+        `/uploads/gallery/thumbs/${photo.file}`,
+        photo.category,
+        photo.alt,
+        photo.alt_en || null,
+        i
+      );
+    });
+
+    (seed.videos || []).forEach((video, i) => {
+      insertVideo.run(
+        `/uploads/videos/${video.file}`,
+        video.thumb ? `/uploads/videos/thumbs/${video.thumb}` : null,
+        video.category,
+        video.title,
+        video.title_en || null,
+        i
+      );
+    });
+
+    for (const [key, value] of Object.entries(seed.settings)) {
+      insertSetting.run(key, value);
+    }
+    for (const [key, value] of Object.entries(seed.settingsEn || {})) {
+      insertSetting.run(key, value);
+    }
+
+    insertSetting.run('admin_password', hashPassword(process.env.ADMIN_PASSWORD || 'menata2024'));
+  })();
+
+  console.log('Database seeded with initial menu, gallery and settings.');
+}
+
+seedIfEmpty();
+
+const { ensureI18n } = require('./ensure-i18n');
+ensureI18n(db);
+
+if (require.main === module) {
+  reseed();
+}
+
+module.exports = db;
+module.exports.hashPassword = hashPassword;

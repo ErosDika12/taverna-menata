@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Vercel local config (link credentials live in Vercel dashboard)
+.vercel/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Cache & temp
+.cache/
+.parcel-cache/
+.turbo/
+.vite/
+*.tmp
+*.temp
+tmp/
+temp/
+
+# SQLite WAL sidecars (main DB is committed for deploy seed)
+*.db-wal
+*.db-shm
+
+# Test / coverage
+coverage/
+.nyc_output/
