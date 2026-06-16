@@ -6,6 +6,7 @@ import { useSettings } from '../settings';
 import { ui } from '../translations';
 import LanguageSwitcher from './LanguageSwitcher';
 import MobileActionBar from './MobileActionBar';
+import SeoHead from './SeoHead';
 import logo from '../assets/logo.png';
 
 const navIcons = [
