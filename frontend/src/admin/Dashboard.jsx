@@ -4,9 +4,9 @@ import { UtensilsCrossed, Images, FileText, Phone, Languages } from 'lucide-reac
 const cards = [
   { to: '/admin/menu', label: 'Menyja', text: 'Kategoritë, pjatat dhe çmimet', icon: UtensilsCrossed },
   { to: '/admin/gallery', label: 'Galeria', text: 'Foto dhe video', icon: Images },
-  { to: '/admin/content', label: 'Përmbajtja', text: 'Ballina dhe historia', icon: FileText },
+  { to: '/admin/content', label: 'Teksti i faqes', text: 'Ballina, hero dhe historia', icon: FileText },
   { to: '/admin/contact', label: 'Kontakti', text: 'Telefon, adresa, orari', icon: Phone },
-  { to: '/admin/language', label: 'Gjuha', text: 'Shqip dhe anglisht', icon: Languages }
+  { to: '/admin/language', label: 'Cilësimet', text: 'Gjuha dhe fjalëkalimi', icon: Languages }
 ];
 
 export default function Dashboard() {

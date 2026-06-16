@@ -41,14 +41,16 @@ export default function AdminApp() {
   return (
     <Routes>
       <Route element={<AdminLayout onLogout={() => setAuthed(false)} />}>
-        <Route index element={<Dashboard />} />
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="menu" element={<MenuAdmin />} />
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="content" element={<ContentAdmin />} />
         <Route path="contact" element={<ContactAdmin />} />
         <Route path="language" element={<LanguageAdmin />} />
       </Route>
-      <Route path="*" element={<Navigate to="/admin" replace />} />
+      <Route path="login" element={<Navigate to="/admin/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
   );
 }

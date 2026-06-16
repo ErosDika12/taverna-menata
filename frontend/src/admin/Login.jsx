@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
 export default function Login({ onLogin }) {
+  const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,6 +22,7 @@ export default function Login({ onLogin }) {
       if (!res.ok) throw new Error(data.error || 'Gabim.');
       localStorage.setItem('menata-admin-token', data.token);
       onLogin();
+      navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

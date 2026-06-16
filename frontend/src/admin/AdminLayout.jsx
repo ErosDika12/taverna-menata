@@ -4,12 +4,12 @@ import { adminFetch } from '../api';
 import logo from '../assets/logo.png';
 
 const links = [
-  { to: '/admin', label: 'Paneli', icon: LayoutDashboard, end: true },
+  { to: '/admin/dashboard', label: 'Paneli', icon: LayoutDashboard, end: true },
   { to: '/admin/menu', label: 'Menyja', icon: UtensilsCrossed },
   { to: '/admin/gallery', label: 'Galeria', icon: Images },
-  { to: '/admin/content', label: 'Përmbajtja', icon: FileText },
+  { to: '/admin/content', label: 'Teksti', icon: FileText },
   { to: '/admin/contact', label: 'Kontakti', icon: Phone },
-  { to: '/admin/language', label: 'Gjuha', icon: Languages }
+  { to: '/admin/language', label: 'Cilësimet', icon: Languages }
 ];
 
 export default function AdminLayout({ onLogout }) {

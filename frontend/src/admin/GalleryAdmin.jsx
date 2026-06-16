@@ -13,6 +13,8 @@ export default function GalleryAdmin() {
   const [photos, setPhotos] = useState([]);
   const [videos, setVideos] = useState([]);
   const [msg, setMsg] = useState('');
+  const [editPhoto, setEditPhoto] = useState(null);
+  const [editVideo, setEditVideo] = useState(null);
 
   async function load() {
     const [p, v] = await Promise.all([adminFetch('/gallery'), adminFetch('/videos')]);
@@ -66,9 +68,38 @@ export default function GalleryAdmin() {
     }
   }
 
+  async function savePhoto(e) {
+    e.preventDefault();
+    if (!editPhoto) return;
+    setMsg('');
+    try {
+      await adminFetch(`/gallery/${editPhoto.id}`, { method: 'PUT', body: editPhoto });
+      setEditPhoto(null);
+      await load();
+      setMsg('Foto u përditësua.');
+    } catch (err) {
+      setMsg(err.message);
+    }
+  }
+
+  async function saveVideo(e) {
+    e.preventDefault();
+    if (!editVideo) return;
+    setMsg('');
+    try {
+      await adminFetch(`/videos/${editVideo.id}`, { method: 'PUT', body: editVideo });
+      setEditVideo(null);
+      await load();
+      setMsg('Video u përditësua.');
+    } catch (err) {
+      setMsg(err.message);
+    }
+  }
+
   async function deletePhoto(id) {
     if (!confirm('Fshini këtë foto?')) return;
     await adminFetch(`/gallery/${id}`, { method: 'DELETE' });
+    if (editPhoto?.id === id) setEditPhoto(null);
     await load();
     setMsg('Foto u fshi.');
   }
@@ -76,6 +107,7 @@ export default function GalleryAdmin() {
   async function deleteVideo(id) {
     if (!confirm('Fshini këtë video?')) return;
     await adminFetch(`/videos/${id}`, { method: 'DELETE' });
+    if (editVideo?.id === id) setEditVideo(null);
     await load();
     setMsg('Video u fshi.');
   }
@@ -129,12 +161,49 @@ export default function GalleryAdmin() {
             {photos.map((p) => (
               <div key={p.id} className="admin-thumb">
                 <img src={p.thumb} alt={p.alt} />
-                <button type="button" className="danger" onClick={() => deletePhoto(p.id)}>
-                  Fshi
-                </button>
+                <div className="admin-thumb-actions">
+                  <button type="button" onClick={() => setEditPhoto({ ...p })}>
+                    Ndrysho
+                  </button>
+                  <button type="button" className="danger" onClick={() => deletePhoto(p.id)}>
+                    Fshi
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+
+          {editPhoto && (
+            <form className="admin-form" onSubmit={savePhoto}>
+              <h2>Ndrysho foton</h2>
+              <label>
+                Kategoria
+                <select value={editPhoto.category} onChange={(e) => setEditPhoto({ ...editPhoto, category: e.target.value })}>
+                  {cats.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Përshkrimi (AL)
+                <input value={editPhoto.alt || ''} onChange={(e) => setEditPhoto({ ...editPhoto, alt: e.target.value })} />
+              </label>
+              <label>
+                Përshkrimi (EN)
+                <input value={editPhoto.alt_en || ''} onChange={(e) => setEditPhoto({ ...editPhoto, alt_en: e.target.value })} />
+              </label>
+              <div className="admin-form-actions">
+                <button type="submit" className="btn btn-primary">
+                  Ruaj
+                </button>
+                <button type="button" className="btn btn-outline" onClick={() => setEditPhoto(null)}>
+                  Anulo
+                </button>
+              </div>
+            </form>
+          )}
         </>
       )}
 
@@ -177,12 +246,49 @@ export default function GalleryAdmin() {
                   <strong>{v.title || 'Video'}</strong>
                   <span>{v.category}</span>
                 </div>
-                <button type="button" className="danger" onClick={() => deleteVideo(v.id)}>
-                  Fshi
-                </button>
+                <div className="admin-list-actions">
+                  <button type="button" onClick={() => setEditVideo({ ...v })}>
+                    Ndrysho
+                  </button>
+                  <button type="button" className="danger" onClick={() => deleteVideo(v.id)}>
+                    Fshi
+                  </button>
+                </div>
               </div>
             ))}
           </div>
+
+          {editVideo && (
+            <form className="admin-form" onSubmit={saveVideo}>
+              <h2>Ndrysho videon</h2>
+              <label>
+                Kategoria
+                <select value={editVideo.category} onChange={(e) => setEditVideo({ ...editVideo, category: e.target.value })}>
+                  {cats.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Titulli (AL)
+                <input value={editVideo.title || ''} onChange={(e) => setEditVideo({ ...editVideo, title: e.target.value })} />
+              </label>
+              <label>
+                Titulli (EN)
+                <input value={editVideo.title_en || ''} onChange={(e) => setEditVideo({ ...editVideo, title_en: e.target.value })} />
+              </label>
+              <div className="admin-form-actions">
+                <button type="submit" className="btn btn-primary">
+                  Ruaj
+                </button>
+                <button type="button" className="btn btn-outline" onClick={() => setEditVideo(null)}>
+                  Anulo
+                </button>
+              </div>
+            </form>
+          )}
         </>
       )}
     </div>

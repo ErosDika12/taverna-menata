@@ -26,12 +26,22 @@ export default function ContentAdmin() {
 
   return (
     <div className="admin-page">
-      <h1>Përmbajtja e faqes</h1>
-      <p className="admin-lead">Ndryshoni tekstet e ballinës dhe historisë në të dy gjuhët.</p>
+      <h1>Teksti i faqes</h1>
+      <p className="admin-lead">Ndryshoni tekstet e ballinës, historisë dhe footer-it në të dy gjuhët.</p>
       {msg && <p className="admin-msg">{msg}</p>}
 
       <form className="admin-form" onSubmit={save}>
-        <h2>Ballina</h2>
+        <h2>Hero — titulli</h2>
+        <label>
+          Emri i faqes (AL)
+          <input value={data.site_name_sq || ''} onChange={(e) => set('site_name_sq', e.target.value)} />
+        </label>
+        <label>
+          Emri i faqes (EN)
+          <input value={data.site_name_en || ''} onChange={(e) => set('site_name_en', e.target.value)} />
+        </label>
+
+        <h2>Hero — nëntitulli</h2>
         <label>
           Slogani (AL)
           <input value={data.tagline_sq || ''} onChange={(e) => set('tagline_sq', e.target.value)} />
@@ -40,6 +50,8 @@ export default function ContentAdmin() {
           Slogani (EN)
           <input value={data.tagline_en || ''} onChange={(e) => set('tagline_en', e.target.value)} />
         </label>
+
+        <h2>Hero — përshkrimi</h2>
         <label>
           Teksti i shkurtër (AL)
           <textarea value={data.home_intro_sq || ''} onChange={(e) => set('home_intro_sq', e.target.value)} rows={3} />
@@ -48,6 +60,9 @@ export default function ContentAdmin() {
           Teksti i shkurtër (EN)
           <textarea value={data.home_intro_en || ''} onChange={(e) => set('home_intro_en', e.target.value)} rows={3} />
         </label>
+
+        <h2>Ballina dhe footer</h2>
+        <p className="admin-hint">Slogani shfaqet edhe në footer të faqes.</p>
 
         <h2>Historia</h2>
         <label>
@@ -59,12 +74,13 @@ export default function ContentAdmin() {
           <textarea value={data.about_text_en || ''} onChange={(e) => set('about_text_en', e.target.value)} rows={8} />
         </label>
 
+        <h2>Menyja — shënim për pijet</h2>
         <label>
-          Shënim për pijet (AL)
+          Shënim (AL)
           <input value={data.drinks_note_sq || ''} onChange={(e) => set('drinks_note_sq', e.target.value)} />
         </label>
         <label>
-          Shënim për pijet (EN)
+          Shënim (EN)
           <input value={data.drinks_note_en || ''} onChange={(e) => set('drinks_note_en', e.target.value)} />
         </label>
 

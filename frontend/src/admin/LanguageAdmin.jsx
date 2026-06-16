@@ -21,7 +21,7 @@ export default function LanguageAdmin() {
 
   return (
     <div className="admin-page">
-      <h1>Gjuha dhe siguria</h1>
+      <h1>Cilësimet</h1>
 
       <div className="admin-info-box">
         <h2>Gjuhët e faqes</h2>

@@ -342,6 +342,48 @@
   max-width: 640px;
 }
 
+.admin-hint {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: -8px 0 16px;
+}
+
+.admin-item-preview img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.admin-inline-danger {
+  padding: 10px 16px;
+  border: 1.5px solid #f5c2c0;
+  border-radius: 8px;
+  background: #fff;
+  color: #b42318;
+  font-weight: 600;
+}
+
+.admin-thumb-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.admin-thumb-actions button {
+  padding: 8px;
+  border: none;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.admin-thumb-actions button.danger {
+  color: #b42318;
+  border-left: 1px solid var(--line);
+}
+
 @media (max-width: 799px) {
   .admin-shell {
     flex-direction: column;
@@ -349,29 +391,93 @@
 
   .admin-sidebar {
     width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     padding: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
   }
 
   .admin-brand {
-    margin-bottom: 0;
+    margin-bottom: 8px;
   }
 
   .admin-sidebar nav {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow-x: auto;
     width: 100%;
-    order: 3;
+    gap: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .admin-sidebar nav::-webkit-scrollbar {
+    display: none;
   }
 
   .admin-sidebar nav a {
-    padding: 10px 12px;
-    font-size: 0.9rem;
+    padding: 12px 14px;
+    font-size: 0.88rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .admin-logout {
-    margin-left: auto;
+    align-self: flex-end;
+    margin-top: 4px;
+  }
+
+  .admin-main {
+    padding: 16px 14px 32px;
+  }
+
+  .admin-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-card {
+    padding: 20px 18px;
+    min-height: 88px;
+  }
+
+  .admin-form {
+    max-width: none;
+    padding: 18px 16px;
+  }
+
+  .admin-form input,
+  .admin-form textarea,
+  .admin-form select {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .admin-login-card input {
+    font-size: 16px;
+  }
+
+  .admin-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-row select,
+  .admin-row .btn {
+    width: 100%;
+  }
+
+  .admin-list-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-list-actions {
+    justify-content: flex-end;
+  }
+
+  .admin-thumb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
 }

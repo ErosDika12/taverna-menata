@@ -7,12 +7,14 @@ export default function MenuAdmin() {
   const [catId, setCatId] = useState(null);
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState(null);
+  const [newCat, setNewCat] = useState(null);
 
   async function load() {
     const [cats, its] = await Promise.all([adminFetch('/categories'), adminFetch('/items')]);
     setCategories(cats);
     setItems(its);
     if (!catId && cats[0]) setCatId(cats[0].id);
+    else if (catId && !cats.find((c) => c.id === catId) && cats[0]) setCatId(cats[0].id);
   }
 
   useEffect(() => {
@@ -34,6 +36,31 @@ export default function MenuAdmin() {
     }
   }
 
+  async function createCategory(e) {
+    e.preventDefault();
+    setMsg('');
+    try {
+      await adminFetch('/categories', { method: 'POST', body: newCat });
+      setNewCat(null);
+      await load();
+      setMsg('Kategoria u shtua.');
+    } catch (err) {
+      setMsg(err.message);
+    }
+  }
+
+  async function removeCategory(id) {
+    if (!confirm('Fshini këtë kategori? Artikujt brenda saj do të fshihen.')) return;
+    setMsg('');
+    try {
+      await adminFetch(`/categories/${id}`, { method: 'DELETE' });
+      await load();
+      setMsg('Kategoria u fshi.');
+    } catch (err) {
+      setMsg(err.message);
+    }
+  }
+
   async function saveItem(e) {
     e.preventDefault();
     setMsg('');
@@ -49,6 +76,24 @@ export default function MenuAdmin() {
     } catch (err) {
       setMsg(err.message);
     }
+  }
+
+  async function uploadItemImage(itemId, file) {
+    if (!file) return;
+    setMsg('');
+    const fd = new FormData();
+    fd.append('image', file);
+    const token = localStorage.getItem('menata-admin-token');
+    const res = await fetch(`/api/admin/items/${itemId}/image`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: fd
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gabim.');
+    setForm((f) => (f && f.id === itemId ? { ...f, image: data.image } : f));
+    await load();
+    setMsg('Foto u ngarkua.');
   }
 
   async function removeItem(id) {
@@ -91,7 +136,43 @@ export default function MenuAdmin() {
         <button type="button" className="btn btn-primary" onClick={newItem}>
           + Artikull i ri
         </button>
+        <button
+          type="button"
+          className="btn btn-outline"
+          onClick={() => setNewCat({ name: '', name_en: '', type: 'food', note: '', note_en: '' })}
+        >
+          + Kategori e re
+        </button>
       </div>
+
+      {newCat && (
+        <form className="admin-form" onSubmit={createCategory}>
+          <h2>Kategori e re</h2>
+          <label>
+            Emri (AL)
+            <input value={newCat.name} onChange={(e) => setNewCat({ ...newCat, name: e.target.value })} required />
+          </label>
+          <label>
+            Emri (EN)
+            <input value={newCat.name_en} onChange={(e) => setNewCat({ ...newCat, name_en: e.target.value })} />
+          </label>
+          <label>
+            Lloji
+            <select value={newCat.type} onChange={(e) => setNewCat({ ...newCat, type: e.target.value })}>
+              <option value="food">Ushqim</option>
+              <option value="drinks">Pije</option>
+            </select>
+          </label>
+          <div className="admin-form-actions">
+            <button type="submit" className="btn btn-primary">
+              Shto
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => setNewCat(null)}>
+              Anulo
+            </button>
+          </div>
+        </form>
+      )}
 
       {activeCat && (
         <form className="admin-form" onSubmit={saveCategory}>
@@ -125,9 +206,24 @@ export default function MenuAdmin() {
               onChange={(e) => setCategories((cs) => cs.map((c) => (c.id === catId ? { ...c, note_en: e.target.value } : c)))}
             />
           </label>
-          <button type="submit" className="btn btn-outline">
-            Ruaj kategorinë
-          </button>
+          <label>
+            Renditja
+            <input
+              type="number"
+              value={activeCat.sort ?? 0}
+              onChange={(e) =>
+                setCategories((cs) => cs.map((c) => (c.id === catId ? { ...c, sort: Number(e.target.value) } : c)))
+              }
+            />
+          </label>
+          <div className="admin-form-actions">
+            <button type="submit" className="btn btn-outline">
+              Ruaj kategorinë
+            </button>
+            <button type="button" className="danger admin-inline-danger" onClick={() => removeCategory(activeCat.id)}>
+              Fshi kategorinë
+            </button>
+          </div>
         </form>
       )}
 
@@ -174,6 +270,25 @@ export default function MenuAdmin() {
             Çmimi (€)
             <input type="number" step="0.5" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} required />
           </label>
+          <label>
+            Renditja
+            <input type="number" value={form.sort ?? 0} onChange={(e) => setForm({ ...form, sort: Number(e.target.value) })} />
+          </label>
+          {form.image && (
+            <div className="admin-item-preview">
+              <img src={form.image} alt="" />
+            </div>
+          )}
+          {form.id && (
+            <label>
+              Foto e artikullit
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => uploadItemImage(form.id, e.target.files?.[0]).catch((err) => setMsg(err.message))}
+              />
+            </label>
+          )}
           <label className="admin-check">
             <input type="checkbox" checked={!!form.available} onChange={(e) => setForm({ ...form, available: e.target.checked ? 1 : 0 })} />
             Në dispozicion
