@@ -27,7 +27,9 @@ export default function AdminApp() {
       .finally(() => setReady(true));
   }, []);
 
-  if (!ready) return <div className="admin-loading">Duke u ngarkuar…</div>;
+  if (!ready) {
+    return <div className="admin-loading">Loading admin panel…</div>;
+  }
 
   if (!authed) {
     return (
@@ -47,7 +49,8 @@ export default function AdminApp() {
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="content" element={<ContentAdmin />} />
         <Route path="contact" element={<ContactAdmin />} />
-        <Route path="language" element={<LanguageAdmin />} />
+        <Route path="settings" element={<LanguageAdmin />} />
+        <Route path="language" element={<Navigate to="/admin/settings" replace />} />
       </Route>
       <Route path="login" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

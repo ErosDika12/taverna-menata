@@ -46,10 +46,15 @@ AL / EN toggle in the header. Content is stored bilingually in the database.
 
 ## Admin panel
 
-Open **http://localhost:5173/admin** (or `/admin` on your domain).
+Open **http://localhost:5173/admin** (or `/admin` on your domain). You will be redirected to `/admin/login`.
 
-Default password: `menata2024` (change via **Gjuha** in the admin, or set `ADMIN_PASSWORD`
-before first seed).
+**Default login (local development):**
+
+| Field | Value |
+|-------|-------|
+| Password | `menata2024` |
+
+No username is required. Change the password after first login via **Settings** in the admin panel, or set `ADMIN_PASSWORD` in a `.env` file before the first database seed.
 
 The admin panel lets you edit:
 

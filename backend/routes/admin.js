@@ -57,6 +57,8 @@ router.put('/password', requireAdmin, (req, res) => {
   }
   db.prepare("INSERT INTO settings (key, value) VALUES ('admin_password', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
     .run(hashPassword(next));
+  db.prepare("INSERT INTO settings (key, value) VALUES ('admin_password_source', 'user') ON CONFLICT(key) DO UPDATE SET value = 'user'")
+    .run('user');
   res.json({ ok: true });
 });
 

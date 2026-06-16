@@ -13,7 +13,7 @@ export default function LanguageAdmin() {
       await adminFetch('/password', { method: 'PUT', body: { current, next } });
       setCurrent('');
       setNext('');
-      setMsg('Fjalëkalimi u ndryshua.');
+      setMsg('Password updated successfully.');
     } catch (err) {
       setMsg(err.message);
     }
@@ -21,33 +21,37 @@ export default function LanguageAdmin() {
 
   return (
     <div className="admin-page">
-      <h1>Cilësimet</h1>
+      <div className="admin-page-head">
+        <h1>Settings</h1>
+        <p className="admin-lead">Security and language information for the public website.</p>
+      </div>
 
       <div className="admin-info-box">
-        <h2>Gjuhët e faqes</h2>
+        <h2>Website languages</h2>
         <p>
-          Faqja ka dy gjuhë: <strong>Shqip</strong> (parazgjedhur) dhe <strong>Anglisht</strong>.
-          Vizitorët ndërrojnë gjuhën me butonin AL / EN.
+          The public site supports <strong>Albanian (default)</strong> and <strong>English</strong>.
+          Visitors switch language with the AL / EN button in the header.
         </p>
         <p>
-          Tekstet e menysë, ballinës dhe historisë redaktohen veç e veç për çdo gjuhë te{' '}
-          <strong>Menyja</strong> dhe <strong>Përmbajtja</strong>.
+          Menu, homepage, about and contact text are edited separately for each language in
+          <strong> Menu</strong>, <strong>Text</strong> and <strong>Contact</strong>.
         </p>
       </div>
 
       <form className="admin-form" onSubmit={changePassword}>
-        <h2>Ndrysho fjalëkalimin</h2>
+        <h2>Change admin password</h2>
+        <p className="admin-hint">Use at least 6 characters. Default password is documented in README for first login.</p>
         <label>
-          Fjalëkalimi aktual
+          Current password
           <input type="password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
         </label>
         <label>
-          Fjalëkalimi i ri
+          New password
           <input type="password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={6} />
         </label>
-        {msg && <p className="admin-msg">{msg}</p>}
-        <button type="submit" className="btn btn-primary">
-          Ruaj fjalëkalimin
+        {msg && <p className={msg.includes('success') ? 'admin-msg' : 'admin-error'}>{msg}</p>}
+        <button type="submit" className="admin-primary-btn">
+          Save new password
         </button>
       </form>
     </div>

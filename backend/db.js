@@ -172,15 +172,44 @@ function reseed() {
     }
 
     insertSetting.run('admin_password', hashPassword(process.env.ADMIN_PASSWORD || 'menata2024'));
+    insertSetting.run('admin_password_source', process.env.ADMIN_PASSWORD ? 'env' : 'default');
   })();
 
   console.log('Database seeded with initial menu, gallery and settings.');
+}
+
+function ensureAdminPassword(db) {
+  const get = (key) => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value;
+  const upsert = db.prepare(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  const defaultPw = process.env.ADMIN_PASSWORD || 'menata2024';
+  const defaultHash = hashPassword(defaultPw);
+
+  if (process.env.ADMIN_PASSWORD) {
+    upsert.run('admin_password', defaultHash);
+    upsert.run('admin_password_source', 'env');
+    return;
+  }
+
+  if (!get('admin_password')) {
+    upsert.run('admin_password', defaultHash);
+    upsert.run('admin_password_source', 'default');
+    return;
+  }
+
+  // Keep default password until changed explicitly in admin Settings.
+  if (get('admin_password_source') !== 'user') {
+    upsert.run('admin_password', defaultHash);
+    upsert.run('admin_password_source', get('admin_password_source') || 'default');
+  }
 }
 
 seedIfEmpty();
 
 const { ensureI18n } = require('./ensure-i18n');
 ensureI18n(db);
+ensureAdminPassword(db);
 
 if (require.main === module) {
   reseed();
