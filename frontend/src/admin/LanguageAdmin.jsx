@@ -5,10 +5,12 @@ export default function LanguageAdmin() {
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
 
   async function changePassword(e) {
     e.preventDefault();
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch('/password', { method: 'PUT', body: { current, next } });
       setCurrent('');
@@ -16,6 +18,8 @@ export default function LanguageAdmin() {
       setMsg('Password updated successfully.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -50,8 +54,8 @@ export default function LanguageAdmin() {
           <input type="password" value={next} onChange={(e) => setNext(e.target.value)} required minLength={6} />
         </label>
         {msg && <p className={msg.includes('success') ? 'admin-msg' : 'admin-error'}>{msg}</p>}
-        <button type="submit" className="admin-primary-btn">
-          Save new password
+        <button type="submit" className="admin-primary-btn" disabled={saving}>
+          {saving ? 'Saving…' : 'Save new password'}
         </button>
       </form>
     </div>

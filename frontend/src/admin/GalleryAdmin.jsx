@@ -15,11 +15,24 @@ export default function GalleryAdmin() {
   const [msg, setMsg] = useState('');
   const [editPhoto, setEditPhoto] = useState(null);
   const [editVideo, setEditVideo] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   async function load() {
     const [p, v] = await Promise.all([adminFetch('/gallery'), adminFetch('/videos')]);
     setPhotos(p);
     setVideos(v);
+  }
+
+  async function run(action) {
+    setMsg('');
+    setBusy(true);
+    try {
+      await action();
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
@@ -28,9 +41,8 @@ export default function GalleryAdmin() {
 
   async function uploadPhoto(e) {
     e.preventDefault();
-    setMsg('');
-    const fd = new FormData(e.target);
-    try {
+    await run(async () => {
+      const fd = new FormData(e.target);
       const token = localStorage.getItem('menata-admin-token');
       const res = await fetch('/api/admin/gallery', {
         method: 'POST',
@@ -38,20 +50,17 @@ export default function GalleryAdmin() {
         body: fd
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Gabim.');
       e.target.reset();
       await load();
       setMsg('Foto u ngarkua.');
-    } catch (err) {
-      setMsg(err.message);
-    }
+    });
   }
 
   async function uploadVideo(e) {
     e.preventDefault();
-    setMsg('');
-    const fd = new FormData(e.target);
-    try {
+    await run(async () => {
+      const fd = new FormData(e.target);
       const token = localStorage.getItem('menata-admin-token');
       const res = await fetch('/api/admin/videos', {
         method: 'POST',
@@ -59,63 +68,59 @@ export default function GalleryAdmin() {
         body: fd
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Gabim.');
       e.target.reset();
       await load();
       setMsg('Video u ngarkua.');
-    } catch (err) {
-      setMsg(err.message);
-    }
+    });
   }
 
   async function savePhoto(e) {
     e.preventDefault();
     if (!editPhoto) return;
-    setMsg('');
-    try {
+    await run(async () => {
       await adminFetch(`/gallery/${editPhoto.id}`, { method: 'PUT', body: editPhoto });
       setEditPhoto(null);
       await load();
       setMsg('Foto u përditësua.');
-    } catch (err) {
-      setMsg(err.message);
-    }
+    });
   }
 
   async function saveVideo(e) {
     e.preventDefault();
     if (!editVideo) return;
-    setMsg('');
-    try {
+    await run(async () => {
       await adminFetch(`/videos/${editVideo.id}`, { method: 'PUT', body: editVideo });
       setEditVideo(null);
       await load();
       setMsg('Video u përditësua.');
-    } catch (err) {
-      setMsg(err.message);
-    }
+    });
   }
 
   async function deletePhoto(id) {
     if (!confirm('Fshini këtë foto?')) return;
-    await adminFetch(`/gallery/${id}`, { method: 'DELETE' });
-    if (editPhoto?.id === id) setEditPhoto(null);
-    await load();
-    setMsg('Foto u fshi.');
+    await run(async () => {
+      await adminFetch(`/gallery/${id}`, { method: 'DELETE' });
+      if (editPhoto?.id === id) setEditPhoto(null);
+      await load();
+      setMsg('Foto u fshi.');
+    });
   }
 
   async function deleteVideo(id) {
     if (!confirm('Fshini këtë video?')) return;
-    await adminFetch(`/videos/${id}`, { method: 'DELETE' });
-    if (editVideo?.id === id) setEditVideo(null);
-    await load();
-    setMsg('Video u fshi.');
+    await run(async () => {
+      await adminFetch(`/videos/${id}`, { method: 'DELETE' });
+      if (editVideo?.id === id) setEditVideo(null);
+      await load();
+      setMsg('Video u fshi.');
+    });
   }
 
   return (
     <div className="admin-page">
       <h1>Galeria</h1>
-      {msg && <p className="admin-msg">{msg}</p>}
+      {msg && <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>}
 
       <div className="admin-tabs">
         <button type="button" className={tab === 'photos' ? 'active' : ''} onClick={() => setTab('photos')}>
@@ -152,8 +157,8 @@ export default function GalleryAdmin() {
               Përshkrimi (EN)
               <input name="alt_en" />
             </label>
-            <button type="submit" className="btn btn-primary">
-              Ngarko
+            <button type="submit" className="btn btn-primary" disabled={busy}>
+              {busy ? 'Duke u ngarkuar…' : 'Ngarko'}
             </button>
           </form>
 
@@ -165,7 +170,7 @@ export default function GalleryAdmin() {
                   <button type="button" onClick={() => setEditPhoto({ ...p })}>
                     Ndrysho
                   </button>
-                  <button type="button" className="danger" onClick={() => deletePhoto(p.id)}>
+                  <button type="button" className="danger" disabled={busy} onClick={() => deletePhoto(p.id)}>
                     Fshi
                   </button>
                 </div>
@@ -195,8 +200,8 @@ export default function GalleryAdmin() {
                 <input value={editPhoto.alt_en || ''} onChange={(e) => setEditPhoto({ ...editPhoto, alt_en: e.target.value })} />
               </label>
               <div className="admin-form-actions">
-                <button type="submit" className="btn btn-primary">
-                  Ruaj
+                <button type="submit" className="btn btn-primary" disabled={busy}>
+                  {busy ? 'Duke u ruajtur…' : 'Ruaj'}
                 </button>
                 <button type="button" className="btn btn-outline" onClick={() => setEditPhoto(null)}>
                   Anulo
@@ -233,8 +238,8 @@ export default function GalleryAdmin() {
               Titulli (EN)
               <input name="title_en" />
             </label>
-            <button type="submit" className="btn btn-primary">
-              Ngarko
+            <button type="submit" className="btn btn-primary" disabled={busy}>
+              {busy ? 'Duke u ngarkuar…' : 'Ngarko'}
             </button>
           </form>
 
@@ -250,7 +255,7 @@ export default function GalleryAdmin() {
                   <button type="button" onClick={() => setEditVideo({ ...v })}>
                     Ndrysho
                   </button>
-                  <button type="button" className="danger" onClick={() => deleteVideo(v.id)}>
+                  <button type="button" className="danger" disabled={busy} onClick={() => deleteVideo(v.id)}>
                     Fshi
                   </button>
                 </div>
@@ -280,8 +285,8 @@ export default function GalleryAdmin() {
                 <input value={editVideo.title_en || ''} onChange={(e) => setEditVideo({ ...editVideo, title_en: e.target.value })} />
               </label>
               <div className="admin-form-actions">
-                <button type="submit" className="btn btn-primary">
-                  Ruaj
+                <button type="submit" className="btn btn-primary" disabled={busy}>
+                  {busy ? 'Duke u ruajtur…' : 'Ruaj'}
                 </button>
                 <button type="button" className="btn btn-outline" onClick={() => setEditVideo(null)}>
                   Anulo

@@ -39,6 +39,7 @@ const videoFilter = (_req, file, cb) => {
 };
 
 module.exports = {
+  uploadsRoot,
   uploadImage: multer({ storage: imageStorage('gallery'), limits: { fileSize: 12 * 1024 * 1024 }, fileFilter: imageFilter }),
   uploadThumb: multer({ storage: imageStorage('gallery/thumbs'), limits: { fileSize: 4 * 1024 * 1024 }, fileFilter: imageFilter }),
   uploadMenuImage: multer({ storage: imageStorage('menu'), limits: { fileSize: 8 * 1024 * 1024 }, fileFilter: imageFilter }),

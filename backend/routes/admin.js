@@ -7,6 +7,15 @@ const { uploadImage, uploadThumb, uploadMenuImage, uploadVideo, uploadVideoThumb
 
 const router = Router();
 
+function handleUpload(middleware) {
+  return (req, res, next) => {
+    middleware(req, res, (err) => {
+      if (err) return res.status(400).json({ error: err.message || 'Gabim në ngarkim.' });
+      next();
+    });
+  };
+}
+
 router.post('/login', (req, res) => {
   const { password } = req.body;
   if (!password) return res.status(400).json({ error: 'Shkruani fjalëkalimin.' });
@@ -94,13 +103,17 @@ router.get('/items', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM items ORDER BY category_id, sort, id').all());
 });
 
+function asAvailable(value) {
+  return value === 1 || value === true || value === '1' ? 1 : 0;
+}
+
 router.post('/items', requireAdmin, (req, res) => {
   const { category_id, name, name_en, description, description_en, price, image, available } = req.body;
   const max = db.prepare('SELECT COALESCE(MAX(sort), -1) AS m FROM items WHERE category_id = ?').get(category_id).m;
   const r = db.prepare(
     `INSERT INTO items (category_id, name, name_en, description, description_en, price, image, available, sort)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(category_id, name, name_en || null, description || null, description_en || null, price, image || null, available ? 1 : 0, max + 1);
+  ).run(category_id, name, name_en || null, description || null, description_en || null, price, image || null, asAvailable(available), max + 1);
   res.json({ id: r.lastInsertRowid });
 });
 
@@ -109,7 +122,7 @@ router.put('/items/:id', requireAdmin, (req, res) => {
   db.prepare(
     `UPDATE items SET category_id=?, name=?, name_en=?, description=?, description_en=?,
      price=?, image=?, available=?, sort=? WHERE id=?`
-  ).run(category_id, name, name_en || null, description || null, description_en || null, price, image || null, available ? 1 : 0, sort ?? 0, req.params.id);
+  ).run(category_id, name, name_en || null, description || null, description_en || null, price, image || null, asAvailable(available), sort ?? 0, req.params.id);
   res.json({ ok: true });
 });
 
@@ -118,7 +131,7 @@ router.delete('/items/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/items/:id/image', requireAdmin, uploadMenuImage.single('image'), (req, res) => {
+router.post('/items/:id/image', requireAdmin, handleUpload(uploadMenuImage.single('image')), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const url = toUrl(req.file.filename, 'menu');
   db.prepare('UPDATE items SET image = ? WHERE id = ?').run(url, req.params.id);
@@ -130,7 +143,7 @@ router.get('/gallery', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM gallery ORDER BY sort, id').all());
 });
 
-router.post('/gallery', requireAdmin, uploadImage.single('image'), (req, res) => {
+router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image')), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const { category, alt, alt_en } = req.body;
   const image = toUrl(req.file.filename, 'gallery');
@@ -158,7 +171,7 @@ router.get('/videos', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM videos ORDER BY sort, id').all());
 });
 
-router.post('/videos', requireAdmin, uploadVideo.single('video'), (req, res) => {
+router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video')), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua video.' });
   const { category, title, title_en } = req.body;
   const src = toUrl(req.file.filename, 'videos');
@@ -168,7 +181,7 @@ router.post('/videos', requireAdmin, uploadVideo.single('video'), (req, res) => 
   res.json({ id: r.lastInsertRowid, src });
 });
 
-router.post('/videos/:id/thumb', requireAdmin, uploadVideoThumb.single('thumb'), (req, res) => {
+router.post('/videos/:id/thumb', requireAdmin, handleUpload(uploadVideoThumb.single('thumb')), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const thumb = toUrl(req.file.filename, 'videos/thumbs');
   db.prepare('UPDATE videos SET thumb = ? WHERE id = ?').run(thumb, req.params.id);

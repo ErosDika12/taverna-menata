@@ -3,11 +3,21 @@ const path = require('path');
 const express = require('express');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
+const { uploadsRoot } = require('./upload');
 
 const app = express();
 
 app.use(express.json({ limit: '2mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d' }));
+
+function staticUploads(root) {
+  return express.static(root, { maxAge: '7d', fallthrough: true });
+}
+
+app.use('/uploads', (req, res, next) => {
+  staticUploads(uploadsRoot())(req, res, () => {
+    staticUploads(path.join(__dirname, 'uploads'))(req, res, next);
+  });
+});
 app.use('/api', (_req, res, next) => {
   const orig = res.json.bind(res);
   res.json = (body) => {

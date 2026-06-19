@@ -4,6 +4,7 @@ import { adminFetch } from '../api';
 export default function ContentAdmin() {
   const [data, setData] = useState({});
   const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     adminFetch('/settings').then(setData).catch((e) => setMsg(e.message));
@@ -12,11 +13,14 @@ export default function ContentAdmin() {
   async function save(e) {
     e.preventDefault();
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch('/settings', { method: 'PUT', body: data });
       setMsg('U ruajt.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -28,7 +32,7 @@ export default function ContentAdmin() {
     <div className="admin-page">
       <h1>Teksti i faqes</h1>
       <p className="admin-lead">Ndryshoni tekstet e ballinës, historisë dhe footer-it në të dy gjuhët.</p>
-      {msg && <p className="admin-msg">{msg}</p>}
+      {msg && <p className={msg === 'U ruajt.' ? 'admin-msg' : 'admin-error'}>{msg}</p>}
 
       <form className="admin-form" onSubmit={save}>
         <h2>Hero — titulli</h2>
@@ -84,8 +88,8 @@ export default function ContentAdmin() {
           <input value={data.drinks_note_en || ''} onChange={(e) => set('drinks_note_en', e.target.value)} />
         </label>
 
-        <button type="submit" className="btn btn-primary admin-btn-full">
-          Ruaj ndryshimet
+        <button type="submit" className="admin-primary-btn" disabled={saving}>
+          {saving ? 'Duke u ruajtur…' : 'Ruaj ndryshimet'}
         </button>
       </form>
     </div>

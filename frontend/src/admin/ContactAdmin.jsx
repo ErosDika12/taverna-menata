@@ -4,6 +4,7 @@ import { adminFetch } from '../api';
 export default function ContactAdmin() {
   const [data, setData] = useState({});
   const [msg, setMsg] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     adminFetch('/settings').then(setData).catch((e) => setMsg(e.message));
@@ -12,11 +13,14 @@ export default function ContactAdmin() {
   async function save(e) {
     e.preventDefault();
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch('/settings', { method: 'PUT', body: data });
       setMsg('U ruajt.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -27,7 +31,7 @@ export default function ContactAdmin() {
   return (
     <div className="admin-page">
       <h1>Kontakti</h1>
-      {msg && <p className="admin-msg">{msg}</p>}
+      {msg && <p className={msg === 'U ruajt.' ? 'admin-msg' : 'admin-error'}>{msg}</p>}
 
       <form className="admin-form" onSubmit={save}>
         <label>
@@ -47,12 +51,16 @@ export default function ContactAdmin() {
           <input value={data.facebook || ''} onChange={(e) => set('facebook', e.target.value)} />
         </label>
         <label>
-          Adresa
-          <input value={data.address || ''} onChange={(e) => set('address', e.target.value)} />
+          Adresa (AL)
+          <input value={data.address_sq || data.address || ''} onChange={(e) => set('address_sq', e.target.value)} />
+        </label>
+        <label>
+          Adresa (EN)
+          <input value={data.address_en || ''} onChange={(e) => set('address_en', e.target.value)} />
         </label>
         <label>
           Orari (AL)
-          <input value={data.hours_sq || ''} onChange={(e) => set('hours_sq', e.target.value)} />
+          <input value={data.hours_sq || data.hours || ''} onChange={(e) => set('hours_sq', e.target.value)} />
         </label>
         <label>
           Orari (EN)
@@ -62,8 +70,8 @@ export default function ContactAdmin() {
           Google Maps (linku)
           <input value={data.maps_url || ''} onChange={(e) => set('maps_url', e.target.value)} />
         </label>
-        <button type="submit" className="btn btn-primary admin-btn-full">
-          Ruaj
+        <button type="submit" className="admin-primary-btn" disabled={saving}>
+          {saving ? 'Duke u ruajtur…' : 'Ruaj'}
         </button>
       </form>
     </div>

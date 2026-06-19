@@ -8,6 +8,7 @@ export default function MenuAdmin() {
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState(null);
   const [newCat, setNewCat] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     const [cats, its] = await Promise.all([adminFetch('/categories'), adminFetch('/items')]);
@@ -28,17 +29,21 @@ export default function MenuAdmin() {
     e.preventDefault();
     if (!activeCat) return;
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch(`/categories/${activeCat.id}`, { method: 'PUT', body: activeCat });
       setMsg('Kategoria u ruajt.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function createCategory(e) {
     e.preventDefault();
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch('/categories', { method: 'POST', body: newCat });
       setNewCat(null);
@@ -46,61 +51,90 @@ export default function MenuAdmin() {
       setMsg('Kategoria u shtua.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function removeCategory(id) {
     if (!confirm('Fshini këtë kategori? Artikujt brenda saj do të fshihen.')) return;
     setMsg('');
+    setSaving(true);
     try {
       await adminFetch(`/categories/${id}`, { method: 'DELETE' });
       await load();
       setMsg('Kategoria u fshi.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function saveItem(e) {
     e.preventDefault();
     setMsg('');
+    setSaving(true);
     try {
+      const payload = { ...form, category_id: Number(form.category_id), available: form.available ? 1 : 0 };
       if (form.id) {
-        await adminFetch(`/items/${form.id}`, { method: 'PUT', body: form });
+        await adminFetch(`/items/${form.id}`, { method: 'PUT', body: payload });
       } else {
-        await adminFetch('/items', { method: 'POST', body: form });
+        await adminFetch('/items', { method: 'POST', body: payload });
       }
       setForm(null);
       await load();
       setMsg('U ruajt.');
     } catch (err) {
       setMsg(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
   async function uploadItemImage(itemId, file) {
     if (!file) return;
     setMsg('');
-    const fd = new FormData();
-    fd.append('image', file);
-    const token = localStorage.getItem('menata-admin-token');
-    const res = await fetch(`/api/admin/items/${itemId}/image`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: fd
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Gabim.');
-    setForm((f) => (f && f.id === itemId ? { ...f, image: data.image } : f));
-    await load();
-    setMsg('Foto u ngarkua.');
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const token = localStorage.getItem('menata-admin-token');
+      const res = await fetch(`/api/admin/items/${itemId}/image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gabim.');
+      setForm((f) => (f && f.id === itemId ? { ...f, image: data.image } : f));
+      await load();
+      setMsg('Foto u ngarkua.');
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function removeItem(id) {
     if (!confirm('Fshini këtë artikull?')) return;
-    await adminFetch(`/items/${id}`, { method: 'DELETE' });
-    await load();
-    setMsg('U fshi.');
+    setMsg('');
+    setSaving(true);
+    try {
+      await adminFetch(`/items/${id}`, { method: 'DELETE' });
+      if (form?.id === id) setForm(null);
+      await load();
+      setMsg('U fshi.');
+    } catch (err) {
+      setMsg(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function editItem(item) {
+    setForm({ ...item, available: item.available ? 1 : 0 });
   }
 
   function newItem() {
@@ -120,7 +154,7 @@ export default function MenuAdmin() {
   return (
     <div className="admin-page">
       <h1>Menyja</h1>
-      {msg && <p className="admin-msg">{msg}</p>}
+      {msg && <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>}
 
       <div className="admin-row">
         <label>
@@ -164,7 +198,7 @@ export default function MenuAdmin() {
             </select>
           </label>
           <div className="admin-form-actions">
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
               Shto
             </button>
             <button type="button" className="btn btn-outline" onClick={() => setNewCat(null)}>
@@ -217,10 +251,10 @@ export default function MenuAdmin() {
             />
           </label>
           <div className="admin-form-actions">
-            <button type="submit" className="btn btn-outline">
+            <button type="submit" className="btn btn-outline" disabled={saving}>
               Ruaj kategorinë
             </button>
-            <button type="button" className="danger admin-inline-danger" onClick={() => removeCategory(activeCat.id)}>
+            <button type="button" className="danger admin-inline-danger" disabled={saving} onClick={() => removeCategory(activeCat.id)}>
               Fshi kategorinë
             </button>
           </div>
@@ -236,10 +270,10 @@ export default function MenuAdmin() {
               {!item.available && <em> (jo në dispozicion)</em>}
             </div>
             <div className="admin-list-actions">
-              <button type="button" onClick={() => setForm({ ...item, available: item.available ? 1 : 0 })}>
+              <button type="button" onClick={() => editItem(item)}>
                 Ndrysho
               </button>
-              <button type="button" className="danger" onClick={() => removeItem(item.id)}>
+              <button type="button" className="danger" disabled={saving} onClick={() => removeItem(item.id)}>
                 Fshi
               </button>
             </div>
@@ -285,7 +319,7 @@ export default function MenuAdmin() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => uploadItemImage(form.id, e.target.files?.[0]).catch((err) => setMsg(err.message))}
+                onChange={(e) => uploadItemImage(form.id, e.target.files?.[0])}
               />
             </label>
           )}
@@ -294,8 +328,8 @@ export default function MenuAdmin() {
             Në dispozicion
           </label>
           <div className="admin-form-actions">
-            <button type="submit" className="btn btn-primary">
-              Ruaj
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Duke u ruajtur…' : 'Ruaj'}
             </button>
             <button type="button" className="btn btn-outline" onClick={() => setForm(null)}>
               Anulo
