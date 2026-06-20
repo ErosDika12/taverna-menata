@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { Router } = require('express');
 const db = require('../db');
 const { hashPassword } = require('../db');
-const { requireAdmin, MAX_AGE_MS } = require('../middleware/auth');
+const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { uploadImage, uploadThumb, uploadMenuImage, uploadVideo, uploadVideoThumb, toUrl } = require('../upload');
 
 const router = Router();
@@ -25,8 +25,12 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'Fjalëkalimi është i gabuar.' });
   }
 
-  const token = crypto.randomBytes(32).toString('hex');
-  db.prepare('INSERT INTO admin_sessions (token, created_at) VALUES (?, ?)').run(token, Date.now());
+  const token = createAdminToken();
+  try {
+    db.prepare('INSERT INTO admin_sessions (token, created_at) VALUES (?, ?)').run(token, Date.now());
+  } catch {
+    /* optional legacy store */
+  }
   res.json({ token });
 });
 
@@ -68,6 +72,7 @@ router.put('/password', requireAdmin, (req, res) => {
     .run(hashPassword(next));
   db.prepare("INSERT INTO settings (key, value) VALUES ('admin_password_source', 'user') ON CONFLICT(key) DO UPDATE SET value = 'user'")
     .run('user');
+  bumpTokenVersion();
   res.json({ ok: true });
 });
 

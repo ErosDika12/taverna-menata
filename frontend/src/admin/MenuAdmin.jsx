@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { adminFetch } from '../api';
+import { adminFetch, adminUpload } from '../api';
 
 export default function MenuAdmin() {
   const [categories, setCategories] = useState([]);
@@ -9,6 +9,12 @@ export default function MenuAdmin() {
   const [form, setForm] = useState(null);
   const [newCat, setNewCat] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  function showError(err) {
+    if (err.message === 'LOGIN_REQUIRED') return;
+    setMsg(err.message);
+  }
 
   async function load() {
     const [cats, its] = await Promise.all([adminFetch('/categories'), adminFetch('/items')]);
@@ -19,7 +25,10 @@ export default function MenuAdmin() {
   }
 
   useEffect(() => {
-    load().catch((e) => setMsg(e.message));
+    setLoading(true);
+    load()
+      .catch(showError)
+      .finally(() => setLoading(false));
   }, []);
 
   const catItems = items.filter((i) => i.category_id === catId);
@@ -99,19 +108,12 @@ export default function MenuAdmin() {
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const token = localStorage.getItem('menata-admin-token');
-      const res = await fetch(`/api/admin/items/${itemId}/image`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gabim.');
+      const data = await adminUpload(`/items/${itemId}/image`, fd);
       setForm((f) => (f && f.id === itemId ? { ...f, image: data.image } : f));
       await load();
       setMsg('Foto u ngarkua.');
     } catch (err) {
-      setMsg(err.message);
+      showError(err);
     } finally {
       setSaving(false);
     }
@@ -154,8 +156,14 @@ export default function MenuAdmin() {
   return (
     <div className="admin-page">
       <h1>Menyja</h1>
-      {msg && <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>}
+      {msg && !msg.includes('LOGIN') && (
+        <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>
+      )}
 
+      {loading ? (
+        <p className="admin-lead">Duke u ngarkuar menyja…</p>
+      ) : (
+        <>
       <div className="admin-row">
         <label>
           Kategoria
@@ -336,6 +344,8 @@ export default function MenuAdmin() {
             </button>
           </div>
         </form>
+      )}
+        </>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { adminFetch } from '../api';
+import { adminFetch, adminUpload } from '../api';
 
 const cats = [
   { value: 'food', label: 'Ushqimi' },
@@ -16,11 +16,17 @@ export default function GalleryAdmin() {
   const [editPhoto, setEditPhoto] = useState(null);
   const [editVideo, setEditVideo] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     const [p, v] = await Promise.all([adminFetch('/gallery'), adminFetch('/videos')]);
     setPhotos(p);
     setVideos(v);
+  }
+
+  function showError(err) {
+    if (err.message === 'LOGIN_REQUIRED') return;
+    setMsg(err.message);
   }
 
   async function run(action) {
@@ -29,28 +35,24 @@ export default function GalleryAdmin() {
     try {
       await action();
     } catch (err) {
-      setMsg(err.message);
+      showError(err);
     } finally {
       setBusy(false);
     }
   }
 
   useEffect(() => {
-    load().catch((e) => setMsg(e.message));
+    setLoading(true);
+    load()
+      .catch(showError)
+      .finally(() => setLoading(false));
   }, []);
 
   async function uploadPhoto(e) {
     e.preventDefault();
     await run(async () => {
       const fd = new FormData(e.target);
-      const token = localStorage.getItem('menata-admin-token');
-      const res = await fetch('/api/admin/gallery', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gabim.');
+      await adminUpload('/gallery', fd);
       e.target.reset();
       await load();
       setMsg('Foto u ngarkua.');
@@ -61,14 +63,7 @@ export default function GalleryAdmin() {
     e.preventDefault();
     await run(async () => {
       const fd = new FormData(e.target);
-      const token = localStorage.getItem('menata-admin-token');
-      const res = await fetch('/api/admin/videos', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: fd
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gabim.');
+      await adminUpload('/videos', fd);
       e.target.reset();
       await load();
       setMsg('Video u ngarkua.');
@@ -120,8 +115,14 @@ export default function GalleryAdmin() {
   return (
     <div className="admin-page">
       <h1>Galeria</h1>
-      {msg && <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>}
+      {msg && !msg.includes('LOGIN') && (
+        <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>
+      )}
 
+      {loading ? (
+        <p className="admin-lead">Duke u ngarkuar galeria…</p>
+      ) : (
+        <>
       <div className="admin-tabs">
         <button type="button" className={tab === 'photos' ? 'active' : ''} onClick={() => setTab('photos')}>
           Foto
@@ -163,6 +164,9 @@ export default function GalleryAdmin() {
           </form>
 
           <div className="admin-thumb-grid">
+            {photos.length === 0 && (
+              <p className="admin-hint admin-gallery-empty">Nuk ka foto ende. Ngarkoni foto të restorantit më sipër.</p>
+            )}
             {photos.map((p) => (
               <div key={p.id} className="admin-thumb">
                 <img src={p.thumb} alt={p.alt} />
@@ -294,6 +298,8 @@ export default function GalleryAdmin() {
               </div>
             </form>
           )}
+        </>
+      )}
         </>
       )}
     </div>
