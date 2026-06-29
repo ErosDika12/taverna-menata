@@ -6,23 +6,32 @@ import {
   FileText,
   Phone,
   Settings,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { adminFetch } from '../api';
+import AdminNotifications from './AdminNotifications';
 import logo from '../assets/logo.png';
 
-const links = [
+const baseLinks = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/menu', label: 'Menu', icon: UtensilsCrossed },
   { to: '/admin/gallery', label: 'Gallery', icon: Images },
   { to: '/admin/content', label: 'Text', icon: FileText },
   { to: '/admin/contact', label: 'Contact', icon: Phone },
-  { to: '/admin/settings', label: 'Settings', icon: Settings }
+  { to: '/admin/settings', label: 'Settings', icon: Settings, mainOnly: true }
 ];
 
-export default function AdminLayout({ onLogout }) {
+const adminLink = { to: '/admin/admins', label: 'Admins', icon: Users, mainOnly: true };
+
+export default function AdminLayout({ admin, onLogout }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const isMain = admin?.role === 'main';
+
+  const links = isMain
+    ? [...baseLinks.slice(0, 5), adminLink, baseLinks[5]]
+    : baseLinks.filter((l) => !l.mainOnly);
 
   async function logout() {
     try {
@@ -31,6 +40,7 @@ export default function AdminLayout({ onLogout }) {
       /* session may already be gone */
     }
     localStorage.removeItem('menata-admin-token');
+    localStorage.removeItem('menata-admin-user');
     onLogout();
     navigate('/admin/login', { replace: true });
   }
@@ -42,7 +52,7 @@ export default function AdminLayout({ onLogout }) {
           <img src={logo} alt="" width="42" />
           <div>
             <span>Menata Admin</span>
-            <small>Website editor</small>
+            <small>{isMain ? 'Main Admin' : 'Website Editor'}</small>
           </div>
         </div>
         <nav>
@@ -65,9 +75,12 @@ export default function AdminLayout({ onLogout }) {
             <img src={logo} alt="" width="36" />
             <span>Menata Admin</span>
           </div>
-          <button type="button" className="admin-logout admin-logout-mobile" onClick={logout}>
-            <LogOut size={18} aria-hidden="true" />
-          </button>
+          <div className="admin-topbar-actions">
+            {isMain && <AdminNotifications />}
+            <button type="button" className="admin-logout admin-logout-mobile" onClick={logout}>
+              <LogOut size={18} aria-hidden="true" />
+            </button>
+          </div>
         </header>
 
         <main className="admin-main">

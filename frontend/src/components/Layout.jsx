@@ -24,9 +24,12 @@ export default function Layout() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (pathname !== '/') window.scrollTo(0, 0);
     document.body.classList.toggle('no-action-bar', pathname === '/contact');
-    return () => document.body.classList.remove('no-action-bar');
+    document.body.classList.toggle('home-page', pathname === '/');
+    return () => {
+      document.body.classList.remove('no-action-bar', 'home-page');
+    };
   }, [pathname]);
 
   return (
@@ -59,10 +62,9 @@ export default function Layout() {
       <footer className="footer">
         <img src={logo} alt="" width="54" />
         <p className="footer-tagline">{settings.tagline}</p>
-        <p>
-          {settings.address} · {settings.phone}
-        </p>
-        <p className="footer-hours">{settings.hours}</p>
+        <NavLink to="/contact" className="footer-link">
+          {t.buttons.contactUs}
+        </NavLink>
       </footer>
 
       {pathname !== '/contact' && <MobileActionBar />}

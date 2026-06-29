@@ -70,6 +70,10 @@ export default function ContactAdmin() {
           Google Maps (linku)
           <input value={data.maps_url || ''} onChange={(e) => set('maps_url', e.target.value)} />
         </label>
+        <label>
+          Google Review (linku)
+          <input value={data.review_url || ''} onChange={(e) => set('review_url', e.target.value)} placeholder="Link për review në Google" />
+        </label>
         <button type="submit" className="admin-primary-btn" disabled={saving}>
           {saving ? 'Duke u ruajtur…' : 'Ruaj'}
         </button>

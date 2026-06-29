@@ -68,7 +68,7 @@ function ensureI18n(db) {
       'that make the atmosphere come alive.\n\n' +
       'It is this mix of good food, hospitality and time spent with people you care about that has made ' +
       'Menata one of the most loved spots in Prishtina. A tavern you visit for the food - and stay longer for the atmosphere.',
-    hours_en: 'Every day - 07:00 - 05:00',
+    hours_en: 'Every day - 07:00 - 03:00',
     drinks_note_en: 'Prices after midnight are +20%'
   };
   for (const [key, value] of Object.entries(EN_SETTINGS)) {

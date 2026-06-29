@@ -29,9 +29,11 @@ function signPayload(payload) {
   return `${body}.${sig}`;
 }
 
-function createAdminToken() {
+function createAdminToken(admin) {
   return signPayload({
     v: getTokenVersion(),
+    adminId: admin.id,
+    role: admin.role,
     iat: Date.now(),
     exp: Date.now() + MAX_AGE_MS
   });
@@ -83,12 +85,8 @@ function hasLegacySession(token) {
 }
 
 function requireAdmin(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ error: 'Nuk jeni të kyçur.' });
-
-  if (verifyAdminToken(token) || hasLegacySession(token)) return next();
-
-  return res.status(401).json({ error: 'Nuk jeni të kyçur.' });
+  const { attachAdmin } = require('./adminRoles');
+  return attachAdmin(req, res, next);
 }
 
 module.exports = {

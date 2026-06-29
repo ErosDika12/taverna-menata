@@ -23,6 +23,10 @@ function localized(raw, base, l) {
   return '';
 }
 
+function isDailyCategory(name) {
+  return /ditore|daily/i.test(name || '');
+}
+
 router.get('/menu', (req, res) => {
   const l = lang(req);
   const categories = db.prepare('SELECT * FROM categories ORDER BY sort, id').all();
@@ -41,7 +45,9 @@ router.get('/menu', (req, res) => {
   }, {});
 
   res.json(
-    categories.map((c) => ({
+    categories
+      .filter((c) => !isDailyCategory(c.name))
+      .map((c) => ({
       id: c.id,
       name: pick(c, 'name', l),
       type: c.type,
@@ -97,7 +103,8 @@ router.get('/settings', (req, res) => {
     home_intro: localized(raw, 'home_intro', l),
     about_text: localized(raw, 'about_text', l),
     hours: localized(raw, 'hours', l),
-    drinks_note: localized(raw, 'drinks_note', l)
+    drinks_note: localized(raw, 'drinks_note', l),
+    review_url: raw.review_url || raw.maps_url
   };
 
   res.json(out);

@@ -4,6 +4,7 @@
  */
 const BASE = process.argv[2] || 'https://taverna-menata.vercel.app';
 const PASSWORD = process.env.ADMIN_PASSWORD || 'menata2024';
+const EMAIL = process.env.ADMIN_EMAIL || 'admin@menata.local';
 
 const results = {};
 
@@ -15,7 +16,7 @@ async function req(path, options = {}) {
 }
 
 function hasAlbanianChars(text) {
-  return /[ùùùù]/.test(text);
+  return /[ÔøΩÔøΩÔøΩÔøΩ]/.test(text);
 }
 
 async function main() {
@@ -25,7 +26,7 @@ async function main() {
     const login = await req('/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: PASSWORD })
+      body: JSON.stringify({ email: EMAIL, password: PASSWORD })
     });
     const token = login.token;
     const auth = { Authorization: `Bearer ${token}` };
@@ -122,7 +123,7 @@ async function main() {
       results.galleryDelete = !galleryAfter.some((g) => g.id === uploadData.id);
     }
 
-    // Video endpoint exists (upload skipped ù no sample video file)
+    // Video endpoint exists (upload skipped ÔøΩ no sample video file)
     const videos = await req('/api/admin/videos', { headers: auth });
     results.videoEndpoint = Array.isArray(videos);
 

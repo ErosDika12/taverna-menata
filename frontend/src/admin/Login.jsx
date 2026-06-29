@@ -5,6 +5,7 @@ import logo from '../assets/logo.png';
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,17 +18,20 @@ export default function Login({ onLogin }) {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.error || 'Fjalëkalimi është i gabuar.');
+        throw new Error(data.error || 'Email ose fjalëkalimi është i gabuar.');
       }
       if (!data.token) {
         throw new Error('Nuk u mor tokeni i hyrjes. Provoni përsëri.');
       }
       localStorage.setItem('menata-admin-token', data.token);
-      onLogin();
+      if (data.admin) {
+        localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
+      }
+      onLogin(data.admin);
       navigate('/admin/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Nuk u lidh me serverin. Kontrolloni që backend është aktiv në portin 4000.');
@@ -42,6 +46,17 @@ export default function Login({ onLogin }) {
         <img src={logo} alt="Taverna Menata" width="80" />
         <h1>Menata Admin</h1>
         <p className="admin-login-sub">Hyni për të ndryshuar menynë, galerinë dhe tekstet e faqes.</p>
+        <label>
+          Email
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+            placeholder="admin@menata.local"
+            required
+          />
+        </label>
         <label>
           Fjalëkalimi
           <input

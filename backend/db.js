@@ -74,6 +74,34 @@ db.exec(`
     token      TEXT PRIMARY KEY,
     created_at INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS admins (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    email         TEXT NOT NULL UNIQUE,
+    name          TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    role          TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('main', 'editor')),
+    status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+    created_at    INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_activity (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+    section    TEXT NOT NULL,
+    action     TEXT NOT NULL,
+    details    TEXT,
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS admin_notifications (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    message        TEXT NOT NULL,
+    section        TEXT,
+    actor_admin_id INTEGER REFERENCES admins(id) ON DELETE SET NULL,
+    read           INTEGER NOT NULL DEFAULT 0,
+    created_at     INTEGER NOT NULL
+  );
 `);
 
 // Add columns on existing databases without wiping data.
@@ -205,11 +233,39 @@ function ensureAdminPassword(db) {
   }
 }
 
+function ensureAdminsTable() {
+  const count = db.prepare('SELECT COUNT(*) AS n FROM admins').get().n;
+  if (count > 0) return;
+
+  const pwRow = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get();
+  const defaultHash = pwRow?.value || hashPassword(process.env.ADMIN_PASSWORD || 'menata2024');
+  const now = Date.now();
+
+  db.prepare(
+    `INSERT INTO admins (email, name, password_hash, role, status, created_at)
+     VALUES (?, ?, ?, 'main', 'active', ?)`
+  ).run('admin@menata.local', 'Main Admin', defaultHash, now);
+}
+
+function migrateOpeningHours() {
+  const upsert = db.prepare(
+    'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+  );
+  for (const key of ['hours_sq', 'hours_en', 'hours']) {
+    const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
+    if (!row?.value) continue;
+    const updated = row.value.replace(/05:00/g, '03:00').replace(/05\.00/g, '03.00');
+    if (updated !== row.value) upsert.run(key, updated);
+  }
+}
+
 seedIfEmpty();
 
 const { ensureI18n } = require('./ensure-i18n');
 ensureI18n(db);
 ensureAdminPassword(db);
+ensureAdminsTable();
+migrateOpeningHours();
 
 if (require.main === module) {
   reseed();

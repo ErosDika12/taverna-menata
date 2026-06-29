@@ -16,7 +16,7 @@ module.exports = {
     'Pikërisht kjo lidhje mes ushqimit të mirë, mikpritjes dhe qejfit me njerëz të zemrës e ka bërë ' +
     'Menatën një nga vendet më të frekuentuara në Prishtinë. Një tavernë ku vjen për me ngrënë mirë, ' +
     'por rri më gjatë për atmosferën.',
-  hours_sq: 'Çdo ditë · 07:00 – 05:00',
+  hours_sq: 'Çdo ditë · 07:00 – 03:00',
   drinks_note_sq: 'Çmimet pas mesnatës janë +20%',
   address_sq: 'Rr. Faton Shabani, 10000 Prishtinë, Kosovë'
 };

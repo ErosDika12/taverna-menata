@@ -355,7 +355,7 @@ const settings = {
     'Pikùrisht kjo lidhje mes ushqimit tù mirù, mikpritjes dhe qejfit me njerùz tù zemrùs e ka bùrù ' +
     'Menatùn njù nga vendet mù tù frekuentuara nù Prishtinù. Njù tavernù ku vjen pùr me ngrùnù mirù, ' +
     'por rri mù gjatù pùr atmosferùn.',
-  hours_sq: 'ùdo ditù ù 07:00 ù 05:00',
+  hours_sq: 'ùdo ditù ù 07:00 ù 03:00',
   drinks_note_sq: 'ùmimet pas mesnatùs janù +20%',
   phone: '+383 48 533 555',
   whatsapp: '38348533555',
@@ -381,7 +381,7 @@ const settingsEn = {
     'that make the atmosphere come alive.\n\n' +
     'It is this mix of good food, hospitality and time spent with people you care about that has made ' +
     'Menata one of the most loved spots in Prishtina. A tavern you visit for the food ù and stay longer for the atmosphere.',
-  hours_en: 'Every day ù 07:00 ù 05:00',
+  hours_en: 'Every day ù 07:00 ù 03:00',
   drinks_note_en: 'Prices after midnight are +20%'
 };
 

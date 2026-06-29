@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Play, X } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
+import ItemPreviewModal from '../components/ItemPreviewModal';
 import { mediaUrl } from '../media';
 
 export default function Gallery() {
@@ -40,26 +41,36 @@ export default function Gallery() {
   }, [lang]);
 
   useEffect(() => {
-    if (openPhoto === null) return;
+    if (openVideo === null) return;
     function onKey(e) {
-      if (e.key === 'Escape') setOpenPhoto(null);
+      if (e.key === 'Escape') setOpenVideo(null);
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [openPhoto]);
+  }, [openVideo]);
+
+  const videoList = photos === null ? [] : (videos ?? []);
+  const visiblePhotos = section === 'all' ? (photos ?? []) : (photos ?? []).filter((p) => p.category === section);
+  const visibleVideos = section === 'all' ? videoList : videoList.filter((v) => v.category === section);
+
+  const previewItems = useMemo(
+    () =>
+      visiblePhotos.map((p) => ({
+        id: p.id,
+        name: p.alt || t.sections[p.category] || t.sections.food,
+        description: null,
+        price: null,
+        image: p.image
+      })),
+    [visiblePhotos, t.sections]
+  );
 
   if (photos === null) {
     return <div className="page-loading">{t.loading}</div>;
   }
 
-  const videoList = videos ?? [];
-
-  const visiblePhotos = section === 'all' ? photos : photos.filter((p) => p.category === section);
-  const visibleVideos = section === 'all' ? videoList : videoList.filter((v) => v.category === section);
-  const photo = openPhoto !== null ? visiblePhotos[openPhoto] : null;
-
   return (
-    <div className="page">
+    <div className="page" id="galeria">
       <header className="page-head">
         <h1>{t.title}</h1>
         <p>{t.subtitle}</p>
@@ -146,37 +157,14 @@ export default function Gallery() {
         </>
       )}
 
-      {photo && (
-        <div className="lightbox" role="dialog" onClick={() => setOpenPhoto(null)}>
-          <img src={mediaUrl(photo.image)} alt={photo.alt} decoding="async" onClick={(e) => e.stopPropagation()} />
-          <button className="lightbox-close" aria-label={t.close} onClick={() => setOpenPhoto(null)}>
-            <X size={28} />
-          </button>
-          {openPhoto > 0 && (
-            <button
-              className="lightbox-nav prev"
-              aria-label={t.prevPhoto}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenPhoto(openPhoto - 1);
-              }}
-            >
-              <ChevronLeft size={32} />
-            </button>
-          )}
-          {openPhoto < visiblePhotos.length - 1 && (
-            <button
-              className="lightbox-nav next"
-              aria-label={t.nextPhoto}
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenPhoto(openPhoto + 1);
-              }}
-            >
-              <ChevronRight size={32} />
-            </button>
-          )}
-        </div>
+      {openPhoto !== null && previewItems.length > 0 && (
+        <ItemPreviewModal
+          items={previewItems}
+          index={openPhoto}
+          categoryName={t.sections[section] || t.sections.all}
+          onClose={() => setOpenPhoto(null)}
+          onChange={setOpenPhoto}
+        />
       )}
 
       {openVideo && (
@@ -188,7 +176,7 @@ export default function Gallery() {
             preload="metadata"
             onClick={(e) => e.stopPropagation()}
           />
-          <button className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
+          <button type="button" className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
             <X size={28} />
           </button>
         </div>

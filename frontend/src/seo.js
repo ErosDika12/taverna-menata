@@ -1,52 +1,52 @@
-/** Per-page SEO copy — Albanian default, English alternate */
+/** Per-page SEO copy ï¿½ Albanian default, English alternate */
 
 export const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://taverna-menata.vercel.app';
 
 export const PAGE_SEO = {
   sq: {
     '/': {
-      title: 'Taverna Menata · Tavernë Tradicionale në Prishtinë',
+      title: 'Taverna Menata ï¿½ Tavernï¿½ Tradicionale nï¿½ Prishtinï¿½',
       description:
-        'Taverna Menata — tavernë tradicionale në Prishtinë. Gatime shtëpie, mish në skarë, meze dhe atmosferë familjare. Rr. Faton Shabani.'
+        'Taverna Menata ï¿½ tavernï¿½ tradicionale nï¿½ Prishtinï¿½. Gatime shtï¿½pie, mish nï¿½ skarï¿½, meze dhe atmosferï¿½ familjare. Rr. Faton Shabani.'
     },
     '/menu': {
-      title: 'Menyja · Taverna Menata',
-      description: 'Shiko menynë e plotë të Taverna Menata — ushqime tradicionale dhe pije në Prishtinë.'
+      title: 'Menyja ï¿½ Taverna Menata',
+      description: 'Shiko menynï¿½ e plotï¿½ tï¿½ Taverna Menata ï¿½ ushqime tradicionale dhe pije nï¿½ Prishtinï¿½.'
     },
     '/gallery': {
-      title: 'Galeria · Taverna Menata',
-      description: 'Foto dhe video nga Taverna Menata — ushqim, ambienti dhe atmosfera e restorantit.'
+      title: 'Galeria ï¿½ Taverna Menata',
+      description: 'Foto dhe video nga Taverna Menata ï¿½ ushqim, ambienti dhe atmosfera e restorantit.'
     },
     '/about': {
-      title: 'Historia · Taverna Menata',
-      description: 'Historia e Taverna Menata — një tavernë tradicionale në zemër të Prishtinës.'
+      title: 'Historia ï¿½ Taverna Menata',
+      description: 'Historia e Taverna Menata ï¿½ njï¿½ tavernï¿½ tradicionale nï¿½ zemï¿½r tï¿½ Prishtinï¿½s.'
     },
     '/contact': {
-      title: 'Kontakti · Taverna Menata',
-      description: 'Na kontaktoni — telefon, WhatsApp, adresa dhe orari i Taverna Menata në Prishtinë.'
+      title: 'Kontakti ï¿½ Taverna Menata',
+      description: 'Na kontaktoni ï¿½ telefon, WhatsApp, adresa dhe orari i Taverna Menata nï¿½ Prishtinï¿½.'
     }
   },
   en: {
     '/': {
-      title: 'Taverna Menata · Traditional Tavern in Prishtina',
+      title: 'Taverna Menata ï¿½ Traditional Tavern in Prishtina',
       description:
-        'Taverna Menata — a traditional tavern in Prishtina. Home-style cooking, grilled meat, meze and a warm atmosphere. Faton Shabani St.'
+        'Taverna Menata ï¿½ a traditional tavern in Prishtina. Home-style cooking, grilled meat, meze and a warm atmosphere. Faton Shabani St.'
     },
     '/menu': {
-      title: 'Menu · Taverna Menata',
-      description: 'Browse the full Taverna Menata menu — traditional food and drinks in Prishtina.'
+      title: 'Menu ï¿½ Taverna Menata',
+      description: 'Browse the full Taverna Menata menu ï¿½ traditional food and drinks in Prishtina.'
     },
     '/gallery': {
-      title: 'Gallery · Taverna Menata',
-      description: 'Photos and videos from Taverna Menata — food, interior and restaurant atmosphere.'
+      title: 'Gallery ï¿½ Taverna Menata',
+      description: 'Photos and videos from Taverna Menata ï¿½ food, interior and restaurant atmosphere.'
     },
     '/about': {
-      title: 'Our Story · Taverna Menata',
-      description: 'The story of Taverna Menata — a traditional tavern in the heart of Prishtina.'
+      title: 'Our Story ï¿½ Taverna Menata',
+      description: 'The story of Taverna Menata ï¿½ a traditional tavern in the heart of Prishtina.'
     },
     '/contact': {
-      title: 'Contact · Taverna Menata',
-      description: 'Get in touch — phone, WhatsApp, address and opening hours for Taverna Menata in Prishtina.'
+      title: 'Contact ï¿½ Taverna Menata',
+      description: 'Get in touch ï¿½ phone, WhatsApp, address and opening hours for Taverna Menata in Prishtina.'
     }
   }
 };

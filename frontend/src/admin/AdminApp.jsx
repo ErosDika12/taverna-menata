@@ -9,11 +9,13 @@ import GalleryAdmin from './GalleryAdmin';
 import ContentAdmin from './ContentAdmin';
 import ContactAdmin from './ContactAdmin';
 import LanguageAdmin from './LanguageAdmin';
+import AdminsAdmin from './AdminsAdmin';
 import '../admin.css';
 
 export default function AdminApp() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [admin, setAdmin] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem('menata-admin-token');
@@ -22,8 +24,15 @@ export default function AdminApp() {
       return;
     }
     adminFetch('/me')
-      .then(() => setAuthed(true))
-      .catch(() => localStorage.removeItem('menata-admin-token'))
+      .then((data) => {
+        setAuthed(true);
+        setAdmin(data.admin);
+        if (data.admin) localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
+      })
+      .catch(() => {
+        localStorage.removeItem('menata-admin-token');
+        localStorage.removeItem('menata-admin-user');
+      })
       .finally(() => setReady(true));
   }, []);
 
@@ -34,7 +43,7 @@ export default function AdminApp() {
   if (!authed) {
     return (
       <Routes>
-        <Route path="login" element={<Login onLogin={() => setAuthed(true)} />} />
+        <Route path="login" element={<Login onLogin={(a) => { setAuthed(true); setAdmin(a); }} />} />
         <Route path="*" element={<Navigate to="/admin/login" replace />} />
       </Routes>
     );
@@ -42,14 +51,18 @@ export default function AdminApp() {
 
   return (
     <Routes>
-      <Route element={<AdminLayout onLogout={() => setAuthed(false)} />}>
+      <Route element={<AdminLayout admin={admin} onLogout={() => { setAuthed(false); setAdmin(null); }} />}>
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard admin={admin} />} />
         <Route path="menu" element={<MenuAdmin />} />
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="content" element={<ContentAdmin />} />
         <Route path="contact" element={<ContactAdmin />} />
-        <Route path="settings" element={<LanguageAdmin />} />
+        <Route path="settings" element={<LanguageAdmin admin={admin} />} />
+        <Route
+          path="admins"
+          element={admin?.role === 'main' ? <AdminsAdmin /> : <Navigate to="/admin/dashboard" replace />}
+        />
         <Route path="language" element={<Navigate to="/admin/settings" replace />} />
       </Route>
       <Route path="login" element={<Navigate to="/admin/dashboard" replace />} />
