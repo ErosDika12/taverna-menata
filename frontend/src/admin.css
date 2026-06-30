@@ -751,6 +751,38 @@
   right: auto;
   bottom: calc(100% + 8px);
   top: auto;
+  color: var(--ink);
+}
+
+.admin-notif-panel {
+  color: var(--ink);
+}
+
+.admin-notif-message {
+  display: block;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.admin-notif-meta {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.admin-notif-meta strong {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.admin-notif-error {
+  padding: 8px 14px;
+  margin: 0;
+  color: #b42318;
+  font-size: 0.85rem;
 }
 
 .admin-access-denied {
@@ -872,6 +904,7 @@
   border-bottom: 1px solid var(--line);
   font-size: 0.9rem;
   line-height: 1.4;
+  color: var(--ink);
 }
 
 .admin-notif-panel li.unread {

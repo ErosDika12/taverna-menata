@@ -113,7 +113,11 @@ const migrations = [
   'ALTER TABLE items ADD COLUMN description_en TEXT',
   'ALTER TABLE items ADD COLUMN available INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE gallery ADD COLUMN alt_en TEXT',
-  'ALTER TABLE admins ADD COLUMN updated_at INTEGER'
+  'ALTER TABLE admins ADD COLUMN updated_at INTEGER',
+  'ALTER TABLE admin_notifications ADD COLUMN actor_email TEXT',
+  'ALTER TABLE admin_notifications ADD COLUMN actor_name TEXT',
+  'ALTER TABLE admin_notifications ADD COLUMN action TEXT',
+  'ALTER TABLE admin_notifications ADD COLUMN details TEXT'
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already applied */ }

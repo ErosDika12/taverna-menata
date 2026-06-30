@@ -7,6 +7,9 @@ const { uploadsRoot } = require('./upload');
 
 const app = express();
 
+const { importNotificationsRegistry } = require('./activity');
+importNotificationsRegistry();
+
 app.use(express.json({ limit: '2mb' }));
 
 function staticUploads(root) {

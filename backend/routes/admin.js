@@ -3,7 +3,7 @@ const db = require('../db');
 const { hashPassword, importAdminsRegistry, exportAdminsRegistry } = require('../db');
 const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { requireMainAdmin } = require('../middleware/adminRoles');
-const { logAdminActivity } = require('../activity');
+const { logAdminActivity, formatNotificationRow, importNotificationsRegistry } = require('../activity');
 const { uploadImage, uploadThumb, uploadMenuImage, uploadVideo, uploadVideoThumb, toUrl } = require('../upload');
 
 const router = Router();
@@ -64,15 +64,32 @@ router.get('/me', requireAdmin, (req, res) => {
 
 // --- Notifications (main admin only) ---
 router.get('/notifications', requireAdmin, requireMainAdmin, (_req, res) => {
+  importNotificationsRegistry();
   const rows = db
     .prepare(
-      `SELECT n.*, a.name AS actor_name
+      `SELECT n.id, n.message, n.section, n.actor_admin_id, n.actor_email, n.actor_name,
+              n.action, n.details, n.read, n.created_at, a.name AS actor_name_join, a.email AS actor_email_join
        FROM admin_notifications n
        LEFT JOIN admins a ON a.id = n.actor_admin_id
        ORDER BY n.created_at DESC
        LIMIT 100`
     )
-    .all();
+    .all()
+    .map((row) => ({
+      id: row.id,
+      section: row.section,
+      action: row.action,
+      details: row.details,
+      read: row.read,
+      created_at: row.created_at,
+      actor_email: row.actor_email || row.actor_email_join,
+      actor_name: row.actor_name || row.actor_name_join,
+      message: formatNotificationRow({
+        ...row,
+        actor_email: row.actor_email || row.actor_email_join,
+        actor_name: row.actor_name || row.actor_name_join
+      })
+    }));
   res.json(rows);
 });
 
