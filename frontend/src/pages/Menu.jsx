@@ -11,6 +11,10 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
+function isDailyCategoryName(name = '') {
+  return /ditore|daily/i.test(name);
+}
+
 function MenuItemRow({ item, onOpen }) {
   return (
     <li className="menu-item">
@@ -44,8 +48,9 @@ export default function Menu() {
   useEffect(() => {
     apiGet('/api/menu', lang)
       .then((data) => {
-        setCategories(data);
-        setActiveId(data.find((c) => c.type === 'food')?.id ?? null);
+        const filtered = data.filter((c) => !isDailyCategoryName(c.name));
+        setCategories(filtered);
+        setActiveId(filtered.find((c) => c.type === 'food')?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);

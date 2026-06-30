@@ -23,8 +23,13 @@ function localized(raw, base, l) {
   return '';
 }
 
-function isDailyCategory(name) {
-  return /ditore|daily/i.test(name || '');
+function isDailyCategory(name, nameEn) {
+  const sq = String(name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+  const en = String(nameEn || '').toLowerCase();
+  return sq.includes('ditore') || sq.includes('daily') || en.includes('daily');
 }
 
 router.get('/menu', (req, res) => {
@@ -46,7 +51,7 @@ router.get('/menu', (req, res) => {
 
   res.json(
     categories
-      .filter((c) => !isDailyCategory(c.name))
+      .filter((c) => !isDailyCategory(c.name, c.name_en))
       .map((c) => ({
       id: c.id,
       name: pick(c, 'name', l),

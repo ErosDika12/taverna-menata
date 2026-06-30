@@ -29,6 +29,10 @@ function formatPrice(price) {
 const PREVIEW_MENU_ITEMS = 6;
 const PREVIEW_GALLERY_PHOTOS = 8;
 
+function isDailyCategoryName(name = '') {
+  return /ditore|daily/i.test(name);
+}
+
 export default function Home() {
   const settings = useSettings();
   const { lang } = useLang();
@@ -55,7 +59,7 @@ export default function Home() {
 
   const menuPreview = useMemo(() => {
     if (!menuCategories?.length) return [];
-    const food = menuCategories.filter((c) => c.type === 'food');
+    const food = menuCategories.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name));
     const pool = food.flatMap((c) =>
       c.items.map((item) => ({ ...item, categoryName: c.name }))
     );
