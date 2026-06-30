@@ -1,15 +1,35 @@
 const db = require('./db');
 
-const SECTION_LABELS = {
-  menu: 'Menu',
-  gallery: 'Gallery',
-  text: 'Text',
-  contact: 'Contact',
-  settings: 'Settings'
+const SECTION_ITEM_LABELS = {
+  menu: 'Menu item',
+  gallery: 'Gallery item',
+  text: 'Text content',
+  contact: 'Contact content'
 };
 
 function formatTime(ts) {
-  return new Date(ts).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit', hour12: false });
+  return new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function notificationVerb(action) {
+  const lower = String(action).toLowerCase();
+  if (lower.includes('delete')) return 'deleted';
+  if (lower.includes('create') || lower.includes('upload') || lower.includes('add')) return 'added';
+  return 'changed';
+}
+
+function buildNotificationMessage(admin, section, action, details, now) {
+  const who = admin.email || admin.name || 'Website Editor';
+  const itemLabel = SECTION_ITEM_LABELS[section] || section;
+  const verb = notificationVerb(action);
+  const time = formatTime(now);
+
+  if (details) {
+    const item = String(details).replace(/^'|'$/g, '');
+    return `${who} ${verb} ${itemLabel} '${item}' at ${time}.`;
+  }
+
+  return `${who} ${verb} ${itemLabel} at ${time}.`;
 }
 
 function logAdminActivity(admin, section, action, details = '') {
@@ -22,14 +42,11 @@ function logAdminActivity(admin, section, action, details = '') {
 
   if (admin.role !== 'website_editor') return;
 
-  const sectionLabel = section === 'contact' ? 'Contact page' : SECTION_LABELS[section] || section;
-  const who = admin.name || admin.email || 'Website Editor';
-  const what = details ? `${action} ${details}` : action;
-  const message = `${who} updated ${sectionLabel} (${what}) at ${formatTime(now)}.`;
+  const message = buildNotificationMessage(admin, section, action, details, now);
 
   db.prepare(
     'INSERT INTO admin_notifications (message, section, actor_admin_id, read, created_at) VALUES (?, ?, ?, 0, ?)'
   ).run(message, section, admin.id, now);
 }
 
-module.exports = { logAdminActivity, SECTION_LABELS };
+module.exports = { logAdminActivity, SECTION_ITEM_LABELS };

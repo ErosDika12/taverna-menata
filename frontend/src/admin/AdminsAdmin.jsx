@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell, Users, Shield, UserCog, Trash2, PauseCircle, PlayCircle, Plus } from 'lucide-react';
 import { adminFetch } from '../api';
 
-const ROLE_LABELS = { main: 'Main Admin', editor: 'Website Editor' };
+const ROLE_LABELS = { main_admin: 'Main Admin', website_editor: 'Website Editor' };
 const STATUS_LABELS = { active: 'Active', suspended: 'Suspended' };
 
 export default function AdminsAdmin() {
@@ -103,7 +103,7 @@ export default function AdminsAdmin() {
               {admins.map((admin) => (
                 <tr key={admin.id}>
                   <td>
-                    {admin.role === 'main' ? <Shield size={14} aria-hidden="true" /> : <UserCog size={14} aria-hidden="true" />}{' '}
+                    {admin.role === 'main_admin' ? <Shield size={14} aria-hidden="true" /> : <UserCog size={14} aria-hidden="true" />}{' '}
                     {admin.name}
                   </td>
                   <td>{admin.email}</td>
@@ -115,7 +115,7 @@ export default function AdminsAdmin() {
                     <button type="button" className="admin-secondary-btn" onClick={() => showActivity(admin.id)}>
                       Activity
                     </button>
-                    {admin.role !== 'main' && (
+                    {admin.role !== 'main_admin' && (
                       <>
                         <button type="button" className="admin-secondary-btn" onClick={() => toggleSuspend(admin)}>
                           {admin.status === 'active' ? <PauseCircle size={16} /> : <PlayCircle size={16} />}

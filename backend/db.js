@@ -82,7 +82,8 @@ db.exec(`
     password_hash TEXT NOT NULL,
     role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
     status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
-    created_at    INTEGER NOT NULL
+    created_at    INTEGER NOT NULL,
+    updated_at    INTEGER NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS admin_activity (
@@ -111,11 +112,13 @@ const migrations = [
   'ALTER TABLE items ADD COLUMN name_en TEXT',
   'ALTER TABLE items ADD COLUMN description_en TEXT',
   'ALTER TABLE items ADD COLUMN available INTEGER NOT NULL DEFAULT 1',
-  'ALTER TABLE gallery ADD COLUMN alt_en TEXT'
+  'ALTER TABLE gallery ADD COLUMN alt_en TEXT',
+  'ALTER TABLE admins ADD COLUMN updated_at INTEGER'
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already applied */ }
 }
+db.prepare('UPDATE admins SET updated_at = created_at WHERE updated_at IS NULL').run();
 
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -242,9 +245,30 @@ function ensureAdminsTable() {
   const now = Date.now();
 
   db.prepare(
-    `INSERT INTO admins (email, name, password_hash, role, status, created_at)
-     VALUES (?, ?, ?, 'main_admin', 'active', ?)`
-  ).run('admin@menata.local', 'Main Admin', defaultHash, now);
+    `INSERT INTO admins (email, name, password_hash, role, status, created_at, updated_at)
+     VALUES (?, ?, ?, 'main_admin', 'active', ?, ?)`
+  ).run('admin@menata.local', 'Main Admin', defaultHash, now, now);
+}
+
+function ensureMainAdminAccount() {
+  const defaultHash = hashPassword(process.env.ADMIN_PASSWORD || 'menata2024');
+  const now = Date.now();
+  let main = db.prepare("SELECT * FROM admins WHERE role = 'main_admin' ORDER BY id ASC LIMIT 1").get();
+
+  if (!main) {
+    ensureAdminsTable();
+    main = db.prepare("SELECT * FROM admins WHERE role = 'main_admin' ORDER BY id ASC LIMIT 1").get();
+    if (!main) return;
+  }
+
+  const source = db.prepare("SELECT value FROM settings WHERE key = 'admin_password_source'").get()?.value;
+  const passwordHash = source === 'user' ? main.password_hash : defaultHash;
+
+  if (main.email !== 'admin@menata.local' || main.password_hash !== passwordHash) {
+    db.prepare(
+      "UPDATE admins SET email = 'admin@menata.local', password_hash = ?, updated_at = ? WHERE id = ?"
+    ).run(passwordHash, now, main.id);
+  }
 }
 
 function migrateAdminRolesSchema() {
@@ -268,9 +292,10 @@ function migrateAdminRolesSchema() {
       password_hash TEXT NOT NULL,
       role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
       status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
-      created_at    INTEGER NOT NULL
+      created_at    INTEGER NOT NULL,
+      updated_at    INTEGER NOT NULL
     );
-    INSERT INTO admins_new (id, email, name, password_hash, role, status, created_at)
+    INSERT INTO admins_new (id, email, name, password_hash, role, status, created_at, updated_at)
     SELECT
       id,
       email,
@@ -281,7 +306,8 @@ function migrateAdminRolesSchema() {
         ELSE 'website_editor'
       END,
       status,
-      created_at
+      created_at,
+      COALESCE(updated_at, created_at)
     FROM admins;
     DROP TABLE admins;
     ALTER TABLE admins_new RENAME TO admins;
@@ -308,6 +334,7 @@ ensureI18n(db);
 ensureAdminPassword(db);
 migrateAdminRolesSchema();
 ensureAdminsTable();
+ensureMainAdminAccount();
 migrateOpeningHours();
 
 if (require.main === module) {

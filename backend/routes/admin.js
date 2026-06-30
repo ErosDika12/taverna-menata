@@ -88,7 +88,7 @@ router.put('/notifications/:id/read', requireAdmin, requireMainAdmin, (req, res)
 // --- Admin management (main admin only) ---
 router.get('/admins', requireAdmin, requireMainAdmin, (_req, res) => {
   const admins = db
-    .prepare('SELECT id, email, name, role, status, created_at FROM admins ORDER BY role DESC, created_at ASC')
+    .prepare('SELECT id, email, name, role, status, created_at, updated_at FROM admins ORDER BY role DESC, created_at ASC')
     .all();
   res.json(admins);
 });
@@ -127,12 +127,13 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
   const exists = db.prepare('SELECT id FROM admins WHERE email = ? COLLATE NOCASE').get(email.trim());
   if (exists) return res.status(400).json({ error: 'Ky email ekziston tashmë.' });
 
+  const now = Date.now();
   const r = db
     .prepare(
-      `INSERT INTO admins (email, name, password_hash, role, status, created_at)
-       VALUES (?, ?, ?, 'website_editor', 'active', ?)`
+      `INSERT INTO admins (email, name, password_hash, role, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'website_editor', 'active', ?, ?)`
     )
-    .run(email.trim(), name.trim(), hashPassword(password), Date.now());
+    .run(email.trim(), name.trim(), hashPassword(password), now, now);
 
   logAdminActivity(req.admin, 'settings', 'created admin', name.trim());
   res.json({ id: r.lastInsertRowid });
@@ -145,7 +146,8 @@ router.put('/admins/:id/suspend', requireAdmin, requireMainAdmin, (req, res) => 
     return res.status(403).json({ error: 'Nuk mund të pezulloni administratorin kryesor.' });
   }
 
-  db.prepare("UPDATE admins SET status = 'suspended' WHERE id = ?").run(req.params.id);
+  const now = Date.now();
+  db.prepare("UPDATE admins SET status = 'suspended', updated_at = ? WHERE id = ?").run(now, req.params.id);
   logAdminActivity(req.admin, 'settings', 'suspended admin', target.name);
   res.json({ ok: true });
 });
@@ -154,7 +156,8 @@ router.put('/admins/:id/activate', requireAdmin, requireMainAdmin, (req, res) =>
   const target = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.params.id);
   if (!target) return res.status(404).json({ error: 'Admini nuk u gjet.' });
 
-  db.prepare("UPDATE admins SET status = 'active' WHERE id = ?").run(req.params.id);
+  const now = Date.now();
+  db.prepare("UPDATE admins SET status = 'active', updated_at = ? WHERE id = ?").run(now, req.params.id);
   logAdminActivity(req.admin, 'settings', 'activated admin', target.name);
   res.json({ ok: true });
 });
@@ -209,7 +212,8 @@ router.put('/password', requireAdmin, requireMainAdmin, (req, res) => {
   }
 
   const hash = hashPassword(next);
-  db.prepare('UPDATE admins SET password_hash = ? WHERE id = ?').run(hash, req.admin.id);
+  const now = Date.now();
+  db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, now, req.admin.id);
   db.prepare(
     "INSERT INTO settings (key, value) VALUES ('admin_password', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
   ).run(hash);
@@ -247,7 +251,7 @@ router.put('/categories/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.delete('/categories/:id', requireAdmin, requireMainAdmin, (req, res) => {
+router.delete('/categories/:id', requireAdmin, (req, res) => {
   const cat = db.prepare('SELECT name FROM categories WHERE id = ?').get(req.params.id);
   db.prepare('DELETE FROM categories WHERE id = ?').run(req.params.id);
   logAdminActivity(req.admin, 'menu', 'deleted category', cat?.name || '');

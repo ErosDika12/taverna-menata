@@ -58,7 +58,10 @@ export default function AdminApp() {
         <Route path="gallery" element={<GalleryAdmin />} />
         <Route path="content" element={<ContentAdmin />} />
         <Route path="contact" element={<ContactAdmin />} />
-        <Route path="settings" element={<LanguageAdmin admin={admin} />} />
+        <Route
+          path="settings"
+          element={admin?.role === 'main_admin' ? <LanguageAdmin admin={admin} /> : <Navigate to="/admin/dashboard" replace />}
+        />
         <Route
           path="admins"
           element={admin?.role === 'main_admin' ? <AdminsAdmin /> : <Navigate to="/admin/dashboard" replace />}
