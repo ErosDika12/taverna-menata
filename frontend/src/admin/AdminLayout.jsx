@@ -63,6 +63,11 @@ export default function AdminLayout({ admin, onLogout }) {
             </NavLink>
           ))}
         </nav>
+        {isMain && (
+          <div className="admin-sidebar-notifications">
+            <AdminNotifications variant="sidebar" />
+          </div>
+        )}
         <button type="button" className="admin-logout" onClick={logout}>
           <LogOut size={18} aria-hidden="true" />
           Logout

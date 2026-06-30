@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { adminFetch } from '../api';
 
-export default function AdminNotifications() {
+export default function AdminNotifications({ variant = 'default' }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
 
@@ -25,11 +25,12 @@ export default function AdminNotifications() {
   }
 
   return (
-    <div className="admin-notifications">
+    <div className={`admin-notifications ${variant === 'sidebar' ? 'admin-notifications-sidebar' : ''}`}>
       <button
         type="button"
         className="admin-notif-btn"
         aria-label="Notifications"
+        aria-expanded={open}
         onClick={() => {
           setOpen(!open);
           if (!open && unread) markAllRead();
@@ -37,6 +38,7 @@ export default function AdminNotifications() {
       >
         <Bell size={20} />
         {unread > 0 && <span className="admin-notif-badge">{unread}</span>}
+        {variant === 'sidebar' && <span className="admin-notif-label">Notifications</span>}
       </button>
 
       {open && (

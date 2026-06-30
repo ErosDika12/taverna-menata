@@ -10,6 +10,7 @@ import ContentAdmin from './ContentAdmin';
 import ContactAdmin from './ContactAdmin';
 import LanguageAdmin from './LanguageAdmin';
 import AdminsAdmin from './AdminsAdmin';
+import AccessDenied from './AccessDenied';
 import '../admin.css';
 
 export default function AdminApp() {
@@ -25,9 +26,12 @@ export default function AdminApp() {
     }
     adminFetch('/me')
       .then((data) => {
+        if (!data.admin?.role) {
+          throw new Error('Invalid session');
+        }
         setAuthed(true);
         setAdmin(data.admin);
-        if (data.admin) localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
+        localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
       })
       .catch(() => {
         localStorage.removeItem('menata-admin-token');
@@ -60,11 +64,11 @@ export default function AdminApp() {
         <Route path="contact" element={<ContactAdmin />} />
         <Route
           path="settings"
-          element={admin?.role === 'main_admin' ? <LanguageAdmin admin={admin} /> : <Navigate to="/admin/dashboard" replace />}
+          element={admin?.role === 'main_admin' ? <LanguageAdmin admin={admin} /> : <AccessDenied />}
         />
         <Route
           path="admins"
-          element={admin?.role === 'main_admin' ? <AdminsAdmin /> : <Navigate to="/admin/dashboard" replace />}
+          element={admin?.role === 'main_admin' ? <AdminsAdmin /> : <AccessDenied />}
         />
         <Route path="language" element={<Navigate to="/admin/settings" replace />} />
       </Route>

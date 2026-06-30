@@ -16,7 +16,7 @@ export default function ContentAdmin() {
     setSaving(true);
     try {
       await adminFetch('/settings', { method: 'PUT', body: data });
-      setMsg('U ruajt.');
+      setMsg('Saved. Changes appear on the public website after refresh.');
     } catch (err) {
       setMsg(err.message);
     } finally {
@@ -32,7 +32,7 @@ export default function ContentAdmin() {
     <div className="admin-page">
       <h1>Teksti i faqes</h1>
       <p className="admin-lead">Ndryshoni tekstet e ballinës, historisë dhe footer-it në të dy gjuhët.</p>
-      {msg && <p className={msg === 'U ruajt.' ? 'admin-msg' : 'admin-error'}>{msg}</p>}
+      {msg && <p className={msg.startsWith('Saved') ? 'admin-msg' : 'admin-error'}>{msg}</p>}
 
       <form className="admin-form" onSubmit={save}>
         <h2>Hero — titulli</h2>

@@ -142,7 +142,7 @@ export default function AdminsAdmin() {
               ) : (
                 adminActivity.map((row) => (
                   <li key={row.id}>
-                    <strong>{row.section}</strong> � {row.action}
+                    <strong>{row.section}</strong> · {row.action}
                     {row.details ? `: ${row.details}` : ''}
                     <small>{new Date(row.created_at).toLocaleString()}</small>
                   </li>
@@ -176,7 +176,7 @@ export default function AdminsAdmin() {
           />
         </label>
         <button type="submit" className="admin-primary-btn" disabled={saving}>
-          {saving ? 'Creating�' : 'Create Website Editor'}
+          {saving ? 'Creating…' : 'Create Website Editor'}
         </button>
       </form>
 
@@ -190,7 +190,7 @@ export default function AdminsAdmin() {
           ) : (
             activity.map((row) => (
               <li key={row.id}>
-                <strong>{row.admin_name}</strong> � {row.section}: {row.action}
+                <strong>{row.admin_name}</strong> · {row.section}: {row.action}
                 {row.details ? ` (${row.details})` : ''}
                 <small>{new Date(row.created_at).toLocaleString()}</small>
               </li>

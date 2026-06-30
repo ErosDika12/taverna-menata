@@ -16,7 +16,7 @@ export default function ContactAdmin() {
     setSaving(true);
     try {
       await adminFetch('/settings', { method: 'PUT', body: data });
-      setMsg('U ruajt.');
+      setMsg('Saved. Changes appear on the public website after refresh.');
     } catch (err) {
       setMsg(err.message);
     } finally {
@@ -31,7 +31,7 @@ export default function ContactAdmin() {
   return (
     <div className="admin-page">
       <h1>Kontakti</h1>
-      {msg && <p className={msg === 'U ruajt.' ? 'admin-msg' : 'admin-error'}>{msg}</p>}
+      {msg && <p className={msg.startsWith('Saved') ? 'admin-msg' : 'admin-error'}>{msg}</p>}
 
       <form className="admin-form" onSubmit={save}>
         <label>

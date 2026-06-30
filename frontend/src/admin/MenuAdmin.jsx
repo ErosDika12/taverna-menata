@@ -93,7 +93,7 @@ export default function MenuAdmin() {
       }
       setForm(null);
       await load();
-      setMsg('U ruajt.');
+      setMsg('Saved. Visible on the public menu after refresh.');
     } catch (err) {
       setMsg(err.message);
     } finally {
