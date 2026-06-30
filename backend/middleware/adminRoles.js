@@ -36,7 +36,7 @@ function attachAdmin(req, res, next) {
 
 function requireMainAdmin(req, res, next) {
   if (!req.admin) return res.status(401).json({ error: 'Nuk jeni t� ky�ur.' });
-  if (req.admin.role !== 'main') {
+  if (req.admin.role !== 'main_admin') {
     return res.status(403).json({ error: 'Vet�m administratori kryesor ka qasje n� k�t� seksion.' });
   }
   next();

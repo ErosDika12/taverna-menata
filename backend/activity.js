@@ -20,7 +20,7 @@ function logAdminActivity(admin, section, action, details = '') {
     'INSERT INTO admin_activity (admin_id, section, action, details, created_at) VALUES (?, ?, ?, ?, ?)'
   ).run(admin.id, section, action, details || null, now);
 
-  if (admin.role !== 'editor') return;
+  if (admin.role !== 'website_editor') return;
 
   const sectionLabel = section === 'contact' ? 'Contact page' : SECTION_LABELS[section] || section;
   const who = admin.name || admin.email || 'Website Editor';

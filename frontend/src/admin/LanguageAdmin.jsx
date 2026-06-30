@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { adminFetch } from '../api';
 
 export default function LanguageAdmin({ admin }) {
-  const isMain = admin?.role === 'main';
+  const isMain = admin?.role === 'main_admin';
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [msg, setMsg] = useState('');

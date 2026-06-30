@@ -27,7 +27,7 @@ const adminLink = { to: '/admin/admins', label: 'Admins', icon: Users, mainOnly:
 export default function AdminLayout({ admin, onLogout }) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const isMain = admin?.role === 'main';
+  const isMain = admin?.role === 'main_admin';
 
   const links = isMain
     ? [...baseLinks.slice(0, 5), adminLink, baseLinks[5]]

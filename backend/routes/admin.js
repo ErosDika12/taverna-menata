@@ -130,7 +130,7 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
   const r = db
     .prepare(
       `INSERT INTO admins (email, name, password_hash, role, status, created_at)
-       VALUES (?, ?, ?, 'editor', 'active', ?)`
+       VALUES (?, ?, ?, 'website_editor', 'active', ?)`
     )
     .run(email.trim(), name.trim(), hashPassword(password), Date.now());
 
@@ -141,7 +141,7 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
 router.put('/admins/:id/suspend', requireAdmin, requireMainAdmin, (req, res) => {
   const target = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.params.id);
   if (!target) return res.status(404).json({ error: 'Admini nuk u gjet.' });
-  if (target.role === 'main') {
+  if (target.role === 'main_admin') {
     return res.status(403).json({ error: 'Nuk mund të pezulloni administratorin kryesor.' });
   }
 
@@ -162,7 +162,7 @@ router.put('/admins/:id/activate', requireAdmin, requireMainAdmin, (req, res) =>
 router.delete('/admins/:id', requireAdmin, requireMainAdmin, (req, res) => {
   const target = db.prepare('SELECT * FROM admins WHERE id = ?').get(req.params.id);
   if (!target) return res.status(404).json({ error: 'Admini nuk u gjet.' });
-  if (target.role === 'main') {
+  if (target.role === 'main_admin') {
     return res.status(403).json({ error: 'Nuk mund të fshini administratorin kryesor.' });
   }
 

@@ -61,7 +61,7 @@ export default function AdminApp() {
         <Route path="settings" element={<LanguageAdmin admin={admin} />} />
         <Route
           path="admins"
-          element={admin?.role === 'main' ? <AdminsAdmin /> : <Navigate to="/admin/dashboard" replace />}
+          element={admin?.role === 'main_admin' ? <AdminsAdmin /> : <Navigate to="/admin/dashboard" replace />}
         />
         <Route path="language" element={<Navigate to="/admin/settings" replace />} />
       </Route>

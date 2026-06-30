@@ -80,7 +80,7 @@ db.exec(`
     email         TEXT NOT NULL UNIQUE,
     name          TEXT NOT NULL,
     password_hash TEXT NOT NULL,
-    role          TEXT NOT NULL DEFAULT 'editor' CHECK (role IN ('main', 'editor')),
+    role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
     status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
     created_at    INTEGER NOT NULL
   );
@@ -243,8 +243,50 @@ function ensureAdminsTable() {
 
   db.prepare(
     `INSERT INTO admins (email, name, password_hash, role, status, created_at)
-     VALUES (?, ?, ?, 'main', 'active', ?)`
+     VALUES (?, ?, ?, 'main_admin', 'active', ?)`
   ).run('admin@menata.local', 'Main Admin', defaultHash, now);
+}
+
+function migrateAdminRolesSchema() {
+  const row = db
+    .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'admins'")
+    .get();
+  if (!row?.sql) return;
+  const hasOldRoles = row.sql.includes("('main', 'editor')");
+  if (!hasOldRoles) {
+    db.prepare("UPDATE admins SET role = 'main_admin' WHERE role = 'main'").run();
+    db.prepare("UPDATE admins SET role = 'website_editor' WHERE role = 'editor'").run();
+    return;
+  }
+
+  db.exec(`
+    BEGIN;
+    CREATE TABLE admins_new (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      email         TEXT NOT NULL UNIQUE,
+      name          TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
+      status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+      created_at    INTEGER NOT NULL
+    );
+    INSERT INTO admins_new (id, email, name, password_hash, role, status, created_at)
+    SELECT
+      id,
+      email,
+      name,
+      password_hash,
+      CASE
+        WHEN role = 'main' THEN 'main_admin'
+        ELSE 'website_editor'
+      END,
+      status,
+      created_at
+    FROM admins;
+    DROP TABLE admins;
+    ALTER TABLE admins_new RENAME TO admins;
+    COMMIT;
+  `);
 }
 
 function migrateOpeningHours() {
@@ -264,6 +306,7 @@ seedIfEmpty();
 const { ensureI18n } = require('./ensure-i18n');
 ensureI18n(db);
 ensureAdminPassword(db);
+migrateAdminRolesSchema();
 ensureAdminsTable();
 migrateOpeningHours();
 
