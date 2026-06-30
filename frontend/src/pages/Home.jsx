@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Phone,
@@ -26,12 +26,12 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-const PREVIEW_MENU_ITEMS = 6;
-const PREVIEW_GALLERY_PHOTOS = 8;
-
 function isDailyCategoryName(name = '') {
   return /ditore|daily/i.test(name);
 }
+
+const PREVIEW_MENU_ITEMS = 6;
+const PREVIEW_GALLERY_PHOTOS = 8;
 
 export default function Home() {
   const settings = useSettings();
@@ -57,25 +57,24 @@ export default function Home() {
       .catch(() => setPhotos([]));
   }, [lang]);
 
-  const menuPreview = useMemo(() => {
+  const dailyCategory = useMemo(
+    () => menuCategories?.find((c) => c.type === 'food' && isDailyCategoryName(c.name)),
+    [menuCategories]
+  );
+
+  const regularMenuPreview = useMemo(() => {
     if (!menuCategories?.length) return [];
     const food = menuCategories.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name));
-    const pool = food.flatMap((c) =>
-      c.items.map((item) => ({ ...item, categoryName: c.name }))
-    );
+    const pool = food.flatMap((c) => c.items.map((item) => ({ ...item, categoryName: c.name })));
     return pool.slice(0, PREVIEW_MENU_ITEMS);
   }, [menuCategories]);
 
+  const dailyPreview = useMemo(() => (dailyCategory?.items || []).slice(0, PREVIEW_MENU_ITEMS), [dailyCategory]);
   const galleryPreview = useMemo(() => (photos || []).slice(0, PREVIEW_GALLERY_PHOTOS), [photos]);
 
-  function openMenuPreview(item) {
-    const items = menuPreview.map(({ categoryName, ...rest }) => rest);
-    const index = items.findIndex((i) => i.id === item.id);
-    setPreview({
-      items,
-      index: index >= 0 ? index : 0,
-      categoryName: item.categoryName
-    });
+  function openMenuPreview(item, list, categoryName) {
+    const index = list.findIndex((i) => i.id === item.id);
+    setPreview({ items: list, index: index >= 0 ? index : 0, categoryName });
   }
 
   function openGalleryPreview(photo, list) {
@@ -87,11 +86,7 @@ export default function Home() {
       image: p.image
     }));
     const index = list.findIndex((p) => p.id === photo.id);
-    setPreview({
-      items,
-      index: index >= 0 ? index : 0,
-      categoryName: tg.title
-    });
+    setPreview({ items, index: index >= 0 ? index : 0, categoryName: tg.title });
   }
 
   return (
@@ -137,23 +132,60 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="menu" className="home-section section home-menu">
+      <section id="menu-ditore" className="home-section section home-menu menu-section-daily">
         <div className="home-section-head">
-          <h2>{tm.title}</h2>
-          <p>{tm.subtitle}</p>
+          <h2>{tm.dailyTitle}</h2>
+          <p>{tm.dailySubtitle}</p>
         </div>
-        {menuCategories === null ? (
-          <p className="home-loading">{tm.loading}</p>
-        ) : menuPreview.length === 0 ? (
-          <p className="home-loading">{tm.loading}</p>
-        ) : (
+        {dailyCategory?.note && <p className="menu-note">{dailyCategory.note}</p>}
+        {dailyPreview.length > 0 ? (
           <ul className="menu-list home-menu-list">
-            {menuPreview.map((item) => (
+            {dailyPreview.map((item) => (
               <li key={item.id} className="menu-item">
                 <button
                   type="button"
                   className="menu-item-thumb"
-                  onClick={() => openMenuPreview(item)}
+                  onClick={() => openMenuPreview(item, dailyCategory.items, dailyCategory.name)}
+                  aria-label={item.name}
+                >
+                  {item.image ? (
+                    <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <span className="menu-item-no-img" />
+                  )}
+                </button>
+                <div className="menu-item-body">
+                  <div className="menu-item-row">
+                    <h3>{item.name}</h3>
+                    <span className="menu-item-price">{formatPrice(item.price)}</span>
+                  </div>
+                  {item.description && <p>{item.description}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="home-loading">{tm.loading}</p>
+        )}
+      </section>
+
+      <section id="menu" className="home-section section home-menu">
+        <div className="home-section-head">
+          <h2>{tm.regularTitle}</h2>
+          <p className="menu-subtitle-desktop">{tm.subtitle}</p>
+        </div>
+        {menuCategories === null ? (
+          <p className="home-loading">{tm.loading}</p>
+        ) : regularMenuPreview.length === 0 ? (
+          <p className="home-loading">{tm.loading}</p>
+        ) : (
+          <ul className="menu-list home-menu-list">
+            {regularMenuPreview.map((item) => (
+              <li key={item.id} className="menu-item">
+                <button
+                  type="button"
+                  className="menu-item-thumb"
+                  onClick={() => openMenuPreview(item, regularMenuPreview, item.categoryName)}
                   aria-label={item.name}
                 >
                   {item.image ? (

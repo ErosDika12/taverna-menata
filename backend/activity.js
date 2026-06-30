@@ -8,6 +8,10 @@ const SECTION_LABELS = {
   settings: 'Settings'
 };
 
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString('sq-AL', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 function logAdminActivity(admin, section, action, details = '') {
   if (!admin?.id) return;
 
@@ -18,9 +22,10 @@ function logAdminActivity(admin, section, action, details = '') {
 
   if (admin.role !== 'editor') return;
 
-  const sectionLabel =
-    section === 'contact' ? 'Contact page' : SECTION_LABELS[section] || section;
-  const message = `Website Editor updated ${sectionLabel}.`;
+  const sectionLabel = section === 'contact' ? 'Contact page' : SECTION_LABELS[section] || section;
+  const who = admin.name || admin.email || 'Website Editor';
+  const what = details ? `${action} ${details}` : action;
+  const message = `${who} updated ${sectionLabel} (${what}) at ${formatTime(now)}.`;
 
   db.prepare(
     'INSERT INTO admin_notifications (message, section, actor_admin_id, read, created_at) VALUES (?, ?, ?, 0, ?)'

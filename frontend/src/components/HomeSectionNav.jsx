@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import { ui } from '../translations';
 
-const SECTION_IDS = ['ballina', 'rreth-nesh', 'menu', 'galeria', 'directions', 'review', 'kontakt'];
+const SECTION_IDS = ['ballina', 'rreth-nesh', 'menu-ditore', 'menu', 'galeria', 'directions', 'review', 'kontakt'];
 
 export default function HomeSectionNav() {
   const { lang } = useLang();
@@ -35,7 +35,7 @@ export default function HomeSectionNav() {
     }
   }
 
-  const keys = ['ballina', 'about', 'menu', 'gallery', 'directions', 'review', 'contact'];
+  const keys = ['ballina', 'about', 'menuDitore', 'menu', 'gallery', 'directions', 'review', 'contact'];
 
   return (
     <nav className="home-section-nav" aria-label={labels.aria}>

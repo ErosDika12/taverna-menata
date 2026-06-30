@@ -23,15 +23,6 @@ function localized(raw, base, l) {
   return '';
 }
 
-function isDailyCategory(name, nameEn) {
-  const sq = String(name || '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '');
-  const en = String(nameEn || '').toLowerCase();
-  return sq.includes('ditore') || sq.includes('daily') || en.includes('daily');
-}
-
 router.get('/menu', (req, res) => {
   const l = lang(req);
   const categories = db.prepare('SELECT * FROM categories ORDER BY sort, id').all();
@@ -50,9 +41,7 @@ router.get('/menu', (req, res) => {
   }, {});
 
   res.json(
-    categories
-      .filter((c) => !isDailyCategory(c.name, c.name_en))
-      .map((c) => ({
+    categories.map((c) => ({
       id: c.id,
       name: pick(c, 'name', l),
       type: c.type,

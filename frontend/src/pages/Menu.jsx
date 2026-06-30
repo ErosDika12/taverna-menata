@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Phone } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
@@ -48,33 +48,36 @@ export default function Menu() {
   useEffect(() => {
     apiGet('/api/menu', lang)
       .then((data) => {
-        const filtered = data.filter((c) => !isDailyCategoryName(c.name));
-        setCategories(filtered);
-        setActiveId(filtered.find((c) => c.type === 'food')?.id ?? null);
+        setCategories(data);
+        const regularFood = data.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name));
+        setActiveId(regularFood[0]?.id ?? data.find((c) => c.type === 'food')?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);
 
-  const foodCategories = useMemo(() => categories?.filter((c) => c.type === 'food') ?? [], [categories]);
+  const dailyCategory = useMemo(
+    () => categories?.find((c) => c.type === 'food' && isDailyCategoryName(c.name)),
+    [categories]
+  );
+  const foodCategories = useMemo(
+    () => categories?.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name)) ?? [],
+    [categories]
+  );
   const drinkCategories = useMemo(() => categories?.filter((c) => c.type === 'drinks') ?? [], [categories]);
   const visible = type === 'food' ? foodCategories : drinkCategories;
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
 
   function switchType(next) {
     setType(next);
-    if (next === 'food') {
-      setActiveId(foodCategories[0]?.id ?? null);
-    } else {
-      setActiveId(drinkCategories[0]?.id ?? null);
-    }
+    setActiveId((next === 'food' ? foodCategories : drinkCategories)[0]?.id ?? null);
   }
 
-  function openPreview(item) {
-    const index = active.items.findIndex((i) => i.id === item.id);
+  function openPreview(item, list, categoryName) {
+    const index = list.findIndex((i) => i.id === item.id);
     setPreview({
-      items: active.items,
+      items: list,
       index: index >= 0 ? index : 0,
-      categoryName: active.name
+      categoryName
     });
   }
 
@@ -91,49 +94,74 @@ export default function Menu() {
         <p className="menu-subtitle-desktop">{t.subtitle}</p>
       </header>
 
-      <div className="menu-sticky">
-        <div className="menu-type" role="tablist">
-          <button
-            role="tab"
-            aria-selected={type === 'food'}
-            className={type === 'food' ? 'active' : ''}
-            onClick={() => switchType('food')}
-          >
-            {t.food}
-          </button>
-          <button
-            role="tab"
-            aria-selected={type === 'drinks'}
-            className={type === 'drinks' ? 'active' : ''}
-            onClick={() => switchType('drinks')}
-          >
-            {t.drinks}
-          </button>
-        </div>
+      {dailyCategory && (
+        <section id="menu-ditore" className="menu-section menu-section-daily">
+          <header className="menu-section-head">
+            <h2>{t.dailyTitle}</h2>
+            <p className="menu-section-sub">{t.dailySubtitle}</p>
+            {dailyCategory.note && <p className="menu-note">{dailyCategory.note}</p>}
+          </header>
+          <ul className="menu-list">
+            {dailyCategory.items.map((item) => (
+              <MenuItemRow
+                key={item.id}
+                item={item}
+                onOpen={() => openPreview(item, dailyCategory.items, dailyCategory.name)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
-        <div className="chips" role="tablist">
-          {visible.map((c) => (
+      <section id="menu" className="menu-section">
+        <header className="menu-section-head">
+          <h2>{t.regularTitle}</h2>
+        </header>
+
+        <div className="menu-sticky">
+          <div className="menu-type" role="tablist">
             <button
-              key={c.id}
               role="tab"
-              aria-selected={c.id === active?.id}
-              className={c.id === active?.id ? 'active' : ''}
-              onClick={() => setActiveId(c.id)}
+              aria-selected={type === 'food'}
+              className={type === 'food' ? 'active' : ''}
+              onClick={() => switchType('food')}
             >
-              {c.name}
+              {t.food}
             </button>
-          ))}
+            <button
+              role="tab"
+              aria-selected={type === 'drinks'}
+              className={type === 'drinks' ? 'active' : ''}
+              onClick={() => switchType('drinks')}
+            >
+              {t.drinks}
+            </button>
+          </div>
+
+          <div className="chips" role="tablist">
+            {visible.map((c) => (
+              <button
+                key={c.id}
+                role="tab"
+                aria-selected={c.id === active?.id}
+                className={c.id === active?.id ? 'active' : ''}
+                onClick={() => setActiveId(c.id)}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
-      {active?.note && <p className="menu-note">{active.note}</p>}
+        {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
+        {active?.note && <p className="menu-note">{active.note}</p>}
 
-      <ul className="menu-list">
-        {active?.items.map((item) => (
-          <MenuItemRow key={item.id} item={item} onOpen={openPreview} />
-        ))}
-      </ul>
+        <ul className="menu-list">
+          {active?.items.map((item) => (
+            <MenuItemRow key={item.id} item={item} onOpen={() => openPreview(item, active.items, active.name)} />
+          ))}
+        </ul>
+      </section>
 
       <section className="reserve-strip">
         <h2>{t.foundTitle}</h2>
