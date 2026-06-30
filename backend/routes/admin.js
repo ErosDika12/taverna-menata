@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const db = require('../db');
-const { hashPassword } = require('../db');
+const { hashPassword, importAdminsRegistry, exportAdminsRegistry } = require('../db');
 const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { requireMainAdmin } = require('../middleware/adminRoles');
 const { logAdminActivity } = require('../activity');
@@ -18,6 +18,7 @@ function handleUpload(middleware) {
 }
 
 function findAdminByCredentials(email, password) {
+  importAdminsRegistry();
   const admin = db.prepare('SELECT * FROM admins WHERE email = ? COLLATE NOCASE').get(email.trim());
   if (!admin) return null;
   if (admin.password_hash !== hashPassword(password)) return null;
@@ -136,6 +137,7 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
     .run(email.trim(), name.trim(), hashPassword(password), now, now);
 
   logAdminActivity(req.admin, 'settings', 'created admin', name.trim());
+  exportAdminsRegistry();
   res.json({ id: r.lastInsertRowid });
 });
 
@@ -149,6 +151,7 @@ router.put('/admins/:id/suspend', requireAdmin, requireMainAdmin, (req, res) => 
   const now = Date.now();
   db.prepare("UPDATE admins SET status = 'suspended', updated_at = ? WHERE id = ?").run(now, req.params.id);
   logAdminActivity(req.admin, 'settings', 'suspended admin', target.name);
+  exportAdminsRegistry();
   res.json({ ok: true });
 });
 
@@ -159,6 +162,7 @@ router.put('/admins/:id/activate', requireAdmin, requireMainAdmin, (req, res) =>
   const now = Date.now();
   db.prepare("UPDATE admins SET status = 'active', updated_at = ? WHERE id = ?").run(now, req.params.id);
   logAdminActivity(req.admin, 'settings', 'activated admin', target.name);
+  exportAdminsRegistry();
   res.json({ ok: true });
 });
 
@@ -171,6 +175,7 @@ router.delete('/admins/:id', requireAdmin, requireMainAdmin, (req, res) => {
 
   db.prepare('DELETE FROM admins WHERE id = ?').run(req.params.id);
   logAdminActivity(req.admin, 'settings', 'deleted admin', target.name);
+  exportAdminsRegistry();
   res.json({ ok: true });
 });
 

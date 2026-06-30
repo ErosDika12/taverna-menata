@@ -327,6 +327,69 @@ function migrateOpeningHours() {
   }
 }
 
+function exportAdminsRegistry() {
+  const admins = db
+    .prepare('SELECT id, email, name, password_hash, role, status, created_at, updated_at FROM admins')
+    .all();
+  db.prepare(
+    "INSERT INTO settings (key, value) VALUES ('admin_registry', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+  ).run(JSON.stringify(admins));
+}
+
+function importAdminsRegistry() {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_registry'").get();
+  if (!row?.value) return;
+
+  let admins;
+  try {
+    admins = JSON.parse(row.value);
+  } catch {
+    return;
+  }
+  if (!Array.isArray(admins)) return;
+
+  const upsert = db.prepare(
+    `INSERT INTO admins (id, email, name, password_hash, role, status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       email = excluded.email,
+       name = excluded.name,
+       password_hash = CASE WHEN excluded.password_hash != '' THEN excluded.password_hash ELSE admins.password_hash END,
+       role = excluded.role,
+       status = excluded.status,
+       updated_at = excluded.updated_at`
+  );
+
+  db.transaction(() => {
+    for (const admin of admins) {
+      if (!admin?.email || !admin?.role) continue;
+      upsert.run(
+        admin.id,
+        admin.email,
+        admin.name || admin.email,
+        admin.password_hash || '',
+        admin.role,
+        admin.status || 'active',
+        admin.created_at || Date.now(),
+        admin.updated_at || admin.created_at || Date.now()
+      );
+    }
+  })();
+}
+
+function importAdminsFromEnv() {
+  const raw = process.env.MENATA_ADMIN_REGISTRY;
+  if (!raw) return;
+  try {
+    db.prepare(
+      "INSERT INTO settings (key, value) VALUES ('admin_registry', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+    ).run(raw);
+    importAdminsRegistry();
+  } catch {
+    /* ignore malformed env */
+  }
+}
+
 seedIfEmpty();
 
 const { ensureI18n } = require('./ensure-i18n');
@@ -335,6 +398,9 @@ ensureAdminPassword(db);
 migrateAdminRolesSchema();
 ensureAdminsTable();
 ensureMainAdminAccount();
+importAdminsFromEnv();
+importAdminsRegistry();
+exportAdminsRegistry();
 migrateOpeningHours();
 
 if (require.main === module) {
@@ -343,3 +409,5 @@ if (require.main === module) {
 
 module.exports = db;
 module.exports.hashPassword = hashPassword;
+module.exports.exportAdminsRegistry = exportAdminsRegistry;
+module.exports.importAdminsRegistry = importAdminsRegistry;

@@ -34,6 +34,9 @@ function createAdminToken(admin) {
     v: getTokenVersion(),
     adminId: admin.id,
     role: admin.role,
+    email: admin.email,
+    name: admin.name,
+    status: admin.status,
     iat: Date.now(),
     exp: Date.now() + MAX_AGE_MS
   });

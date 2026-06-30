@@ -36,17 +36,21 @@ function logAdminActivity(admin, section, action, details = '') {
   if (!admin?.id) return;
 
   const now = Date.now();
-  db.prepare(
-    'INSERT INTO admin_activity (admin_id, section, action, details, created_at) VALUES (?, ?, ?, ?, ?)'
-  ).run(admin.id, section, action, details || null, now);
+  try {
+    db.prepare(
+      'INSERT INTO admin_activity (admin_id, section, action, details, created_at) VALUES (?, ?, ?, ?, ?)'
+    ).run(admin.id, section, action, details || null, now);
 
-  if (admin.role !== 'website_editor') return;
+    if (admin.role !== 'website_editor') return;
 
-  const message = buildNotificationMessage(admin, section, action, details, now);
+    const message = buildNotificationMessage(admin, section, action, details, now);
 
-  db.prepare(
-    'INSERT INTO admin_notifications (message, section, actor_admin_id, read, created_at) VALUES (?, ?, ?, 0, ?)'
-  ).run(message, section, admin.id, now);
+    db.prepare(
+      'INSERT INTO admin_notifications (message, section, actor_admin_id, read, created_at) VALUES (?, ?, ?, 0, ?)'
+    ).run(message, section, admin.id, now);
+  } catch {
+    /* activity log is best-effort on serverless */
+  }
 }
 
 module.exports = { logAdminActivity, SECTION_ITEM_LABELS };
