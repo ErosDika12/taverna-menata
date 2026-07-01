@@ -57,7 +57,9 @@ export const ui = {
     preview: {
       close: 'Mbyll',
       prev: 'Artikulli i mëparshëm',
-      next: 'Artikulli tjetër'
+      next: 'Artikulli tjetër',
+      swipeHorizontal: 'Rrëshqit majtas / djathtas',
+      swipeClose: 'Rrëshqit poshtë për mbyllje'
     },
     about: {
       title: 'Historia jonë',
@@ -137,7 +139,9 @@ export const ui = {
     preview: {
       close: 'Close',
       prev: 'Previous item',
-      next: 'Next item'
+      next: 'Next item',
+      swipeHorizontal: 'Swipe left / right',
+      swipeClose: 'Swipe down to close'
     },
     about: {
       title: 'Our story',
