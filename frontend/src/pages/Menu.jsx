@@ -88,16 +88,12 @@ export default function Menu() {
     <div className="page">
       <header className="page-head">
         <h1>{t.title}</h1>
-        <p className="menu-subtitle-desktop">{t.subtitle}</p>
-        <p className="menu-subtitle-desktop menu-price-euro-note">{t.priceEuroNote}</p>
       </header>
 
       {dailyCategory && (
         <section id="menu-ditore" className="menu-section menu-section-daily">
           <header className="menu-section-head">
             <h2>{t.dailyTitle}</h2>
-            <p className="menu-section-sub menu-subtitle-desktop">{t.dailySubtitle}</p>
-            {dailyCategory.note && <p className="menu-note">{dailyCategory.note}</p>}
           </header>
           <ul className="menu-list">
             {dailyCategory.items.map((item) => (

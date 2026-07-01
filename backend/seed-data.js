@@ -5,39 +5,39 @@ const categories = [
   {
     name: 'Meny Ditore',
     type: 'food',
-    note: 'Shrbehet do dit deri n ora 17:00',
+    note: 'Shï¿½rbehet ï¿½do ditï¿½ deri nï¿½ ora 17:00',
     items: [
-      { name: 'Mngjes Menata', price: 4.5, description: 'Vez n furr, tortilla me spinaq, mocarela, tomatina, qep e re', image: '/uploads/gallery/dsc00765.jpg' },
-      { name: 'Mngjes Fshati', price: 5, description: 'Vez n sy, virshlle pule t frguara, qumsht, gjalp, marmelad, djath i bardh, qep e re', image: '/uploads/gallery/dsc00787.jpg' },
-      { name: 'Omlet', price: 4, description: 'Vez t tundura e t frguara, djath i bardh, domate, tranguj, qep e re' },
-      { name: 'Omlet mix', price: 5, description: 'Suxhuk / Prshut / Spanaq / Perime / Gjiz' },
-      { name: 'Vez n sy', price: 4, description: 'Vez n sy, djath i bardh, domate, tranguj, ullinj, qep e re' },
-      { name: 'Buk e frguar me vez', price: 4, description: 'Ajvar / djath / Nutella' },
-      { name: 'Leqenik', price: 2.5, description: 'Dy copa leqenik me spinaq, djath i bardh, qumsht, qep e re' },
-      { name: 'Pallaqinka', price: 3.5, description: 'Ajvar / djath / marmelad / Nutella' },
-      { name: 'Pogaqe me suxhuk', price: 5.5, description: 'Maz me speca n tav, pogaqe e shtpis me suxhuk, djath i bardh, perime sezonale, qep e re' },
-      { name: 'Pogaqe me maz', price: 5, description: 'Maz me speca n tav, pogaqe e shtpis, djath i bardh, perime sezonale, qep e re' },
-      { name: 'Sup me perime', price: 2, image: '/uploads/gallery/_dsc6317.jpg' },
-      { name: 'Sup me pul', price: 2 },
-      { name: 'Sendviq vegjetarian', price: 4.5, description: 'Sendviq n pet me perime, patate t frguara dhe sos i bardh' },
-      { name: 'Sendviq me prshut', price: 5, description: 'Sendviq n pet me prshut, patate t frguara dhe sos i bardh' },
-      { name: 'Sendviq me pul', price: 5, description: 'Sendviq n pet me mish pule, patate t frguara dhe sos i bardh' },
-      { name: 'Tav me makarona', price: 5, description: 'Makarona, mish pule me sos t bardh dhe kakavall, djath i bardh, spec turshi, kpurdha' },
-      { name: 'Tav boloneze', price: 5.5, description: 'Makarona me mish t bluar, salc domatesh dhe kakavall, djath i bardh dhe spec turshi' }
+      { name: 'Mï¿½ngjes Menata', price: 4.5, description: 'Vezï¿½ nï¿½ furrï¿½, tortilla me spinaq, mocarela, tomatina, qepï¿½ e re', image: '/uploads/gallery/dsc00765.jpg' },
+      { name: 'Mï¿½ngjes Fshati', price: 5, description: 'Vezï¿½ nï¿½ sy, virshlle pule tï¿½ fï¿½rguara, qumï¿½sht, gjalpï¿½, marmeladï¿½, djath i bardhï¿½, qepï¿½ e re', image: '/uploads/gallery/dsc00787.jpg' },
+      { name: 'Omlet', price: 4, description: 'Vezï¿½ tï¿½ tundura e tï¿½ fï¿½rguara, djath i bardhï¿½, domate, tranguj, qepï¿½ e re' },
+      { name: 'Omlet mix', price: 5, description: 'Suxhuk / Pï¿½rshutï¿½ / Spanaq / Perime / Gjizï¿½' },
+      { name: 'Vezï¿½ nï¿½ sy', price: 4, description: 'Vezï¿½ nï¿½ sy, djath i bardhï¿½, domate, tranguj, ullinj, qepï¿½ e re' },
+      { name: 'Bukï¿½ e fï¿½rguar me vezï¿½', price: 4, description: 'Ajvar / djath / Nutella' },
+      { name: 'Leqenik', price: 2.5, description: 'Dy copa leqenik me spinaq, djath i bardhï¿½, qumï¿½sht, qepï¿½ e re' },
+      { name: 'Pallaqinka', price: 3.5, description: 'Ajvar / djath / marmeladï¿½ / Nutella' },
+      { name: 'Pogaqe me suxhuk', price: 5.5, description: 'Mazï¿½ me speca nï¿½ tavï¿½, pogaqe e shtï¿½pisï¿½ me suxhuk, djath i bardhï¿½, perime sezonale, qepï¿½ e re' },
+      { name: 'Pogaqe me mazï¿½', price: 5, description: 'Mazï¿½ me speca nï¿½ tavï¿½, pogaqe e shtï¿½pisï¿½, djath i bardhï¿½, perime sezonale, qepï¿½ e re' },
+      { name: 'Supï¿½ me perime', price: 2, image: '/uploads/gallery/_dsc6317.jpg' },
+      { name: 'Supï¿½ me pulï¿½', price: 2 },
+      { name: 'Sendviq vegjetarian', price: 4.5, description: 'Sendviq nï¿½ petï¿½ me perime, patate tï¿½ fï¿½rguara dhe sos i bardhï¿½' },
+      { name: 'Sendviq me pï¿½rshutï¿½', price: 5, description: 'Sendviq nï¿½ petï¿½ me pï¿½rshutï¿½, patate tï¿½ fï¿½rguara dhe sos i bardhï¿½' },
+      { name: 'Sendviq me pulï¿½', price: 5, description: 'Sendviq nï¿½ petï¿½ me mish pule, patate tï¿½ fï¿½rguara dhe sos i bardhï¿½' },
+      { name: 'Tavï¿½ me makarona', price: 5, description: 'Makarona, mish pule me sos tï¿½ bardhï¿½ dhe kaï¿½kavall, djath i bardhï¿½, spec turshi, kï¿½purdha' },
+      { name: 'Tavï¿½ boloneze', price: 5.5, description: 'Makarona me mish tï¿½ bluar, salcï¿½ domatesh dhe kaï¿½kavall, djath i bardhï¿½ dhe spec turshi' }
     ]
   },
   {
     name: 'Sallata',
     type: 'food',
     items: [
-      { name: 'Sallat shope', price: 5, description: 'Domate, tranguj dhe djath i bardh' },
-      { name: 'Sallat greke', price: 5, description: 'Domate, tranguj, qep, spec, ullinj dhe djath i bardh' },
-      { name: 'Sallat e shpis', price: 6, description: 'Lakr, sallat e gjelbr, domate, tranguj, vez t zier, ullinj, spec turshi, karrot', image: '/uploads/gallery/dsc04443.jpg' },
-      { name: 'Sallat tuna', price: 5.5, image: '/uploads/gallery/dsc08098.jpg' },
-      { name: 'Sallat caesar', price: 5.5 },
-      { name: 'Kombinim turshi', price: 3, description: 'Pjat sezonale' },
-      { name: 'Turshi Menata', price: 5, description: 'Pjat sezonale' },
-      { name: 'Lakr turshi', price: 3, description: 'Pjat sezonale' },
+      { name: 'Sallatï¿½ shope', price: 5, description: 'Domate, tranguj dhe djath i bardhï¿½' },
+      { name: 'Sallatï¿½ greke', price: 5, description: 'Domate, tranguj, qepï¿½, spec, ullinj dhe djath i bardhï¿½' },
+      { name: 'Sallatï¿½ e shpisï¿½', price: 6, description: 'Lakï¿½r, sallatï¿½ e gjelbï¿½r, domate, tranguj, vezï¿½ tï¿½ zier, ullinj, spec turshi, karrotï¿½', image: '/uploads/gallery/dsc04443.jpg' },
+      { name: 'Sallatï¿½ tuna', price: 5.5, image: '/uploads/gallery/dsc08098.jpg' },
+      { name: 'Sallatï¿½ caesar', price: 5.5 },
+      { name: 'Kombinim turshi', price: 3, description: 'Pjatï¿½ sezonale' },
+      { name: 'Turshi Menata', price: 5, description: 'Pjatï¿½ sezonale' },
+      { name: 'Lakï¿½r turshi', price: 3, description: 'Pjatï¿½ sezonale' },
       { name: 'Speca turshi', price: 3 }
     ]
   },
@@ -45,46 +45,46 @@ const categories = [
     name: 'Pjata Kryesore',
     type: 'food',
     items: [
-      { name: 'Pleskavic', price: 5, description: 'Pleskavic, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Ushtipka', price: 5.5, description: 'Ushtipka, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Kofsh pule', price: 5.5, description: 'Kofsh pule, kpurdha dhe perime t frguara, sallat me patate' },
-      { name: 'Gjoks pule', price: 9, description: 'Gjoks pule me mocarela, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Tul vii', price: 10, description: 'Tul vii, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Muskuj', price: 10, description: 'Muskuj, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Kotlet', price: 13, description: 'Kotlet, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Brinj kingji', price: 13, description: 'Brinj kingji, kpurdha dhe perime t frguara, sallat me patate, sos shpije' },
-      { name: 'Biftek', price: 19, description: 'Biftek, kpurdha dhe perime t frguara, sallat me patate, sos shpije', image: '/uploads/gallery/dsc07243.jpg' },
-      { name: 'Kombinim 1', price: 30, description: 'Suxhuk, pleskavic, ushtipka, kofsh pule, muskuj, perime n skar, kpurdha, sallat me patate, sos shpije', image: '/uploads/gallery/dsc03575.jpg' },
-      { name: 'Kombinim 2', price: 40, description: 'Tul vii, muskuj, kotlet, brinj kingji, kofsh pule, kpurdha, perime n skar, sallat me patate, sos shpije', image: '/uploads/gallery/dsc09322.jpg' },
-      { name: 'Kombinim 3', price: 48, description: 'Kombinim i mishrave n tav' },
-      { name: 'Meze e nxeht (e madhe)', price: 18, description: 'Patate t frguara, virshlle vii, krah pule, djath me susam, kpurdha, onion rings, 2 sosa', image: '/uploads/gallery/_dsc3487.jpg' },
-      { name: 'Meze e nxeht (e vogl)', price: 10, description: 'Patate t frguara, virshlle vii, krah pule, djath me susam, kpurdha, onion rings, 2 sosa' },
-      { name: 'Meze e ftoht (e madhe)', price: 17, description: 'Tranguj turshi, karrota, djath sharri, kakavall, suxhuk, prshut, ullinj, arra, cranberry, sos i bardh', image: '/uploads/gallery/_dsc3319.jpg' },
-      { name: 'Meze e ftoht (e vogl)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kakavall, suxhuk, prshut, ullinj, arra, cranberry, sos i bardh' },
+      { name: 'Pleskavicï¿½', price: 5, description: 'Pleskavicï¿½, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Ushtipka', price: 5.5, description: 'Ushtipka, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Kofshï¿½ pule', price: 5.5, description: 'Kofshï¿½ pule, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate' },
+      { name: 'Gjoks pule', price: 9, description: 'Gjoks pule me mocarela, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Tul viï¿½i', price: 10, description: 'Tul viï¿½i, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Muskuj', price: 10, description: 'Muskuj, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Kotlet', price: 13, description: 'Kotlet, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Brinjï¿½ kingji', price: 13, description: 'Brinjï¿½ kingji, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije' },
+      { name: 'Biftek', price: 19, description: 'Biftek, kï¿½purdha dhe perime tï¿½ fï¿½rguara, sallatï¿½ me patate, sos shpije', image: '/uploads/gallery/dsc07243.jpg' },
+      { name: 'Kombinim 1', price: 30, description: 'Suxhuk, pleskavicï¿½, ushtipka, kofshï¿½ pule, muskuj, perime nï¿½ skarï¿½, kï¿½purdha, sallatï¿½ me patate, sos shpije', image: '/uploads/gallery/dsc03575.jpg' },
+      { name: 'Kombinim 2', price: 40, description: 'Tul viï¿½i, muskuj, kotlet, brinjï¿½ kingji, kofshï¿½ pule, kï¿½purdha, perime nï¿½ skarï¿½, sallatï¿½ me patate, sos shpije', image: '/uploads/gallery/dsc09322.jpg' },
+      { name: 'Kombinim 3', price: 48, description: 'Kombinim i mishrave nï¿½ tavï¿½' },
+      { name: 'Meze e nxehtï¿½ (e madhe)', price: 18, description: 'Patate tï¿½ fï¿½rguara, virshlle viï¿½i, krahï¿½ pule, djath me susam, kï¿½purdha, onion rings, 2 sosa', image: '/uploads/gallery/_dsc3487.jpg' },
+      { name: 'Meze e nxehtï¿½ (e vogï¿½l)', price: 10, description: 'Patate tï¿½ fï¿½rguara, virshlle viï¿½i, krahï¿½ pule, djath me susam, kï¿½purdha, onion rings, 2 sosa' },
+      { name: 'Meze e ftohtï¿½ (e madhe)', price: 17, description: 'Tranguj turshi, karrota, djath sharri, kaï¿½kavall, suxhuk, pï¿½rshutï¿½, ullinj, arra, cranberry, sos i bardhï¿½', image: '/uploads/gallery/_dsc3319.jpg' },
+      { name: 'Meze e ftohtï¿½ (e vogï¿½l)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kaï¿½kavall, suxhuk, pï¿½rshutï¿½, ullinj, arra, cranberry, sos i bardhï¿½' },
       { name: 'Biftek 1 kg', price: 65 },
-      { name: 'Specialitet Menata', price: 13, description: 'Mish n tel i mbshtjell me ajvar dhe kakavall' }
+      { name: 'Specialitet Menata', price: 13, description: 'Mish nï¿½ tel i mbï¿½shtjellï¿½ me ajvar dhe kaï¿½kavall' }
     ]
   },
   {
     name: 'Pjata Shtes\u00eb',
     type: 'food',
     items: [
-      { name: 'Buk bageti e rreshkur', price: 1.5 },
+      { name: 'Bukï¿½ bageti e rreshkur', price: 1.5 },
       { name: 'Kos', price: 1.5 },
       { name: 'Ajvar', price: 1.5 },
       { name: 'Tarator', price: 2 },
-      { name: 'Pjat me salsa', price: 3 },
-      { name: 'Sallat me patate', price: 2.5 },
-      { name: 'Speca me hudr', price: 2.5 },
-      { name: 'Speca t djegs', price: 3 },
-      { name: 'Kpurdha t frguara', price: 4 },
-      { name: 'Kpurdha n tav', price: 4.5, description: 'T prgatitura n tav me spinaq' },
-      { name: 'Kpurdh e mbushur', price: 6, description: 'Me spinaq dhe gorgonzola' },
+      { name: 'Pjatï¿½ me salsa', price: 3 },
+      { name: 'Sallatï¿½ me patate', price: 2.5 },
+      { name: 'Speca me hudï¿½r', price: 2.5 },
+      { name: 'Speca tï¿½ djegï¿½s', price: 3 },
+      { name: 'Kï¿½purdha tï¿½ fï¿½rguara', price: 4 },
+      { name: 'Kï¿½purdha nï¿½ tavï¿½', price: 4.5, description: 'Tï¿½ pï¿½rgatitura nï¿½ tavï¿½ me spinaq' },
+      { name: 'Kï¿½purdhï¿½ e mbushur', price: 6, description: 'Me spinaq dhe gorgonzola' },
       { name: 'Brusketa', price: 3.5 },
-      { name: 'Perime t frguara', price: 4, image: '/uploads/gallery/_dsc3358.jpg' },
-      { name: 'Djath me susam', price: 4, description: 'Shrbehet me mjalt' },
-      { name: 'Djath i frguar', price: 4.5 },
-      { name: 'Pjat me djathra', price: 5, description: 'Djath dele, dhie, lope, sharri, ullinj dhe vaj ulliri' }
+      { name: 'Perime tï¿½ fï¿½rguara', price: 4, image: '/uploads/gallery/_dsc3358.jpg' },
+      { name: 'Djath me susam', price: 4, description: 'Shï¿½rbehet me mjaltï¿½' },
+      { name: 'Djath i fï¿½rguar', price: 4.5 },
+      { name: 'Pjatï¿½ me djathï¿½ra', price: 5, description: 'Djath dele, dhie, lope, sharri, ullinj dhe vaj ulliri' }
     ]
   },
   {
@@ -258,65 +258,65 @@ const categories = [
 
 // category: food | interior | exterior | atmosphere
 const gallery = [
-  { file: 'dsc00765.jpg', category: 'food', alt: 'Mngjes i pasur me vez, tortilla dhe lng portokalli' },
-  { file: 'dsc00787.jpg', category: 'food', alt: 'Mngjes fshati me vez n sy, virshlle, djath dhe domate' },
-  { file: 'dsc01666.jpg', category: 'food', alt: 'Tortilla n skar me patate dhe sos shtpie' },
-  { file: 'dsc01710.jpg', category: 'food', alt: 'Drras me meze n tavolin druri' },
-  { file: 'dsc01719.jpg', category: 'food', alt: 'Gatim i ngroht me sos shtpie' },
-  { file: 'dsc03575.jpg', category: 'food', alt: 'Pjat e madhe me mish n skar, onion rings dhe sosa' },
-  { file: 'dsc03617.jpg', category: 'food', alt: 'Tavolin e shtruar me sallata dhe pjata n skar' },
-  { file: 'dsc04443.jpg', category: 'food', alt: 'Sallat e freskt e shpis me misr dhe karrota' },
-  { file: 'dsc07129.jpg', category: 'food', alt: 'Kokteli i veant i Menats' },
-  { file: 'dsc07173.jpg', category: 'food', alt: 'Koktel i kuq n banak' },
-  { file: 'dsc07243.jpg', category: 'food', alt: 'Biftek me perime n skar dhe sallat me patate' },
-  { file: 'dsc07252.jpg', category: 'food', alt: 'Pjat me mish n skar, kpurdha dhe sos shpije' },
-  { file: 'dsc07294.jpg', category: 'food', alt: 'Drek me sallat, mish n skar dhe pije' },
-  { file: 'dsc07305.jpg', category: 'food', alt: 'Pjat kryesore me nj got ver t kuqe' },
-  { file: 'dsc07425.jpg', category: 'food', alt: 'Mish n skar me birr t ftoht' },
-  { file: 'dsc07972.jpg', category: 'food', alt: 'Kapuino dhe lng portokalli i freskt' },
-  { file: 'dsc07994.jpg', category: 'food', alt: 'Kafe dhe lng n oborr' },
-  { file: 'dsc08025.jpg', category: 'food', alt: 'Koktela freskuese n diell' },
-  { file: 'dsc08051.jpg', category: 'food', alt: 'Drek e leht n terrac' },
-  { file: 'dsc08098.jpg', category: 'food', alt: 'Sallat tuna me limon dhe vaj ulliri' },
-  { file: 'dsc08143.jpg', category: 'food', alt: 'Pjata t shtruara gati pr shrbim' },
-  { file: 'dsc09322.jpg', category: 'food', alt: 'Pjat e przier skare me speca t pjekur dhe domate' },
-  { file: '_dsc0858.jpg', category: 'food', alt: 'Gatime tradicionale n en balte' },
-  { file: '_dsc0892.jpg', category: 'food', alt: 'Tav tradicionale n en balte' },
-  { file: '_dsc0896.jpg', category: 'food', alt: 'Sofr tradicionale me sup dhe buk shtpie' },
-  { file: '_dsc0943.jpg', category: 'food', alt: 'Pjata shtpie mbi mbules tradicionale' },
-  { file: '_dsc0980.jpg', category: 'food', alt: 'Sarma n en balte tradicionale' },
-  { file: '_dsc3302.jpg', category: 'food', alt: 'Drras me meze t ftoht, djathra dhe suxhuk' },
-  { file: '_dsc3319.jpg', category: 'food', alt: 'Meze e ftoht me djath sharri dhe prshut' },
-  { file: '_dsc3358.jpg', category: 'food', alt: 'Perime dhe kpurdha t pjekura n drras druri' },
-  { file: '_dsc3362.jpg', category: 'food', alt: 'Drras me perime t pjekura dhe speca' },
-  { file: '_dsc3487.jpg', category: 'food', alt: 'Meze e nxeht me suxhuk dhe onion rings' },
-  { file: '_dsc3941.jpg', category: 'food', alt: 'Shots shumngjyrshe n banak' },
-  { file: '_dsc6308.jpg', category: 'food', alt: 'Sup, pasul dhe buk shtpie' },
-  { file: '_dsc6317.jpg', category: 'food', alt: 'Sup me perime e shoqruar me leqenik' },
-  { file: 'dsc02300.jpg', category: 'interior', alt: 'Salla kryesore me pemn dhe dritat e ngrohta' },
-  { file: 'dsc02320.jpg', category: 'interior', alt: 'Drita e ngroht npr dritaret e taverns' },
-  { file: 'dsc02323.jpg', category: 'interior', alt: 'Muri me fotografi pran banakut' },
-  { file: 'dsc09455.jpg', category: 'interior', alt: 'Salla e ngroht me tavolina druri' },
+  { file: 'dsc00765.jpg', category: 'food', alt: 'Mï¿½ngjes i pasur me vezï¿½, tortilla dhe lï¿½ng portokalli' },
+  { file: 'dsc00787.jpg', category: 'food', alt: 'Mï¿½ngjes fshati me vezï¿½ nï¿½ sy, virshlle, djath dhe domate' },
+  { file: 'dsc01666.jpg', category: 'food', alt: 'Tortilla nï¿½ skarï¿½ me patate dhe sos shtï¿½pie' },
+  { file: 'dsc01710.jpg', category: 'food', alt: 'Dï¿½rrasï¿½ me meze nï¿½ tavolinï¿½ druri' },
+  { file: 'dsc01719.jpg', category: 'food', alt: 'Gatim i ngrohtï¿½ me sos shtï¿½pie' },
+  { file: 'dsc03575.jpg', category: 'food', alt: 'Pjatï¿½ e madhe me mish nï¿½ skarï¿½, onion rings dhe sosa' },
+  { file: 'dsc03617.jpg', category: 'food', alt: 'Tavolinï¿½ e shtruar me sallata dhe pjata nï¿½ skarï¿½' },
+  { file: 'dsc04443.jpg', category: 'food', alt: 'Sallatï¿½ e freskï¿½t e shpisï¿½ me misï¿½r dhe karrota' },
+  { file: 'dsc07129.jpg', category: 'food', alt: 'Kokteli i veï¿½antï¿½ i Menatï¿½s' },
+  { file: 'dsc07173.jpg', category: 'food', alt: 'Koktel i kuq nï¿½ banak' },
+  { file: 'dsc07243.jpg', category: 'food', alt: 'Biftek me perime nï¿½ skarï¿½ dhe sallatï¿½ me patate' },
+  { file: 'dsc07252.jpg', category: 'food', alt: 'Pjatï¿½ me mish nï¿½ skarï¿½, kï¿½purdha dhe sos shpije' },
+  { file: 'dsc07294.jpg', category: 'food', alt: 'Drekï¿½ me sallatï¿½, mish nï¿½ skarï¿½ dhe pije' },
+  { file: 'dsc07305.jpg', category: 'food', alt: 'Pjatï¿½ kryesore me njï¿½ gotï¿½ verï¿½ tï¿½ kuqe' },
+  { file: 'dsc07425.jpg', category: 'food', alt: 'Mish nï¿½ skarï¿½ me birrï¿½ tï¿½ ftohtï¿½' },
+  { file: 'dsc07972.jpg', category: 'food', alt: 'Kapuï¿½ino dhe lï¿½ng portokalli i freskï¿½t' },
+  { file: 'dsc07994.jpg', category: 'food', alt: 'Kafe dhe lï¿½ng nï¿½ oborr' },
+  { file: 'dsc08025.jpg', category: 'food', alt: 'Koktela freskuese nï¿½ diell' },
+  { file: 'dsc08051.jpg', category: 'food', alt: 'Drekï¿½ e lehtï¿½ nï¿½ terracï¿½' },
+  { file: 'dsc08098.jpg', category: 'food', alt: 'Sallatï¿½ tuna me limon dhe vaj ulliri' },
+  { file: 'dsc08143.jpg', category: 'food', alt: 'Pjata tï¿½ shtruara gati pï¿½r shï¿½rbim' },
+  { file: 'dsc09322.jpg', category: 'food', alt: 'Pjatï¿½ e pï¿½rzier skare me speca tï¿½ pjekur dhe domate' },
+  { file: '_dsc0858.jpg', category: 'food', alt: 'Gatime tradicionale nï¿½ enï¿½ balte' },
+  { file: '_dsc0892.jpg', category: 'food', alt: 'Tavï¿½ tradicionale nï¿½ enï¿½ balte' },
+  { file: '_dsc0896.jpg', category: 'food', alt: 'Sofï¿½r tradicionale me supï¿½ dhe bukï¿½ shtï¿½pie' },
+  { file: '_dsc0943.jpg', category: 'food', alt: 'Pjata shtï¿½pie mbi mbulesï¿½ tradicionale' },
+  { file: '_dsc0980.jpg', category: 'food', alt: 'Sarma nï¿½ enï¿½ balte tradicionale' },
+  { file: '_dsc3302.jpg', category: 'food', alt: 'Dï¿½rrasï¿½ me meze tï¿½ ftohtï¿½, djathï¿½ra dhe suxhuk' },
+  { file: '_dsc3319.jpg', category: 'food', alt: 'Meze e ftohtï¿½ me djath sharri dhe pï¿½rshutï¿½' },
+  { file: '_dsc3358.jpg', category: 'food', alt: 'Perime dhe kï¿½purdha tï¿½ pjekura nï¿½ dï¿½rrasï¿½ druri' },
+  { file: '_dsc3362.jpg', category: 'food', alt: 'Dï¿½rrasï¿½ me perime tï¿½ pjekura dhe speca' },
+  { file: '_dsc3487.jpg', category: 'food', alt: 'Meze e nxehtï¿½ me suxhuk dhe onion rings' },
+  { file: '_dsc3941.jpg', category: 'food', alt: 'Shots shumï¿½ngjyrï¿½she nï¿½ banak' },
+  { file: '_dsc6308.jpg', category: 'food', alt: 'Supï¿½, pasul dhe bukï¿½ shtï¿½pie' },
+  { file: '_dsc6317.jpg', category: 'food', alt: 'Supï¿½ me perime e shoqï¿½ruar me leqenik' },
+  { file: 'dsc02300.jpg', category: 'interior', alt: 'Salla kryesore me pemï¿½n dhe dritat e ngrohta' },
+  { file: 'dsc02320.jpg', category: 'interior', alt: 'Drita e ngrohtï¿½ nï¿½pï¿½r dritaret e tavernï¿½s' },
+  { file: 'dsc02323.jpg', category: 'interior', alt: 'Muri me fotografi pranï¿½ banakut' },
+  { file: 'dsc09455.jpg', category: 'interior', alt: 'Salla e ngrohtï¿½ me tavolina druri' },
   { file: 'dsc09459.jpg', category: 'interior', alt: 'Ambient tradicional me qilima dhe piktura' },
-  { file: 'dsc09461.jpg', category: 'interior', alt: 'Knd i ngroht me piktura dhe bim' },
-  { file: 'dsc09629.jpg', category: 'interior', alt: 'Tavolina t larta rreth pems brenda taverns' },
-  { file: 'dsc09411.jpg', category: 'exterior', alt: 'Ulset e oborrit nn pergol' },
-  { file: 'dsc09427.jpg', category: 'exterior', alt: 'Hyrja prej druri e taverns' },
-  { file: 'dsc09433.jpg', category: 'exterior', alt: 'Kndi i oborrit me karrige shumngjyrshe' },
-  { file: 'dsc09465.jpg', category: 'exterior', alt: 'Oborri me pemn e ullirit' },
-  { file: '_dsc4000.jpg', category: 'exterior', alt: 'Pamje e terracs mes gjelbrimit' },
-  { file: '_dsc9727.jpg', category: 'exterior', alt: 'Korridori i jashtm me stola' },
-  { file: 'dsc07530.jpg', category: 'atmosphere', alt: 'Terraca n mbrmje' },
-  { file: 'dsc08124.jpg', category: 'atmosphere', alt: 'Drek nn hijen e pems n oborr' },
-  { file: 'dsc09312.jpg', category: 'atmosphere', alt: 'Mish i freskt duke u pjekur n skar' },
-  { file: 'dsc09338.jpg', category: 'atmosphere', alt: 'Shoqria duke i shijuar pijet n oborr' },
-  { file: 'dsc09350.jpg', category: 'atmosphere', alt: 'Mbrmje me drita n oborr' },
-  { file: '_dsc3472.jpg', category: 'atmosphere', alt: 'Meze dhe ver n mbrmje' },
-  { file: '_dsc9857.jpg', category: 'atmosphere', alt: 'Birr e freskt nga banaku' }
+  { file: 'dsc09461.jpg', category: 'interior', alt: 'Kï¿½nd i ngrohtï¿½ me piktura dhe bimï¿½' },
+  { file: 'dsc09629.jpg', category: 'interior', alt: 'Tavolina tï¿½ larta rreth pemï¿½s brenda tavernï¿½s' },
+  { file: 'dsc09411.jpg', category: 'exterior', alt: 'Ulï¿½set e oborrit nï¿½n pergolï¿½' },
+  { file: 'dsc09427.jpg', category: 'exterior', alt: 'Hyrja prej druri e tavernï¿½s' },
+  { file: 'dsc09433.jpg', category: 'exterior', alt: 'Kï¿½ndi i oborrit me karrige shumï¿½ngjyrï¿½she' },
+  { file: 'dsc09465.jpg', category: 'exterior', alt: 'Oborri me pemï¿½n e ullirit' },
+  { file: '_dsc4000.jpg', category: 'exterior', alt: 'Pamje e terracï¿½s mes gjelbï¿½rimit' },
+  { file: '_dsc9727.jpg', category: 'exterior', alt: 'Korridori i jashtï¿½m me stola' },
+  { file: 'dsc07530.jpg', category: 'atmosphere', alt: 'Terraca nï¿½ mbrï¿½mje' },
+  { file: 'dsc08124.jpg', category: 'atmosphere', alt: 'Drekï¿½ nï¿½n hijen e pemï¿½s nï¿½ oborr' },
+  { file: 'dsc09312.jpg', category: 'atmosphere', alt: 'Mish i freskï¿½t duke u pjekur nï¿½ skarï¿½' },
+  { file: 'dsc09338.jpg', category: 'atmosphere', alt: 'Shoqï¿½ria duke i shijuar pijet nï¿½ oborr' },
+  { file: 'dsc09350.jpg', category: 'atmosphere', alt: 'Mbrï¿½mje me drita nï¿½ oborr' },
+  { file: '_dsc3472.jpg', category: 'atmosphere', alt: 'Meze dhe verï¿½ nï¿½ mbrï¿½mje' },
+  { file: '_dsc9857.jpg', category: 'atmosphere', alt: 'Birrï¿½ e freskï¿½t nga banaku' }
 ];
 
 const categoryTranslations = {
-  'Meny Ditore': { name_en: 'Daily Menu', note_en: 'Served daily until 17:00' },
+  'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },
   'Pjata Shtes\u00eb': { name_en: 'Side Dishes' },
@@ -341,27 +341,27 @@ const videos = [];
 const settings = {
   site_name: 'Taverna Menata',
   hero_image: '/uploads/gallery/dsc09455.jpg',
-  tagline_sq: 'Trimat i prcjell fati, maraklit qefi.',
+  tagline_sq: 'Trimat i pï¿½rcjell fati, maraklitï¿½ qefi.',
   home_intro_sq:
-    'Tavern tradicionale n zemr t Prishtins  prej mngjesit hert deri te mezet e nats. ' +
-    'Nj vend ku vjen pr me ngrn mir, por rri m gjat pr atmosfern.',
+    'Tavernï¿½ tradicionale nï¿½ zemï¿½r tï¿½ Prishtinï¿½s ï¿½ prej mï¿½ngjesit herï¿½t deri te mezet e natï¿½s. ' +
+    'Njï¿½ vend ku vjen pï¿½r me ngrï¿½nï¿½ mirï¿½, por rri mï¿½ gjatï¿½ pï¿½r atmosferï¿½n.',
   about_text_sq:
-    'Taverna Menata sht prej atyre vendeve ku dita mund t nis hert e t prfundoj von, ' +
-    'gjithmon me shije, shoqni dhe atmosfer t mir.\n\n' +
-    'N mngjes, Menata t pret me ushqime t freskta e t thjeshta, si n shpi. N drek, tavolina ' +
-    'mbushet me pjata t ngrohta, gatime tradicionale, kuzhin t pasur dhe shije q t kujtojn sofrn ' +
-    'familjare. Ndrsa n mbrmje, vendi merr tjetr ritm  birra t ftohta, mish, muzik, neja dhe ' +
-    'shoqni q e bjn atmosfern edhe m t gjall.\n\n' +
-    'Pikrisht kjo lidhje mes ushqimit t mir, mikpritjes dhe qejfit me njerz t zemrs e ka br ' +
-    'Menatn nj nga vendet m t frekuentuara n Prishtin. Nj tavern ku vjen pr me ngrn mir, ' +
-    'por rri m gjat pr atmosfern.',
-  hours_sq: 'do dit  07:00  03:00',
-  drinks_note_sq: 'mimet pas mesnats jan +20%',
+    'Taverna Menata ï¿½shtï¿½ prej atyre vendeve ku dita mund tï¿½ nisï¿½ herï¿½t e tï¿½ pï¿½rfundojï¿½ vonï¿½, ' +
+    'gjithmonï¿½ me shije, shoqni dhe atmosferï¿½ tï¿½ mirï¿½.\n\n' +
+    'Nï¿½ mï¿½ngjes, Menata tï¿½ pret me ushqime tï¿½ freskï¿½ta e tï¿½ thjeshta, si nï¿½ shpi. Nï¿½ drekï¿½, tavolina ' +
+    'mbushet me pjata tï¿½ ngrohta, gatime tradicionale, kuzhinï¿½ tï¿½ pasur dhe shije qï¿½ tï¿½ kujtojnï¿½ sofrï¿½n ' +
+    'familjare. Ndï¿½rsa nï¿½ mbrï¿½mje, vendi merr tjetï¿½r ritï¿½m ï¿½ birra tï¿½ ftohta, mish, muzikï¿½, neja dhe ' +
+    'shoqni qï¿½ e bï¿½jnï¿½ atmosferï¿½n edhe mï¿½ tï¿½ gjallï¿½.\n\n' +
+    'Pikï¿½risht kjo lidhje mes ushqimit tï¿½ mirï¿½, mikpritjes dhe qejfit me njerï¿½z tï¿½ zemrï¿½s e ka bï¿½rï¿½ ' +
+    'Menatï¿½n njï¿½ nga vendet mï¿½ tï¿½ frekuentuara nï¿½ Prishtinï¿½. Njï¿½ tavernï¿½ ku vjen pï¿½r me ngrï¿½nï¿½ mirï¿½, ' +
+    'por rri mï¿½ gjatï¿½ pï¿½r atmosferï¿½n.',
+  hours_sq: 'ï¿½do ditï¿½ ï¿½ 07:00 ï¿½ 03:00',
+  drinks_note_sq: 'ï¿½mimet pas mesnatï¿½s janï¿½ +20%',
   phone: '+383 48 533 555',
   whatsapp: '38348533555',
   instagram: 'https://www.instagram.com/tavernamenata',
   facebook: 'https://www.facebook.com/tavernamenata',
-  address: 'Rr. Faton Shabani, 10000 Prishtin, Kosov',
+  address: 'Rr. Faton Shabani, 10000 Prishtinï¿½, Kosovï¿½',
   maps_url: 'https://www.google.com/maps/search/?api=1&query=Taverna+Menata+Prishtina'
 };
 
@@ -370,18 +370,18 @@ const settingsEn = {
   address_en: 'Faton Shabani St., 10000 Prishtina, Kosovo',
   tagline_en: 'Fortune follows the brave; good company brings cheer.',
   home_intro_en:
-    'A traditional tavern in the heart of Prishtina  from early breakfasts to late-night meze. ' +
+    'A traditional tavern in the heart of Prishtina ï¿½ from early breakfasts to late-night meze. ' +
     'A place you come for the food, and stay for the atmosphere.',
   about_text_en:
-    'Taverna Menata is one of those places where the day can start early and end late  ' +
+    'Taverna Menata is one of those places where the day can start early and end late ï¿½ ' +
     'always with good food, good company and a warm atmosphere.\n\n' +
     'In the morning, Menata welcomes you with fresh, simple dishes, just like at home. At lunch, ' +
     'the tables fill with warm plates, traditional cooking and flavours that bring back the family table. ' +
-    'In the evening, the place takes on a different rhythm  cold beer, grilled meat, music and friends ' +
+    'In the evening, the place takes on a different rhythm ï¿½ cold beer, grilled meat, music and friends ' +
     'that make the atmosphere come alive.\n\n' +
     'It is this mix of good food, hospitality and time spent with people you care about that has made ' +
-    'Menata one of the most loved spots in Prishtina. A tavern you visit for the food  and stay longer for the atmosphere.',
-  hours_en: 'Every day  07:00  03:00',
+    'Menata one of the most loved spots in Prishtina. A tavern you visit for the food ï¿½ and stay longer for the atmosphere.',
+  hours_en: 'Every day ï¿½ 07:00 ï¿½ 03:00',
   drinks_note_en: 'Prices after midnight are +20%'
 };
 

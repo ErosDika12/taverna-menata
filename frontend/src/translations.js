@@ -33,10 +33,7 @@ export const ui = {
     },
     menu: {
       title: 'Menyja',
-      subtitle: 'Çmimet me diskutim',
-      priceEuroNote: 'Të gjitha çmimet janë në euro',
       dailyTitle: 'Menu Ditore',
-      dailySubtitle: 'Pjata ditore të ndara nga menuja e rregullt',
       regularTitle: 'Menu',
       food: 'Ushqime',
       drinks: 'Pije',
@@ -80,18 +77,7 @@ export const ui = {
       mapTitle: 'Taverna Menata në hartë'
     },
     loading: 'Duke u ngarkuar…',
-    a11y: { mainNav: 'Navigimi kryesor' },
-    homeSections: {
-      aria: 'Navigimi i seksioneve',
-      ballina: 'Ballina',
-      about: 'Rreth nesh',
-      menuDitore: 'Menu Ditore',
-      menu: 'Menu',
-      gallery: 'Galeria',
-      directions: 'Si të vish',
-      review: 'Review',
-      contact: 'Kontakt'
-    }
+    a11y: { mainNav: 'Navigimi kryesor' }
   },
   en: {
     nav: { home: 'Home', menu: 'Menu', gallery: 'Gallery', about: 'About', contact: 'Contact' },
@@ -127,10 +113,7 @@ export const ui = {
     },
     menu: {
       title: 'Menu',
-      subtitle: 'Prices negotiable',
-      priceEuroNote: 'All prices are in euro',
       dailyTitle: 'Daily Menu',
-      dailySubtitle: 'Daily dishes separated from the regular menu',
       regularTitle: 'Menu',
       food: 'Food',
       drinks: 'Drinks',
@@ -174,17 +157,6 @@ export const ui = {
       mapTitle: 'Taverna Menata on the map'
     },
     loading: 'Loading…',
-    a11y: { mainNav: 'Main navigation' },
-    homeSections: {
-      aria: 'Section navigation',
-      ballina: 'Home',
-      about: 'About',
-      menuDitore: 'Daily Menu',
-      menu: 'Menu',
-      gallery: 'Gallery',
-      directions: 'Directions',
-      review: 'Review',
-      contact: 'Contact'
-    }
+    a11y: { mainNav: 'Main navigation' }
   }
 };

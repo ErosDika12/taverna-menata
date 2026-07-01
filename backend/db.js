@@ -340,6 +340,28 @@ function migrateOpeningHours() {
   }
 }
 
+function fixStaleClosingTime(text) {
+  if (!text) return text;
+  return text.replace(/05:00/g, '03:00').replace(/05\.00/g, '03.00');
+}
+
+function migrateCategoryNotes() {
+  const rows = db.prepare('SELECT id, name, name_en, note, note_en FROM categories').all();
+  const update = db.prepare('UPDATE categories SET note = ?, note_en = ? WHERE id = ?');
+  for (const row of rows) {
+    const isDaily = /ditore|daily/i.test(`${row.name || ''} ${row.name_en || ''}`);
+    let note = fixStaleClosingTime(row.note);
+    let noteEn = fixStaleClosingTime(row.note_en);
+    if (isDaily) {
+      note = null;
+      noteEn = null;
+    }
+    if (note !== row.note || noteEn !== row.note_en) {
+      update.run(note, noteEn, row.id);
+    }
+  }
+}
+
 function exportAdminsRegistry() {
   const admins = db
     .prepare('SELECT id, email, name, password_hash, role, status, created_at, updated_at FROM admins')
@@ -415,6 +437,7 @@ importAdminsFromEnv();
 importAdminsRegistry();
 exportAdminsRegistry();
 migrateOpeningHours();
+migrateCategoryNotes();
 
 if (require.main === module) {
   reseed();

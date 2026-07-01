@@ -5,7 +5,6 @@ import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { apiGet } from '../api';
 import { ui } from '../translations';
-import HomeSectionNav from '../components/HomeSectionNav';
 import ItemPreviewModal from '../components/ItemPreviewModal';
 import { mediaUrl } from '../media';
 
@@ -77,7 +76,6 @@ export default function Home() {
 
   return (
     <div className="home-scroll">
-      <HomeSectionNav hasDailyMenu={!!dailyCategory?.items?.length} />
 
       <section id="ballina" className="home-section hero">
         <img className="hero-bg" src={mediaUrl(settings.hero_image)} alt="" fetchPriority="high" decoding="async" />
@@ -122,9 +120,7 @@ export default function Home() {
         <section id="menu-ditore" className="home-section section home-menu menu-section-daily">
           <div className="home-section-head">
             <h2>{tm.dailyTitle}</h2>
-            <p className="menu-section-sub menu-subtitle-desktop">{tm.dailySubtitle}</p>
           </div>
-          {dailyCategory.note && <p className="menu-note">{dailyCategory.note}</p>}
           {dailyPreview.length > 0 ? (
             <ul className="menu-list home-menu-list">
               {dailyPreview.map((item) => (
@@ -160,8 +156,6 @@ export default function Home() {
       <section id="menu" className="home-section section home-menu">
         <div className="home-section-head">
           <h2>{tm.regularTitle}</h2>
-          <p className="menu-subtitle-desktop">{tm.subtitle}</p>
-          <p className="menu-subtitle-desktop menu-price-euro-note">{tm.priceEuroNote}</p>
         </div>
         {menuCategories === null ? (
           <p className="home-loading">{tm.loading}</p>

@@ -1,7 +1,7 @@
 /** English translations for menu items and gallery. Keys: "Category::Item name" */
 
 const CATEGORY_EN = {
-  'Meny Ditore': { name_en: 'Daily Menu', note_en: 'Served daily until 17:00' },
+  'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },
   'Pjata Shtes\u00eb': { name_en: 'Side Dishes' },
