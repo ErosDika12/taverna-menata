@@ -97,6 +97,10 @@ main {
   padding-bottom: var(--mobile-footer-h);
 }
 
+body.no-action-bar main {
+  padding-bottom: calc(var(--bottomnav-h) + var(--safe-bottom));
+}
+
 .splash {
   display: grid;
   place-items: center;
@@ -1309,6 +1313,10 @@ main {
   display: none;
 }
 
+.menu-price-euro-note {
+  display: none;
+}
+
 .menu-item-thumb {
   flex-shrink: 0;
   padding: 0;
@@ -1555,15 +1563,25 @@ main {
     height: 220px;
   }
 
-  .home-section-link,
-  .home-contact .contact-call-btn {
+  .home-section-link {
     width: 100%;
     justify-content: center;
+  }
+
+  .page,
+  .home-scroll,
+  .home-section-nav-inner {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }
 
 @media (min-width: 800px) {
   .menu-subtitle-desktop {
+    display: block;
+  }
+
+  .menu-price-euro-note {
     display: block;
   }
 

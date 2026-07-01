@@ -23,7 +23,7 @@ export default function Contact() {
         <p>{t.callText}</p>
         <a className="btn btn-primary contact-call-btn" href={`tel:${phone}`}>
           <Phone size={20} aria-hidden="true" />
-          {b.call}
+          {t.callTitle}
         </a>
         <div className="contact-social">
           <a className="btn btn-outline" href={settings.instagram} target="_blank" rel="noopener noreferrer">

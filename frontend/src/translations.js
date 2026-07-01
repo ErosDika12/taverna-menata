@@ -34,6 +34,7 @@ export const ui = {
     menu: {
       title: 'Menyja',
       subtitle: 'Çmimet me diskutim',
+      priceEuroNote: 'Të gjitha çmimet janë në euro',
       dailyTitle: 'Menu Ditore',
       dailySubtitle: 'Pjata ditore të ndara nga menuja e rregullt',
       regularTitle: 'Menu',
@@ -127,6 +128,7 @@ export const ui = {
     menu: {
       title: 'Menu',
       subtitle: 'Prices negotiable',
+      priceEuroNote: 'All prices are in euro',
       dailyTitle: 'Daily Menu',
       dailySubtitle: 'Daily dishes separated from the regular menu',
       regularTitle: 'Menu',

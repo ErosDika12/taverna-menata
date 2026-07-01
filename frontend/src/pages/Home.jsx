@@ -1,17 +1,6 @@
 ﻿import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Phone,
-  Instagram,
-  Facebook,
-  MapPin,
-  Clock,
-  Star,
-  Navigation,
-  ChefHat,
-  Leaf,
-  Users
-} from 'lucide-react';
+import { ChefHat, Leaf, Users, Phone } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { apiGet } from '../api';
@@ -38,11 +27,8 @@ export default function Home() {
   const { lang } = useLang();
   const t = ui[lang].home;
   const tg = ui[lang].gallery;
-  const tc = ui[lang].contact;
   const tm = ui[lang].menu;
   const b = ui[lang].buttons;
-  const phone = settings.phone?.replace(/\s/g, '');
-  const reviewUrl = settings.review_url || settings.maps_url;
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
@@ -91,7 +77,7 @@ export default function Home() {
 
   return (
     <div className="home-scroll">
-      <HomeSectionNav />
+      <HomeSectionNav hasDailyMenu={!!dailyCategory?.items?.length} />
 
       <section id="ballina" className="home-section hero">
         <img className="hero-bg" src={mediaUrl(settings.hero_image)} alt="" fetchPriority="high" decoding="async" />
@@ -132,47 +118,50 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="menu-ditore" className="home-section section home-menu menu-section-daily">
-        <div className="home-section-head">
-          <h2>{tm.dailyTitle}</h2>
-          <p>{tm.dailySubtitle}</p>
-        </div>
-        {dailyCategory?.note && <p className="menu-note">{dailyCategory.note}</p>}
-        {dailyPreview.length > 0 ? (
-          <ul className="menu-list home-menu-list">
-            {dailyPreview.map((item) => (
-              <li key={item.id} className="menu-item">
-                <button
-                  type="button"
-                  className="menu-item-thumb"
-                  onClick={() => openMenuPreview(item, dailyCategory.items, dailyCategory.name)}
-                  aria-label={item.name}
-                >
-                  {item.image ? (
-                    <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
-                  ) : (
-                    <span className="menu-item-no-img" />
-                  )}
-                </button>
-                <div className="menu-item-body">
-                  <div className="menu-item-row">
-                    <h3>{item.name}</h3>
-                    <span className="menu-item-price">{formatPrice(item.price)}</span>
+      {dailyCategory && (
+        <section id="menu-ditore" className="home-section section home-menu menu-section-daily">
+          <div className="home-section-head">
+            <h2>{tm.dailyTitle}</h2>
+            <p className="menu-section-sub menu-subtitle-desktop">{tm.dailySubtitle}</p>
+          </div>
+          {dailyCategory.note && <p className="menu-note">{dailyCategory.note}</p>}
+          {dailyPreview.length > 0 ? (
+            <ul className="menu-list home-menu-list">
+              {dailyPreview.map((item) => (
+                <li key={item.id} className="menu-item">
+                  <button
+                    type="button"
+                    className="menu-item-thumb"
+                    onClick={() => openMenuPreview(item, dailyCategory.items, dailyCategory.name)}
+                    aria-label={item.name}
+                  >
+                    {item.image ? (
+                      <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <span className="menu-item-no-img" />
+                    )}
+                  </button>
+                  <div className="menu-item-body">
+                    <div className="menu-item-row">
+                      <h3>{item.name}</h3>
+                      <span className="menu-item-price">{formatPrice(item.price)}</span>
+                    </div>
+                    {item.description && <p>{item.description}</p>}
                   </div>
-                  {item.description && <p>{item.description}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="home-loading">{tm.loading}</p>
-        )}
-      </section>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="home-loading">{tm.loading}</p>
+          )}
+        </section>
+      )}
 
       <section id="menu" className="home-section section home-menu">
         <div className="home-section-head">
           <h2>{tm.regularTitle}</h2>
           <p className="menu-subtitle-desktop">{tm.subtitle}</p>
+          <p className="menu-subtitle-desktop menu-price-euro-note">{tm.priceEuroNote}</p>
         </div>
         {menuCategories === null ? (
           <p className="home-loading">{tm.loading}</p>
@@ -233,68 +222,6 @@ export default function Home() {
         )}
         <Link to="/gallery" className="btn btn-outline home-section-link">
           {tg.title}
-        </Link>
-      </section>
-
-      <section id="directions" className="home-section section home-directions">
-        <h2>{tc.directionsTitle}</h2>
-        <div className="contact-info-row">
-          <MapPin size={22} aria-hidden="true" />
-          <div>
-            <strong>{tc.address}</strong>
-            <p>{settings.address}</p>
-            <a className="btn btn-outline" href={settings.maps_url} target="_blank" rel="noopener noreferrer">
-              <Navigation size={18} aria-hidden="true" />
-              {b.directions}
-            </a>
-          </div>
-        </div>
-        <div className="contact-info-row">
-          <Clock size={22} aria-hidden="true" />
-          <div>
-            <strong>{tc.hours}</strong>
-            <p>{settings.hours}</p>
-          </div>
-        </div>
-        <div className="contact-map home-contact-map">
-          <iframe
-            title={tc.mapTitle}
-            src="https://maps.google.com/maps?q=Taverna+Menata+Prishtina&z=16&output=embed"
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
-          />
-        </div>
-      </section>
-
-      <section id="review" className="home-section section home-review">
-        <h2>{tc.reviewTitle}</h2>
-        <p>{tc.reviewText}</p>
-        <a className="btn btn-outline" href={reviewUrl} target="_blank" rel="noopener noreferrer">
-          <Star size={20} aria-hidden="true" />
-          {tc.reviewButton}
-        </a>
-      </section>
-
-      <section id="kontakt" className="home-section section home-contact">
-        <h2>{tc.title}</h2>
-        <p>{tc.callText}</p>
-        <a className="btn btn-primary contact-call-btn" href={`tel:${phone}`}>
-          <Phone size={20} aria-hidden="true" />
-          {tc.callTitle}
-        </a>
-        <div className="contact-social">
-          <a className="btn btn-outline" href={settings.instagram} target="_blank" rel="noopener noreferrer">
-            <Instagram size={20} aria-hidden="true" />
-            {b.instagram}
-          </a>
-          <a className="btn btn-outline" href={settings.facebook} target="_blank" rel="noopener noreferrer">
-            <Facebook size={20} aria-hidden="true" />
-            {b.facebook}
-          </a>
-        </div>
-        <Link to="/contact" className="btn btn-outline home-section-link">
-          {b.contactUs}
         </Link>
       </section>
 

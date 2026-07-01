@@ -1,17 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLang } from '../i18n';
 import { ui } from '../translations';
 
-const SECTION_IDS = ['ballina', 'rreth-nesh', 'menu-ditore', 'menu', 'galeria', 'directions', 'review', 'kontakt'];
+const SECTION_CONFIG = [
+  { id: 'ballina', labelKey: 'ballina' },
+  { id: 'rreth-nesh', labelKey: 'about' },
+  { id: 'menu-ditore', labelKey: 'menuDitore', requiresDaily: true },
+  { id: 'menu', labelKey: 'menu' },
+  { id: 'galeria', labelKey: 'gallery' }
+];
 
-export default function HomeSectionNav() {
+export default function HomeSectionNav({ hasDailyMenu = false }) {
   const { lang } = useLang();
   const labels = ui[lang].homeSections;
   const [active, setActive] = useState('ballina');
 
+  const sections = useMemo(
+    () => SECTION_CONFIG.filter((s) => !s.requiresDaily || hasDailyMenu),
+    [hasDailyMenu]
+  );
+
   useEffect(() => {
-    const sections = SECTION_IDS.map((id) => document.getElementById(id)).filter(Boolean);
-    if (!sections.length) return;
+    const elements = sections.map((s) => document.getElementById(s.id)).filter(Boolean);
+    if (!elements.length) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -23,9 +34,9 @@ export default function HomeSectionNav() {
       { rootMargin: '-20% 0px -55% 0px', threshold: [0, 0.25, 0.5] }
     );
 
-    sections.forEach((el) => observer.observe(el));
+    elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [sections]);
 
   function scrollTo(id) {
     const el = document.getElementById(id);
@@ -35,19 +46,17 @@ export default function HomeSectionNav() {
     }
   }
 
-  const keys = ['ballina', 'about', 'menuDitore', 'menu', 'gallery', 'directions', 'review', 'contact'];
-
   return (
     <nav className="home-section-nav" aria-label={labels.aria}>
       <div className="home-section-nav-inner">
-        {SECTION_IDS.map((id, i) => (
+        {sections.map(({ id, labelKey }) => (
           <button
             key={id}
             type="button"
             className={active === id ? 'active' : ''}
             onClick={() => scrollTo(id)}
           >
-            {labels[keys[i]]}
+            {labels[labelKey]}
           </button>
         ))}
       </div>

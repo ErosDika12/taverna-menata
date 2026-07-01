@@ -329,6 +329,15 @@ function migrateOpeningHours() {
     const updated = row.value.replace(/05:00/g, '03:00').replace(/05\.00/g, '03.00');
     if (updated !== row.value) upsert.run(key, updated);
   }
+
+  const rows = db.prepare('SELECT key, value FROM settings').all();
+  for (const row of rows) {
+    if (!row.value || !/05:00|05\.00/.test(row.value)) continue;
+    upsert.run(
+      row.key,
+      row.value.replace(/05:00/g, '03:00').replace(/05\.00/g, '03.00')
+    );
+  }
 }
 
 function exportAdminsRegistry() {

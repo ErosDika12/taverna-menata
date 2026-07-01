@@ -23,14 +23,16 @@ export default function Layout() {
   const t = ui[lang];
   const { pathname } = useLocation();
 
+  const showActionBar = pathname !== '/contact' && pathname !== '/';
+
   useEffect(() => {
     if (pathname !== '/') window.scrollTo(0, 0);
-    document.body.classList.toggle('no-action-bar', pathname === '/contact');
+    document.body.classList.toggle('no-action-bar', !showActionBar);
     document.body.classList.toggle('home-page', pathname === '/');
     return () => {
       document.body.classList.remove('no-action-bar', 'home-page');
     };
-  }, [pathname]);
+  }, [pathname, showActionBar]);
 
   return (
     <>
@@ -67,7 +69,7 @@ export default function Layout() {
         </NavLink>
       </footer>
 
-      {pathname !== '/contact' && <MobileActionBar />}
+      {showActionBar && <MobileActionBar />}
 
       <nav className="bottomnav" aria-label={t.a11y.mainNav}>
         {navIcons.map(({ to, key, icon: Icon }) => (

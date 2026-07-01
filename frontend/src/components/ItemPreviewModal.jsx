@@ -6,7 +6,7 @@ import { mediaUrl } from '../media';
 
 function formatPrice(price) {
   if (price == null) return null;
-  return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} �`;
+  return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
 export default function ItemPreviewModal({ items, index, onClose, onChange, categoryName }) {
