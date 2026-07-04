@@ -1027,3 +1027,19 @@
   max-height: 400px;
   overflow-y: auto;
 }
+
+@media (max-width: 480px) {
+  .admin-login,
+  .admin-loading {
+    padding: 16px;
+  }
+
+  .admin-login-card {
+    padding: 28px 18px;
+    border-radius: 16px;
+  }
+
+  .admin-login-card input {
+    font-size: 16px;
+  }
+}
