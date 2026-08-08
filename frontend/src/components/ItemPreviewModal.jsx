@@ -11,7 +11,7 @@ function formatPrice(price) {
 }
 
 function isDailyCategoryName(name = '') {
-  return /ditore|daily/i.test(name);
+  return /ditore|daily|ofert/i.test(name);
 }
 
 export default function ItemPreviewModal({ items, index, onClose, onChange, categoryName }) {
@@ -145,7 +145,7 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
   if (!item) return null;
 
   const price = formatPrice(item.price);
-  const showCategory = categoryName && !(isMobile && isDailyCategoryName(categoryName));
+  const showCategory = Boolean(categoryName);
   const backdropOpacity = Math.max(0.35, 1 - dragY / 280);
   const modalTransform = `translateY(calc(${visible ? '0px' : '100%'} + ${dragY}px)) translateX(${dragX}px)`;
 

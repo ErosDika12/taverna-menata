@@ -11,7 +11,7 @@ function formatPrice(price) {
 }
 
 function isDailyCategoryName(name = '') {
-  return /ditore|daily/i.test(name);
+  return /ditore|daily|ofert/i.test(name);
 }
 
 function MenuItemRow({ item, onOpen }) {
@@ -48,27 +48,34 @@ export default function Menu() {
     apiGet('/api/menu', lang)
       .then((data) => {
         setCategories(data);
-        const regularFood = data.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name));
-        setActiveId(regularFood[0]?.id ?? data.find((c) => c.type === 'food')?.id ?? null);
+        const food = data.filter((c) => c.type === 'food');
+        const daily = food.find((c) => isDailyCategoryName(c.name));
+        setActiveId(daily?.id ?? food[0]?.id ?? data[0]?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);
 
-  const dailyCategory = useMemo(
-    () => categories?.find((c) => c.type === 'food' && isDailyCategoryName(c.name)),
-    [categories]
-  );
-  const foodCategories = useMemo(
-    () => categories?.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name)) ?? [],
-    [categories]
-  );
+  const foodCategories = useMemo(() => {
+    if (!categories) return [];
+    const food = categories.filter((c) => c.type === 'food');
+    const daily = food.filter((c) => isDailyCategoryName(c.name));
+    const regular = food.filter((c) => !isDailyCategoryName(c.name));
+    return [...daily, ...regular];
+  }, [categories]);
+
   const drinkCategories = useMemo(() => categories?.filter((c) => c.type === 'drinks') ?? [], [categories]);
   const visible = type === 'food' ? foodCategories : drinkCategories;
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
 
+  function categoryLabel(c) {
+    if (isDailyCategoryName(c.name)) return t.dailyOffers;
+    return c.name;
+  }
+
   function switchType(next) {
     setType(next);
-    setActiveId((next === 'food' ? foodCategories : drinkCategories)[0]?.id ?? null);
+    const list = next === 'food' ? foodCategories : drinkCategories;
+    setActiveId(list[0]?.id ?? null);
   }
 
   function openPreview(item, list, categoryName) {
@@ -90,28 +97,7 @@ export default function Menu() {
         <h1>{t.title}</h1>
       </header>
 
-      {dailyCategory && (
-        <section id="menu-ditore" className="menu-section menu-section-daily">
-          <header className="menu-section-head">
-            <h2>{t.dailyTitle}</h2>
-          </header>
-          <ul className="menu-list">
-            {dailyCategory.items.map((item) => (
-              <MenuItemRow
-                key={item.id}
-                item={item}
-                onOpen={() => openPreview(item, dailyCategory.items, dailyCategory.name)}
-              />
-            ))}
-          </ul>
-        </section>
-      )}
-
       <section id="menu" className="menu-section">
-        <header className="menu-section-head">
-          <h2>{t.regularTitle}</h2>
-        </header>
-
         <div className="menu-sticky">
           <div className="menu-type" role="tablist">
             <button
@@ -132,7 +118,7 @@ export default function Menu() {
             </button>
           </div>
 
-          <div className="chips" role="tablist">
+          <div className="chips chips-wrap" role="tablist">
             {visible.map((c) => (
               <button
                 key={c.id}
@@ -141,18 +127,25 @@ export default function Menu() {
                 className={c.id === active?.id ? 'active' : ''}
                 onClick={() => setActiveId(c.id)}
               >
-                {c.name}
+                {categoryLabel(c)}
               </button>
             ))}
           </div>
         </div>
 
+        {type === 'food' && isDailyCategoryName(active?.name || '') && (
+          <p className="menu-note">{t.dailyNote}</p>
+        )}
         {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
-        {active?.note && <p className="menu-note">{active.note}</p>}
+        {active?.note && !isDailyCategoryName(active.name) && <p className="menu-note">{active.note}</p>}
 
         <ul className="menu-list">
           {active?.items.map((item) => (
-            <MenuItemRow key={item.id} item={item} onOpen={() => openPreview(item, active.items, active.name)} />
+            <MenuItemRow
+              key={item.id}
+              item={item}
+              onOpen={() => openPreview(item, active.items, categoryLabel(active))}
+            />
           ))}
         </ul>
       </section>

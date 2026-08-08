@@ -1,6 +1,6 @@
 ﻿import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { ChefHat, Leaf, Users, Phone } from 'lucide-react';
+import { ChefHat, Leaf, Users, Phone, MapPin, Clock, Navigation } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { apiGet } from '../api';
@@ -15,7 +15,7 @@ function formatPrice(price) {
 }
 
 function isDailyCategoryName(name = '') {
-  return /ditore|daily/i.test(name);
+  return /ditore|daily|ofert/i.test(name);
 }
 
 const PREVIEW_MENU_ITEMS = 6;
@@ -27,7 +27,9 @@ export default function Home() {
   const t = ui[lang].home;
   const tg = ui[lang].gallery;
   const tm = ui[lang].menu;
+  const tc = ui[lang].contact;
   const b = ui[lang].buttons;
+  const ta = ui[lang].about;
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
@@ -42,20 +44,15 @@ export default function Home() {
       .catch(() => setPhotos([]));
   }, [lang]);
 
-  const dailyCategory = useMemo(
-    () => menuCategories?.find((c) => c.type === 'food' && isDailyCategoryName(c.name)),
-    [menuCategories]
-  );
-
   const regularMenuPreview = useMemo(() => {
     if (!menuCategories?.length) return [];
-    const food = menuCategories.filter((c) => c.type === 'food' && !isDailyCategoryName(c.name));
+    const food = menuCategories.filter((c) => c.type === 'food');
     const pool = food.flatMap((c) => c.items.map((item) => ({ ...item, categoryName: c.name })));
     return pool.slice(0, PREVIEW_MENU_ITEMS);
   }, [menuCategories]);
 
-  const dailyPreview = useMemo(() => (dailyCategory?.items || []).slice(0, PREVIEW_MENU_ITEMS), [dailyCategory]);
   const galleryPreview = useMemo(() => (photos || []).slice(0, PREVIEW_GALLERY_PHOTOS), [photos]);
+  const phone = settings.phone?.replace(/\s/g, '');
 
   function openMenuPreview(item, list, categoryName) {
     const index = list.findIndex((i) => i.id === item.id);
@@ -76,7 +73,7 @@ export default function Home() {
 
   return (
     <div className="home-scroll">
-
+      {/* 1. Ballina — matches bottom nav */}
       <section id="ballina" className="home-section hero">
         <img className="hero-bg" src={mediaUrl(settings.hero_image)} alt="" fetchPriority="high" decoding="async" />
         <div className="hero-content">
@@ -86,76 +83,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="rreth-nesh" className="home-section section home-about">
-        <h2>{t.aboutTitle}</h2>
-        <div className="home-about-grid">
-          <div className="home-about-text">
-            {settings.about_text?.split('\n\n').slice(0, 2).map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-            <blockquote className="about-quote">{settings.tagline}</blockquote>
-            <Link to="/about" className="btn btn-outline">
-              {b.ourStory}
-            </Link>
-          </div>
-          <img src="/uploads/gallery/thumbs/dsc09465.jpg" alt="Taverna Menata" loading="lazy" decoding="async" />
-        </div>
-        <div className="highlights">
-          {t.highlights.map(({ title, text }, i) => {
-            const Icon = highlightIcons[i];
-            return (
-              <div key={title} className="highlight-card">
-                <span className="highlight-icon">
-                  <Icon size={26} aria-hidden="true" />
-                </span>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {dailyCategory && (
-        <section id="menu-ditore" className="home-section section home-menu menu-section-daily">
-          <div className="home-section-head">
-            <h2>{tm.dailyTitle}</h2>
-          </div>
-          {dailyPreview.length > 0 ? (
-            <ul className="menu-list home-menu-list">
-              {dailyPreview.map((item) => (
-                <li key={item.id} className="menu-item">
-                  <button
-                    type="button"
-                    className="menu-item-thumb"
-                    onClick={() => openMenuPreview(item, dailyCategory.items, dailyCategory.name)}
-                    aria-label={item.name}
-                  >
-                    {item.image ? (
-                      <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <span className="menu-item-no-img" />
-                    )}
-                  </button>
-                  <div className="menu-item-body">
-                    <div className="menu-item-row">
-                      <h3>{item.name}</h3>
-                      <span className="menu-item-price">{formatPrice(item.price)}</span>
-                    </div>
-                    {item.description && <p>{item.description}</p>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="home-loading">{tm.loading}</p>
-          )}
-        </section>
-      )}
-
+      {/* 2. Menyja */}
       <section id="menu" className="home-section section home-menu">
         <div className="home-section-head">
-          <h2>{tm.regularTitle}</h2>
+          <h2>{tm.title}</h2>
+          <p>{t.menuIntro}</p>
         </div>
         {menuCategories === null ? (
           <p className="home-loading">{tm.loading}</p>
@@ -193,9 +125,14 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* 3. Galeria — one title only, no duplicate CTA */}
       <section id="galeria" className="home-section section home-gallery">
         <div className="home-section-head">
-          <h2>{tg.title}</h2>
+          <h2>
+            <Link to="/gallery" className="home-section-title-link">
+              {tg.title}
+            </Link>
+          </h2>
           <p>{tg.subtitle}</p>
         </div>
         {photos === null ? (
@@ -214,8 +151,83 @@ export default function Home() {
             ))}
           </div>
         )}
-        <Link to="/gallery" className="btn btn-outline home-section-link">
-          {tg.title}
+      </section>
+
+      {/* 4. Historia — matches bottom nav label */}
+      <section id="historia" className="home-section section home-about">
+        <div className="home-section-head">
+          <h2>{ta.title}</h2>
+          <p>{t.visitText}</p>
+        </div>
+        <div className="home-about-grid">
+          <div className="home-about-text">
+            <div className="highlights">
+              {t.highlights.map(({ title, text }, i) => {
+                const Icon = highlightIcons[i];
+                return (
+                  <div key={title} className="highlight-card">
+                    <span className="highlight-icon">
+                      <Icon size={26} aria-hidden="true" />
+                    </span>
+                    <h3>{title}</h3>
+                    <p>{text}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <Link to="/about" className="btn btn-outline home-section-link">
+              {b.ourStory}
+            </Link>
+          </div>
+          <img
+            src="/uploads/gallery/thumbs/dsc09465.jpg"
+            alt="Taverna Menata"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      </section>
+
+      {/* 5. Kontakti — matches bottom nav */}
+      <section id="kontakt" className="home-section section home-contact">
+        <div className="home-section-head">
+          <h2>{tc.title}</h2>
+          <p>{tc.subtitle}</p>
+        </div>
+
+        <div className="contact-block home-contact-block">
+          <h3>{tc.callTitle}</h3>
+          <p>{tc.callText}</p>
+          <a className="btn btn-primary contact-call-btn" href={`tel:${phone}`}>
+            <Phone size={20} aria-hidden="true" />
+            {tc.callTitle}
+          </a>
+        </div>
+
+        <div className="contact-block home-contact-block">
+          <h3>{tc.directionsTitle}</h3>
+          <div className="contact-info-row">
+            <MapPin size={22} aria-hidden="true" />
+            <div>
+              <strong>{tc.address}</strong>
+              <p>{settings.address}</p>
+            </div>
+          </div>
+          <div className="contact-info-row">
+            <Clock size={22} aria-hidden="true" />
+            <div>
+              <strong>{tc.hours}</strong>
+              <p>{settings.hours}</p>
+            </div>
+          </div>
+          <a className="btn btn-outline" href={settings.maps_url} target="_blank" rel="noopener noreferrer">
+            <Navigation size={18} aria-hidden="true" />
+            {b.directions}
+          </a>
+        </div>
+
+        <Link to="/contact" className="btn btn-outline home-section-link">
+          {b.contactUs}
         </Link>
       </section>
 

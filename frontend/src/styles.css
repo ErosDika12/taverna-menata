@@ -603,10 +603,17 @@ body.no-action-bar main {
   gap: 8px;
   padding: 4px 0 10px;
   max-width: 100%;
+  overflow: visible;
+}
+
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .chips button {
-  flex-shrink: 1;
+  flex: 0 1 auto;
   border: 1.5px solid var(--line);
   background: var(--surface);
   color: var(--ink);
@@ -615,7 +622,7 @@ body.no-action-bar main {
   min-height: 44px;
   font-size: clamp(0.82rem, 2.2vw, 0.92rem);
   font-weight: 600;
-  white-space: normal;
+  white-space: nowrap;
   text-align: center;
   touch-action: manipulation;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
@@ -1224,6 +1231,28 @@ body.no-action-bar main {
   margin-bottom: 14px;
 }
 
+.home-section-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-section-title-link:hover {
+  text-decoration: underline;
+}
+
+.home-contact-block {
+  margin-bottom: 12px;
+}
+
+.home-contact-block h3 {
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.home-contact .home-section-link {
+  margin-top: 8px;
+}
+
 .home-section-head p {
   color: var(--muted);
   margin: 4px 0 0;
@@ -1631,11 +1660,6 @@ body.no-action-bar main {
 /* ---------- Mobile UX fixes ---------- */
 
 @media (max-width: 768px) {
-  .menu-section-daily,
-  #menu-ditore {
-    display: none !important;
-  }
-
   .preview-modal-swipe-hints,
   .preview-modal-dismiss-hint {
     display: flex;
@@ -1659,6 +1683,10 @@ body.no-action-bar main {
   .preview-modal-body {
     padding: 14px 18px 20px;
     padding-bottom: calc(20px + var(--safe-bottom));
+  }
+
+  .chips button {
+    white-space: normal;
   }
 }
 

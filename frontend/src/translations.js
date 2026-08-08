@@ -19,7 +19,8 @@ export const ui = {
       contactUs: 'Na kontakto'
     },
     home: {
-      aboutTitle: 'Rreth nesh',
+      aboutTitle: 'Historia',
+      menuIntro: 'Ofertat ditore, sallata, pjatat kryesore dhe pijet.',
       whyTitle: 'Pse e duan njerëzit Menatën',
       highlights: [
         { title: 'Kuzhinë tradicionale', text: 'Gatime shtëpie, ashtu si janë bërë gjithmonë' },
@@ -33,7 +34,9 @@ export const ui = {
     },
     menu: {
       title: 'Menyja',
-      dailyTitle: 'Menu Ditore',
+      dailyTitle: 'Ofertat Ditore',
+      dailyOffers: 'Ofertat Ditore',
+      dailyNote: 'Çdo ditë specialitete të ndryshme nga kuzhina jonë.',
       regularTitle: 'Menu',
       food: 'Ushqime',
       drinks: 'Pije',
@@ -101,7 +104,8 @@ export const ui = {
       contactUs: 'Contact us'
     },
     home: {
-      aboutTitle: 'About us',
+      aboutTitle: 'Our story',
+      menuIntro: 'Daily specials, salads, main dishes and drinks.',
       whyTitle: 'Why people love Menata',
       highlights: [
         { title: 'Traditional cuisine', text: 'Home-style cooking, the way it has always been made' },
@@ -115,7 +119,9 @@ export const ui = {
     },
     menu: {
       title: 'Menu',
-      dailyTitle: 'Daily Menu',
+      dailyTitle: 'Daily Specials',
+      dailyOffers: 'Daily Specials',
+      dailyNote: 'Different specialties from our kitchen every day.',
       regularTitle: 'Menu',
       food: 'Food',
       drinks: 'Drinks',
