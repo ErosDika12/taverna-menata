@@ -14,10 +14,6 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-function isDailyCategoryName(name = '') {
-  return /ditore|daily|ofert/i.test(name);
-}
-
 const PREVIEW_MENU_ITEMS = 6;
 const PREVIEW_GALLERY_PHOTOS = 8;
 

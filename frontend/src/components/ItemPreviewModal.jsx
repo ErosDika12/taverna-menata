@@ -10,10 +10,6 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-function isDailyCategoryName(name = '') {
-  return /ditore|daily|ofert/i.test(name);
-}
-
 export default function ItemPreviewModal({ items, index, onClose, onChange, categoryName }) {
   const { lang } = useLang();
   const t = ui[lang].preview;
