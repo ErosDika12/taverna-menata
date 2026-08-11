@@ -6,6 +6,10 @@ const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getAdminSecret() {
   if (process.env.ADMIN_SECRET) return process.env.ADMIN_SECRET;
+  if (process.env.VERCEL && !getAdminSecret._warned) {
+    console.warn('[security] Set ADMIN_SECRET in Vercel environment variables for stronger token signing.');
+    getAdminSecret._warned = true;
+  }
   const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get();
   const pwHash = row?.value || hashPassword(process.env.ADMIN_PASSWORD || 'menata2024');
   return crypto.createHmac('sha256', 'menata-admin-secret-v1').update(pwHash).digest('hex');

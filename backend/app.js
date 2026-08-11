@@ -10,6 +10,14 @@ const app = express();
 const { importNotificationsRegistry } = require('./activity');
 importNotificationsRegistry();
 
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
 app.use(express.json({ limit: '2mb' }));
 
 function staticUploads(root) {
@@ -41,7 +49,8 @@ app.use('/api/admin', (_req, res, next) => {
 app.use('/api/admin', adminRoutes);
 
 app.use((err, _req, res, _next) => {
-  res.status(400).json({ error: err.message || 'Gabim.' });
+  const status = err.status || 400;
+  res.status(status).json({ error: err.message || 'Gabim.' });
 });
 
 const dist = path.join(__dirname, '..', 'frontend', 'dist');

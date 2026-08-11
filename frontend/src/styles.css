@@ -1260,6 +1260,10 @@ body.no-action-bar main {
   line-height: 1.45;
 }
 
+.home-about .home-section-head p {
+  text-align: center;
+}
+
 .home-section-link {
   display: inline-flex;
   margin-top: 14px;

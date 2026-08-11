@@ -3,6 +3,7 @@ const db = require('../db');
 const { hashPassword, importAdminsRegistry, exportAdminsRegistry } = require('../db');
 const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { requireMainAdmin } = require('../middleware/adminRoles');
+const { loginRateLimit } = require('../middleware/rateLimit');
 const { logAdminActivity, formatNotificationRow, importNotificationsRegistry } = require('../activity');
 const { uploadImage, uploadThumb, uploadMenuImage, uploadVideo, uploadVideoThumb, toUrl } = require('../upload');
 
@@ -25,10 +26,14 @@ function findAdminByCredentials(email, password) {
   return admin;
 }
 
-router.post('/login', (req, res) => {
-  const { email, password } = req.body;
+router.post('/login', loginRateLimit, (req, res) => {
+  const email = String(req.body?.email || '').trim().slice(0, 254);
+  const password = String(req.body?.password || '').slice(0, 128);
   if (!email || !password) {
     return res.status(400).json({ error: 'Shkruani email-in dhe fjalëkalimin.' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: 'Email ose fjalëkalimi është i gabuar.' });
   }
 
   const admin = findAdminByCredentials(email, password);
@@ -203,6 +208,9 @@ router.get('/settings', requireAdmin, (_req, res) => {
 });
 
 router.put('/settings', requireAdmin, (req, res) => {
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Të dhënat e pavlefshme.' });
+  }
   const upsert = db.prepare(
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   );
