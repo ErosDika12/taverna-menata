@@ -12,11 +12,9 @@ export default function About() {
 
   return (
     <div className="page">
-      <header className="page-head">
-        <h1>{t.title}</h1>
-      </header>
-
       <div className="about">
+        <h1>{t.title}</h1>
+
         <img className="about-logo" src={logo} alt="Taverna Menata" />
 
         {settings.about_text?.split('\n\n').map((paragraph, i) => (
