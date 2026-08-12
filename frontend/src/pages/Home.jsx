@@ -25,7 +25,7 @@ export default function Home() {
   const tm = ui[lang].menu;
   const tc = ui[lang].contact;
   const b = ui[lang].buttons;
-  const ta = ui[lang].about;
+  const nav = ui[lang].nav;
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
@@ -121,14 +121,10 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* 3. Galeria — one title only, no duplicate CTA */}
+      {/* 3. Galeria — one title at the start of the section */}
       <section id="galeria" className="home-section section home-gallery">
         <div className="home-section-head">
-          <h2>
-            <Link to="/gallery" className="home-section-title-link">
-              {tg.title}
-            </Link>
-          </h2>
+          <h2>{tg.title}</h2>
           <p>{tg.subtitle}</p>
         </div>
         {photos === null ? (
@@ -149,10 +145,10 @@ export default function Home() {
         )}
       </section>
 
-      {/* 4. Historia — matches bottom nav label */}
+      {/* 4. Historia — same label/order as bottom nav */}
       <section id="historia" className="home-section section home-about">
         <div className="home-section-head">
-          <h2>{ta.title}</h2>
+          <h2>{nav.about}</h2>
           <p>{t.visitText}</p>
         </div>
         <div className="home-about-grid">

@@ -25,11 +25,6 @@ export default function About() {
 
         <blockquote className="about-quote">{settings.tagline}</blockquote>
 
-        <div className="about-photos">
-          <img src="/uploads/gallery/thumbs/dsc09459.jpg" alt="Taverna Menata" loading="lazy" />
-          <img src="/uploads/gallery/thumbs/dsc09411.jpg" alt="Taverna Menata" loading="lazy" />
-        </div>
-
         <div className="about-cta">
           <p>{t.cta}</p>
           <Link to="/contact" className="btn btn-primary">

@@ -53,7 +53,6 @@ export default function Login({ onLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="username"
-            placeholder="admin@menata.local"
             required
           />
         </label>
@@ -64,7 +63,6 @@ export default function Login({ onLogin }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            placeholder="Shkruani fjalëkalimin"
             required
           />
         </label>

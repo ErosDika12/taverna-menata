@@ -48,6 +48,7 @@ export const ui = {
     gallery: {
       title: 'Galeria',
       subtitle: 'Foto dhe video reale nga kuzhina, oborri dhe ambientet tona.',
+      all: 'Të gjitha',
       photos: 'Foto',
       videos: 'Video',
       loading: 'Duke e ngarkuar galerinë…',
@@ -133,6 +134,7 @@ export const ui = {
     gallery: {
       title: 'Gallery',
       subtitle: 'Real photos and videos from our kitchen, garden and dining rooms.',
+      all: 'All',
       photos: 'Photos',
       videos: 'Videos',
       loading: 'Loading gallery…',
