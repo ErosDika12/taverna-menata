@@ -921,38 +921,58 @@ body.no-action-bar main {
 
 /* ---------- About / History ---------- */
 
-.about {
+.page.page-about {
   width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 0;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.about > h1 {
-  display: block;
-  width: 100%;
-  margin: 0 auto 16px;
-  text-align: center;
-}
-
-.about > p {
-  display: block;
-  width: 100%;
+  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
   text-align: center;
 }
 
-.about-logo {
+.page.page-about .about {
+  width: 100%;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0;
+  text-align: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page.page-about .about-title {
+  display: block;
+  width: 100%;
+  margin: 0 0 16px;
+  text-align: center;
+  align-self: stretch;
+}
+
+.page.page-about .about-logo {
   display: block;
   width: 110px;
   height: auto;
   margin: 0 auto 24px;
+  align-self: center;
 }
 
-.about-quote {
+.page.page-about .about-text {
+  width: 100%;
+  align-self: stretch;
+  text-align: center;
+}
+
+.page.page-about .about-text p {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  text-align: center;
+}
+
+.page.page-about .about-quote {
   display: block;
   width: 100%;
   font-family: 'France', Georgia, serif;
@@ -960,10 +980,11 @@ body.no-action-bar main {
   color: var(--green);
   text-align: center;
   border: none;
-  margin: 28px auto;
+  margin: 28px 0;
+  align-self: stretch;
 }
 
-.about-cta {
+.page.page-about .about-cta {
   display: block;
   width: 100%;
   text-align: center;
@@ -971,6 +992,7 @@ body.no-action-bar main {
   border-radius: var(--radius);
   padding: 24px;
   box-sizing: border-box;
+  align-self: stretch;
 }
 
 /* ---------- Contact ---------- */
@@ -1997,4 +2019,34 @@ body.no-action-bar main {
     font-size: 0.92rem;
     padding: 10px;
   }
+}
+
+/* ---------- History final centering (must stay last) ---------- */
+.page.page-about {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.page.page-about .about {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.page.page-about .about-title,
+.page.page-about .about-text,
+.page.page-about .about-text p,
+.page.page-about .about-quote,
+.page.page-about .about-cta {
+  text-align: center;
+}
+
+.page.page-about .about-logo {
+  margin-left: auto;
+  margin-right: auto;
+  align-self: center;
 }

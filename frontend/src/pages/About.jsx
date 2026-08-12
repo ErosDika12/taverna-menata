@@ -11,15 +11,17 @@ export default function About() {
   const b = ui[lang].buttons;
 
   return (
-    <div className="page">
+    <div className="page page-about">
       <div className="about">
-        <h1>{t.title}</h1>
+        <h1 className="about-title">{t.title}</h1>
 
         <img className="about-logo" src={logo} alt="Taverna Menata" />
 
-        {settings.about_text?.split('\n\n').map((paragraph, i) => (
-          <p key={i}>{paragraph}</p>
-        ))}
+        <div className="about-text">
+          {settings.about_text?.split('\n\n').map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))}
+        </div>
 
         <blockquote className="about-quote">{settings.tagline}</blockquote>
 
