@@ -919,9 +919,10 @@ body.no-action-bar main {
   background: #000;
 }
 
-/* ---------- About ---------- */
+/* ---------- About / History ---------- */
 
 .page:has(.about) .page-head {
+  width: 100%;
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
@@ -929,10 +930,12 @@ body.no-action-bar main {
 }
 
 .page:has(.about) .page-head h1 {
+  width: 100%;
   text-align: center;
 }
 
 .about {
+  width: 100%;
   max-width: 640px;
   margin-left: auto;
   margin-right: auto;
@@ -958,20 +961,6 @@ body.no-action-bar main {
   text-align: center;
   border: none;
   margin: 28px 0;
-}
-
-.about-photos {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 26px;
-}
-
-.about-photos img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: var(--radius);
 }
 
 .about-cta {
@@ -1282,10 +1271,6 @@ body.no-action-bar main {
 
   .contact-channels {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .about-photos img {
-    height: 220px;
   }
 }
 
