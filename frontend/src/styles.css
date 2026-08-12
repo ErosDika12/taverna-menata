@@ -924,43 +924,53 @@ body.no-action-bar main {
 .about {
   width: 100%;
   max-width: 640px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
+  padding: 0;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .about > h1 {
+  display: block;
   width: 100%;
+  margin: 0 auto 16px;
   text-align: center;
-  margin-bottom: 16px;
 }
 
 .about > p {
+  display: block;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }
 
 .about-logo {
   display: block;
   width: 110px;
-  margin-left: auto;
-  margin-right: auto;
-  margin-bottom: 24px;
+  height: auto;
+  margin: 0 auto 24px;
 }
 
 .about-quote {
+  display: block;
+  width: 100%;
   font-family: 'France', Georgia, serif;
   font-size: 1.25rem;
   color: var(--green);
   text-align: center;
   border: none;
-  margin: 28px 0;
+  margin: 28px auto;
 }
 
 .about-cta {
+  display: block;
+  width: 100%;
   text-align: center;
   background: var(--cream);
   border-radius: var(--radius);
   padding: 24px;
+  box-sizing: border-box;
 }
 
 /* ---------- Contact ---------- */
