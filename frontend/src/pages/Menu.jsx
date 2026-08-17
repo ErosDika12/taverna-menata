@@ -44,6 +44,12 @@ function isDailyOffersCategory(name = '') {
   return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
 }
 
+/** Meny Ditore / Daily Menu — prior dedicated section (not Oferta) */
+function isMenyDitoreCategory(name = '') {
+  if (isDailyOffersCategory(name)) return false;
+  return /meny\s*ditore|menu\s*ditore|daily\s*menu/i.test(name);
+}
+
 function MenuItemRow({ item, onOpen }) {
   return (
     <li className="menu-item">
@@ -79,15 +85,23 @@ export default function Menu() {
       .then((data) => {
         setCategories(data);
         const food = sortFoodCategories(data.filter((c) => c.type === 'food'));
-        const daily = food.find((c) => isDailyOffersCategory(c.name));
-        setActiveId(daily?.id ?? food[0]?.id ?? data[0]?.id ?? null);
+        const chipFood = food.filter((c) => !isMenyDitoreCategory(c.name));
+        const daily = chipFood.find((c) => isDailyOffersCategory(c.name));
+        setActiveId(daily?.id ?? chipFood[0]?.id ?? data[0]?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);
 
+  const menyDitoreCategory = useMemo(() => {
+    if (!categories) return null;
+    return categories.find((c) => c.type === 'food' && isMenyDitoreCategory(c.name)) ?? null;
+  }, [categories]);
+
   const foodCategories = useMemo(() => {
     if (!categories) return [];
-    return sortFoodCategories(categories.filter((c) => c.type === 'food'));
+    return sortFoodCategories(
+      categories.filter((c) => c.type === 'food' && !isMenyDitoreCategory(c.name))
+    );
   }, [categories]);
 
   const drinkCategories = useMemo(() => {
@@ -139,6 +153,24 @@ export default function Menu() {
       <header className="page-head">
         <h1>{t.title}</h1>
       </header>
+
+      {menyDitoreCategory && (
+        <section id="menu-ditore" className="menu-section menu-section-daily">
+          <header className="menu-section-head">
+            <h2>{menyDitoreCategory.name}</h2>
+            {menyDitoreCategory.note && <p className="menu-note">{menyDitoreCategory.note}</p>}
+          </header>
+          <ul className="menu-list">
+            {menyDitoreCategory.items.map((item) => (
+              <MenuItemRow
+                key={item.id}
+                item={item}
+                onOpen={() => openPreview(item, menyDitoreCategory.items, menyDitoreCategory.name)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section id="menu" className="menu-section">
         <div className="menu-sticky">

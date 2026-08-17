@@ -36,7 +36,8 @@ export default function Layout() {
     if (pathname !== '/menu') setSuppressActionBar(false);
   }, [pathname]);
 
-  const showActionBar = pathname !== '/contact' && pathname !== '/' && !suppressActionBar;
+  const showActionBar =
+    pathname !== '/contact' && pathname !== '/' && pathname !== '/gallery' && !suppressActionBar;
 
   useEffect(() => {
     if (pathname !== '/') window.scrollTo(0, 0);
