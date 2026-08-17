@@ -15,7 +15,7 @@ function formatPrice(price) {
 }
 
 const PREVIEW_MENU_ITEMS = 6;
-const PREVIEW_GALLERY_PHOTOS = 8;
+const PREVIEW_GALLERY_PHOTOS = 9;
 
 export default function Home() {
   const settings = useSettings();
@@ -49,6 +49,7 @@ export default function Home() {
 
   const galleryPreview = useMemo(() => (photos || []).slice(0, PREVIEW_GALLERY_PHOTOS), [photos]);
   const phone = settings.phone?.replace(/\s/g, '');
+  const galleryCta = lang === 'en' ? 'See Gallery' : 'Shiko Galerinë';
 
   function openMenuPreview(item, list, categoryName) {
     const index = list.findIndex((i) => i.id === item.id);
@@ -79,12 +80,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Galeria — single section, early after hero */}
+      {/* 2. Galeria — button → text → photos (3-col) */}
       <section id="galeria" className="home-section section home-gallery">
         <div className="home-section-head">
           <h2>{tg.title}</h2>
-          <p>{tg.subtitle}</p>
         </div>
+        <Link to="/gallery" className="btn btn-primary home-section-link">
+          {galleryCta}
+        </Link>
+        <p className="home-section-desc">{tg.subtitle}</p>
         {photos === null ? (
           <p className="home-loading">{tg.loading}</p>
         ) : (
@@ -103,12 +107,15 @@ export default function Home() {
         )}
       </section>
 
-      {/* 3. Menyja */}
+      {/* 3. Menyja — button → text → photos */}
       <section id="menu" className="home-section section home-menu">
         <div className="home-section-head">
           <h2>{tm.title}</h2>
-          <p>{t.menuIntro}</p>
         </div>
+        <Link to="/menu" className="btn btn-primary home-section-link">
+          {b.menu}
+        </Link>
+        <p className="home-section-desc">{t.menuIntro}</p>
         {menuCategories === null ? (
           <p className="home-loading">{tm.loading}</p>
         ) : regularMenuPreview.length === 0 ? (
@@ -140,17 +147,17 @@ export default function Home() {
             ))}
           </ul>
         )}
-        <Link to="/menu" className="btn btn-primary home-section-link">
-          {b.menu}
-        </Link>
       </section>
 
-      {/* 4. Historia — same label/order as bottom nav */}
+      {/* 4. Historia — button → text → photo */}
       <section id="historia" className="home-section section home-about">
         <div className="home-section-head">
           <h2>{nav.about}</h2>
-          <p>{t.visitText}</p>
         </div>
+        <Link to="/about" className="btn btn-outline home-section-link">
+          {b.ourStory}
+        </Link>
+        <p className="home-section-desc">{t.visitText}</p>
         <div className="home-about-grid">
           <div className="home-about-text">
             <div className="highlights">
@@ -167,9 +174,6 @@ export default function Home() {
                 );
               })}
             </div>
-            <Link to="/about" className="btn btn-outline home-section-link">
-              {b.ourStory}
-            </Link>
           </div>
           <img
             src="/uploads/gallery/thumbs/dsc09465.jpg"
@@ -180,7 +184,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Kontakti — matches bottom nav */}
+      {/* 5. Kontakti — content first; Na Kontakto stays last */}
       <section id="kontakt" className="home-section section home-contact">
         <div className="home-section-head">
           <h2>{tc.title}</h2>
