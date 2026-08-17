@@ -101,9 +101,6 @@ export default function Home() {
             ))}
           </div>
         )}
-        <Link to="/gallery" className="btn btn-primary home-section-link">
-          {nav.gallery}
-        </Link>
       </section>
 
       {/* 3. Menyja */}
