@@ -10,8 +10,33 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-function isDailyCategoryName(name = '') {
-  return /ditore|daily|ofert/i.test(name);
+/** Match backend/ensure-menu-structure.js FOOD_ORDER */
+const FOOD_ORDER = [
+  'Oferte Ditore',
+  'Meny Ditore',
+  'Sallata',
+  'Pjata Kryesore',
+  'Pjata Shtesë'
+];
+
+function categoryKey(name = '') {
+  return String(name)
+    .normalize('NFC')
+    .replace(/ë/g, 'e')
+    .replace(/Ë/g, 'E')
+    .toLowerCase()
+    .trim();
+}
+
+const FOOD_RANK = new Map(FOOD_ORDER.map((n, i) => [categoryKey(n), i]));
+
+function sortFoodCategories(food) {
+  return [...food].sort((a, b) => {
+    const ra = FOOD_RANK.has(categoryKey(a.name)) ? FOOD_RANK.get(categoryKey(a.name)) : 999;
+    const rb = FOOD_RANK.has(categoryKey(b.name)) ? FOOD_RANK.get(categoryKey(b.name)) : 999;
+    if (ra !== rb) return ra - rb;
+    return (a.sort ?? 0) - (b.sort ?? 0);
+  });
 }
 
 function MenuItemRow({ item, onOpen }) {
@@ -48,29 +73,26 @@ export default function Menu() {
     apiGet('/api/menu', lang)
       .then((data) => {
         setCategories(data);
-        const food = data.filter((c) => c.type === 'food');
-        const daily = food.find((c) => isDailyCategoryName(c.name));
-        setActiveId(daily?.id ?? food[0]?.id ?? data[0]?.id ?? null);
+        const food = sortFoodCategories(data.filter((c) => c.type === 'food'));
+        setActiveId(food[0]?.id ?? data[0]?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);
 
   const foodCategories = useMemo(() => {
     if (!categories) return [];
-    const food = categories.filter((c) => c.type === 'food');
-    const daily = food.filter((c) => isDailyCategoryName(c.name));
-    const regular = food.filter((c) => !isDailyCategoryName(c.name));
-    return [...daily, ...regular];
+    return sortFoodCategories(categories.filter((c) => c.type === 'food'));
   }, [categories]);
 
-  const drinkCategories = useMemo(() => categories?.filter((c) => c.type === 'drinks') ?? [], [categories]);
+  const drinkCategories = useMemo(() => {
+    if (!categories) return [];
+    return [...categories.filter((c) => c.type === 'drinks')].sort(
+      (a, b) => (a.sort ?? 0) - (b.sort ?? 0)
+    );
+  }, [categories]);
+
   const visible = type === 'food' ? foodCategories : drinkCategories;
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
-
-  function categoryLabel(c) {
-    if (isDailyCategoryName(c.name)) return t.dailyOffers;
-    return c.name;
-  }
 
   function switchType(next) {
     setType(next);
@@ -127,24 +149,21 @@ export default function Menu() {
                 className={c.id === active?.id ? 'active' : ''}
                 onClick={() => setActiveId(c.id)}
               >
-                {categoryLabel(c)}
+                {c.name}
               </button>
             ))}
           </div>
         </div>
 
-        {type === 'food' && isDailyCategoryName(active?.name || '') && (
-          <p className="menu-note">{t.dailyNote}</p>
-        )}
+        {active?.note && <p className="menu-note">{active.note}</p>}
         {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
-        {active?.note && !isDailyCategoryName(active.name) && <p className="menu-note">{active.note}</p>}
 
         <ul className="menu-list">
           {active?.items.map((item) => (
             <MenuItemRow
               key={item.id}
               item={item}
-              onOpen={() => openPreview(item, active.items, categoryLabel(active))}
+              onOpen={() => openPreview(item, active.items, active.name)}
             />
           ))}
         </ul>

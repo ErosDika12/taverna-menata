@@ -79,7 +79,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Menyja */}
+      {/* 2. Galeria — single section, early after hero */}
+      <section id="galeria" className="home-section section home-gallery">
+        <div className="home-section-head">
+          <h2>{tg.title}</h2>
+          <p>{tg.subtitle}</p>
+        </div>
+        {photos === null ? (
+          <p className="home-loading">{tg.loading}</p>
+        ) : (
+          <div className="home-gallery-grid">
+            {galleryPreview.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className="gallery-cell"
+                onClick={() => openGalleryPreview(p, galleryPreview)}
+              >
+                <img src={mediaUrl(p.thumb)} alt={p.alt} loading="lazy" decoding="async" />
+              </button>
+            ))}
+          </div>
+        )}
+        <Link to="/gallery" className="btn btn-primary home-section-link">
+          {nav.gallery}
+        </Link>
+      </section>
+
+      {/* 3. Menyja */}
       <section id="menu" className="home-section section home-menu">
         <div className="home-section-head">
           <h2>{tm.title}</h2>
@@ -119,30 +146,6 @@ export default function Home() {
         <Link to="/menu" className="btn btn-primary home-section-link">
           {b.menu}
         </Link>
-      </section>
-
-      {/* 3. Galeria — one title at the start of the section */}
-      <section id="galeria" className="home-section section home-gallery">
-        <div className="home-section-head">
-          <h2>{tg.title}</h2>
-          <p>{tg.subtitle}</p>
-        </div>
-        {photos === null ? (
-          <p className="home-loading">{tg.loading}</p>
-        ) : (
-          <div className="home-gallery-grid">
-            {galleryPreview.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className="gallery-cell"
-                onClick={() => openGalleryPreview(p, galleryPreview)}
-              >
-                <img src={mediaUrl(p.thumb)} alt={p.alt} loading="lazy" decoding="async" />
-              </button>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* 4. Historia — same label/order as bottom nav */}

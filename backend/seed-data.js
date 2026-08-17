@@ -1,11 +1,19 @@
 // Initial content for the database, transcribed from the printed
 // Taverna Menata menu and the provided brand material. Prices in EUR.
 
+const { wineItems } = require('./wine-menu');
+
 const categories = [
+  {
+    name: 'Oferte Ditore',
+    type: 'food',
+    note: 'Ofertat e ditës ndryshojnë — pyet stafin.',
+    items: []
+  },
   {
     name: 'Meny Ditore',
     type: 'food',
-    note: 'Sh�rbehet �do dit� deri n� ora 17:00',
+    note: 'Sh\u00ebrbehet \u00e7do dit\u00eb deri n\u00eb ora 17:00',
     items: [
       { name: 'M�ngjes Menata', price: 4.5, description: 'Vez� n� furr�, tortilla me spinaq, mocarela, tomatina, qep� e re', image: '/uploads/gallery/dsc00765.jpg' },
       { name: 'M�ngjes Fshati', price: 5, description: 'Vez� n� sy, virshlle pule t� f�rguara, qum�sht, gjalp�, marmelad�, djath i bardh�, qep� e re', image: '/uploads/gallery/dsc00787.jpg' },
@@ -111,6 +119,11 @@ const categories = [
       { name: 'Smirnoff Ice', price: 4 },
       { name: 'Budweiser', price: 4.5 }
     ]
+  },
+  {
+    name: 'Verëra',
+    type: 'drinks',
+    items: wineItems
   },
   {
     name: 'Koktella',
@@ -316,11 +329,13 @@ const gallery = [
 ];
 
 const categoryTranslations = {
+  'Oferte Ditore': { name_en: 'Daily Offers', note_en: 'Daily offers change — ask the staff.' },
   'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },
   'Pjata Shtes\u00eb': { name_en: 'Side Dishes' },
   Birrat: { name_en: 'Beers' },
+  'Verëra': { name_en: 'Wines' },
   Koktella: { name_en: 'Cocktails' },
   Shots: { name_en: 'Shots' },
   Raki: { name_en: 'Raki' },

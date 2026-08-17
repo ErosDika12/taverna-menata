@@ -428,6 +428,7 @@ function importAdminsFromEnv() {
 seedIfEmpty();
 
 const { ensureI18n } = require('./ensure-i18n');
+const { ensureMenuStructure } = require('./ensure-menu-structure');
 ensureI18n(db);
 ensureAdminPassword(db);
 migrateAdminRolesSchema();
@@ -438,6 +439,7 @@ importAdminsRegistry();
 exportAdminsRegistry();
 migrateOpeningHours();
 migrateCategoryNotes();
+ensureMenuStructure(db);
 
 if (require.main === module) {
   reseed();

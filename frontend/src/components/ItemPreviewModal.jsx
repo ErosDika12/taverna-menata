@@ -56,6 +56,28 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
     };
   }, [item, onClose, goPrev, goNext]);
 
+  useEffect(() => {
+    if (item == null || items.length <= 1) return;
+    let acc = 0;
+    let lockedUntil = 0;
+    function onWheel(e) {
+      if (e.target.closest?.('.preview-modal-body-scroll')) return;
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (!delta) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now < lockedUntil) return;
+      acc += delta;
+      if (Math.abs(acc) < 50) return;
+      if (acc > 0) goNext();
+      else goPrev();
+      acc = 0;
+      lockedUntil = now + 280;
+    }
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [item, items.length, goPrev, goNext]);
+
   function handleClose() {
     setVisible(false);
     window.setTimeout(onClose, 220);

@@ -1,11 +1,13 @@
 /** English translations for menu items and gallery. Keys: "Category::Item name" */
 
 const CATEGORY_EN = {
+  'Oferte Ditore': { name_en: 'Daily Offers', note_en: 'Daily offers change — ask the staff.' },
   'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },
   'Pjata Shtes\u00eb': { name_en: 'Side Dishes' },
   Birrat: { name_en: 'Beers' },
+  'Verëra': { name_en: 'Wines' },
   Koktella: { name_en: 'Cocktails' },
   Shots: { name_en: 'Shots' },
   Raki: { name_en: 'Raki' },
@@ -20,7 +22,7 @@ const CATEGORY_EN = {
 };
 
 const DRINK_CATEGORIES = new Set([
-  'Birrat', 'Koktella', 'Shots', 'Raki', 'Whiskey', 'Vodka', 'Gin', 'Rum', 'Tequila', 'Likere', 'Cognac', 'Shampanjë'
+  'Birrat', 'Verëra', 'Koktella', 'Shots', 'Raki', 'Whiskey', 'Vodka', 'Gin', 'Rum', 'Tequila', 'Likere', 'Cognac', 'Shampanjë'
 ]);
 
 const ITEM_EN = {
