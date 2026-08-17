@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Home, UtensilsCrossed, Images, Landmark, Phone } from 'lucide-react';
 import { useLang } from '../i18n';
@@ -22,8 +22,21 @@ export default function Layout() {
   const { lang } = useLang();
   const t = ui[lang];
   const { pathname } = useLocation();
+  const [suppressActionBar, setSuppressActionBar] = useState(false);
 
-  const showActionBar = pathname !== '/contact' && pathname !== '/';
+  useEffect(() => {
+    function onSuppress(e) {
+      setSuppressActionBar(Boolean(e.detail));
+    }
+    window.addEventListener('taverna:suppress-action-bar', onSuppress);
+    return () => window.removeEventListener('taverna:suppress-action-bar', onSuppress);
+  }, []);
+
+  useEffect(() => {
+    if (pathname !== '/menu') setSuppressActionBar(false);
+  }, [pathname]);
+
+  const showActionBar = pathname !== '/contact' && pathname !== '/' && !suppressActionBar;
 
   useEffect(() => {
     if (pathname !== '/') window.scrollTo(0, 0);

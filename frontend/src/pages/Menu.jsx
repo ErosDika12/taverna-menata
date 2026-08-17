@@ -39,6 +39,11 @@ function sortFoodCategories(food) {
   });
 }
 
+/** Oferta Ditore / Daily Offers only — not Meny Ditore */
+function isDailyOffersCategory(name = '') {
+  return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
+}
+
 function MenuItemRow({ item, onOpen }) {
   return (
     <li className="menu-item">
@@ -74,7 +79,8 @@ export default function Menu() {
       .then((data) => {
         setCategories(data);
         const food = sortFoodCategories(data.filter((c) => c.type === 'food'));
-        setActiveId(food[0]?.id ?? data[0]?.id ?? null);
+        const daily = food.find((c) => isDailyOffersCategory(c.name));
+        setActiveId(daily?.id ?? food[0]?.id ?? data[0]?.id ?? null);
       })
       .catch(() => setCategories([]));
   }, [lang]);
@@ -93,6 +99,21 @@ export default function Menu() {
 
   const visible = type === 'food' ? foodCategories : drinkCategories;
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
+  const viewingDailyOffers = type === 'food' && isDailyOffersCategory(active?.name || '');
+
+  useEffect(() => {
+    window.dispatchEvent(
+      new CustomEvent('taverna:suppress-action-bar', { detail: viewingDailyOffers })
+    );
+    return () => {
+      window.dispatchEvent(new CustomEvent('taverna:suppress-action-bar', { detail: false }));
+    };
+  }, [viewingDailyOffers]);
+
+  function categoryLabel(c) {
+    if (isDailyOffersCategory(c.name)) return t.dailyOffers;
+    return c.name;
+  }
 
   function switchType(next) {
     setType(next);
@@ -149,21 +170,22 @@ export default function Menu() {
                 className={c.id === active?.id ? 'active' : ''}
                 onClick={() => setActiveId(c.id)}
               >
-                {c.name}
+                {categoryLabel(c)}
               </button>
             ))}
           </div>
         </div>
 
-        {active?.note && <p className="menu-note">{active.note}</p>}
+        {viewingDailyOffers && <p className="menu-note">{t.dailyNote}</p>}
         {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
+        {active?.note && !isDailyOffersCategory(active.name) && <p className="menu-note">{active.note}</p>}
 
         <ul className="menu-list">
           {active?.items.map((item) => (
             <MenuItemRow
               key={item.id}
               item={item}
-              onOpen={() => openPreview(item, active.items, active.name)}
+              onOpen={() => openPreview(item, active.items, categoryLabel(active))}
             />
           ))}
         </ul>
