@@ -115,15 +115,6 @@ export default function Menu() {
   const active = visible.find((c) => c.id === activeId) ?? visible[0];
   const viewingDailyOffers = type === 'food' && isDailyOffersCategory(active?.name || '');
 
-  useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent('taverna:suppress-action-bar', { detail: viewingDailyOffers })
-    );
-    return () => {
-      window.dispatchEvent(new CustomEvent('taverna:suppress-action-bar', { detail: false }));
-    };
-  }, [viewingDailyOffers]);
-
   function categoryLabel(c) {
     if (isDailyOffersCategory(c.name)) return t.dailyOffers;
     return c.name;

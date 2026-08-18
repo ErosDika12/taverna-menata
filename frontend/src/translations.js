@@ -75,7 +75,7 @@ export const ui = {
       callTitle: 'Thirr tani',
       callText: 'Rezervimet bëhen vetëm me telefon.',
       directionsTitle: 'Si të vish',
-      reviewTitle: 'Leave a Review',
+      reviewTitle: 'Na lini një vlerësim',
       reviewText: 'Na lini një vlerësim në Google.',
       reviewButton: 'Lini një review',
       address: 'Adresa',
