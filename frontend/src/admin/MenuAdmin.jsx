@@ -33,6 +33,8 @@ export default function MenuAdmin() {
 
   const catItems = items.filter((i) => i.category_id === catId);
   const activeCat = categories.find((c) => c.id === catId);
+  const foodCategories = categories.filter((c) => c.type === 'food');
+  const drinkCategories = categories.filter((c) => c.type === 'drinks');
 
   async function saveCategory(e) {
     e.preventDefault();
@@ -168,11 +170,20 @@ export default function MenuAdmin() {
         <label>
           Kategoria
           <select value={catId || ''} onChange={(e) => setCatId(Number(e.target.value))}>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+            <optgroup label="USHQIM">
+              {foodCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="PIJE">
+              {drinkCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
           </select>
         </label>
         <button type="button" className="btn btn-primary" onClick={newItem}>

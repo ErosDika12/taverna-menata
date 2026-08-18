@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Home, UtensilsCrossed, Images, Landmark, Phone } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { ui } from '../translations';
 import LanguageSwitcher from './LanguageSwitcher';
-import MobileActionBar from './MobileActionBar';
 import SeoHead from './SeoHead';
 import logo from '../assets/logo.png';
 
@@ -22,34 +21,18 @@ export default function Layout() {
   const { lang } = useLang();
   const t = ui[lang];
   const { pathname } = useLocation();
-  const [suppressActionBar, setSuppressActionBar] = useState(false);
-
-  useEffect(() => {
-    function onSuppress(e) {
-      setSuppressActionBar(Boolean(e.detail));
-    }
-    window.addEventListener('taverna:suppress-action-bar', onSuppress);
-    return () => window.removeEventListener('taverna:suppress-action-bar', onSuppress);
-  }, []);
-
-  useEffect(() => {
-    if (pathname !== '/menu') setSuppressActionBar(false);
-  }, [pathname]);
-
-  const showActionBar =
-    pathname !== '/contact' && pathname !== '/' && pathname !== '/gallery' && !suppressActionBar;
 
   useEffect(() => {
     if (pathname !== '/') window.scrollTo(0, 0);
-    document.body.classList.toggle('no-action-bar', !showActionBar);
     document.body.classList.toggle('home-page', pathname === '/');
     return () => {
-      document.body.classList.remove('no-action-bar', 'home-page');
+      document.body.classList.remove('home-page');
     };
-  }, [pathname, showActionBar]);
+  }, [pathname]);
 
   return (
     <>
+      <SeoHead />
       <header className="topbar">
         <NavLink to="/" className="topbar-brand">
           <img src={logo} alt="" />
@@ -82,8 +65,6 @@ export default function Layout() {
           {t.buttons.contactUs}
         </NavLink>
       </footer>
-
-      {showActionBar && <MobileActionBar />}
 
       <nav className="bottomnav" aria-label={t.a11y.mainNav}>
         {navIcons.map(({ to, key, icon: Icon }) => (
