@@ -2,8 +2,7 @@
 node_modules/
 
 # Environment & secrets
-.env
-.env.*
+.env*
 !.env.example
 
 # Build output
@@ -51,5 +50,3 @@ temp/
 # Test / coverage
 coverage/
 .nyc_output/
-.vercel
-.env*
