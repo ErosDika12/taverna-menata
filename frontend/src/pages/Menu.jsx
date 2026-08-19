@@ -10,13 +10,16 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-/** Match backend/ensure-menu-structure.js FOOD_ORDER */
-const FOOD_ORDER = [
-  'Oferte Ditore',
-  'Meny Ditore',
-  'Sallata',
-  'Pjata Kryesore',
-  'Pjata Shtesë'
+/** Match backend/ensure-menu-structure.js FOOD_ORDER (offers are a main tab, not listed here). */
+const FOOD_ORDER = ['Meny Ditore', 'Sallata', 'Pjata Kryesore', 'Pjata Shtesë'];
+
+const WEEKDAY_OFFERS = [
+  { id: 'offer-mon', day_sq: 'E HËNË', day_en: 'Monday', name: 'Pasul në Tavë', price: 4.9 },
+  { id: 'offer-tue', day_sq: 'E MARTË', day_en: 'Tuesday', name: 'Tavë me Patate', price: 4.9 },
+  { id: 'offer-wed', day_sq: 'E MËRKURË', day_en: 'Wednesday', name: 'Dollma', price: 4.9 },
+  { id: 'offer-thu', day_sq: 'E ENJTE', day_en: 'Thursday', name: 'Tavë me Perime', price: 4.9 },
+  { id: 'offer-fri', day_sq: 'E PREMTE', day_en: 'Friday', name: 'Sarma me fleta rrushi', price: 4.9 },
+  { id: 'offer-sat', day_sq: 'E SHTUNË', day_en: 'Saturday', name: 'Tavë me oriz', price: 4.9 }
 ];
 
 function categoryKey(name = '') {
@@ -39,17 +42,8 @@ function sortFoodCategories(food) {
   });
 }
 
-/** Oferta Ditore / Daily Offers only — not Meny Ditore */
 function isDailyOffersCategory(name = '') {
   return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
-}
-
-function isDailyMenuCategory(name = '') {
-  return /meny\s*ditore/i.test(name) || /menuja\s*ditore/i.test(name) || /daily\s*menu/i.test(name);
-}
-
-function isServedUntil17Category(name = '') {
-  return isDailyOffersCategory(name) || isDailyMenuCategory(name);
 }
 
 function MenuItemRow({ item, onOpen }) {
@@ -73,6 +67,24 @@ function MenuItemRow({ item, onOpen }) {
   );
 }
 
+function CategorySections({ categories, categoryLabel, onOpen }) {
+  return categories.map((c) => (
+    <section key={c.id} id={`menu-cat-${c.id}`} className="menu-section">
+      <h2 className="menu-category-title">{categoryLabel(c)}</h2>
+      {c.note && <p className="menu-note">{c.note}</p>}
+      <ul className="menu-list">
+        {c.items.map((item) => (
+          <MenuItemRow
+            key={item.id}
+            item={item}
+            onOpen={() => onOpen(item, c.items, categoryLabel(c))}
+          />
+        ))}
+      </ul>
+    </section>
+  ));
+}
+
 export default function Menu() {
   const { lang } = useLang();
   const settings = useSettings();
@@ -89,7 +101,9 @@ export default function Menu() {
 
   const foodCategories = useMemo(() => {
     if (!categories) return [];
-    return sortFoodCategories(categories.filter((c) => c.type === 'food'));
+    return sortFoodCategories(
+      categories.filter((c) => c.type === 'food' && !isDailyOffersCategory(c.name))
+    );
   }, [categories]);
 
   const drinkCategories = useMemo(() => {
@@ -100,12 +114,23 @@ export default function Menu() {
   }, [categories]);
 
   const visible = useMemo(() => {
-    const list = type === 'food' ? foodCategories : drinkCategories;
+    const list = type === 'food' ? foodCategories : type === 'drinks' ? drinkCategories : [];
     return list.filter((c) => (c.items?.length ?? 0) > 0);
   }, [type, foodCategories, drinkCategories]);
 
+  const offerItems = useMemo(
+    () =>
+      WEEKDAY_OFFERS.map((o) => ({
+        id: o.id,
+        name: o.name,
+        price: o.price,
+        image: null,
+        description: null
+      })),
+    []
+  );
+
   function categoryLabel(c) {
-    if (isDailyOffersCategory(c.name)) return t.dailyOffers;
     return c.name;
   }
 
@@ -129,7 +154,7 @@ export default function Menu() {
       </header>
 
       <div className="menu-sticky">
-        <div className="menu-type" role="tablist">
+        <div className="menu-type menu-three" role="tablist">
           <button
             role="tab"
             aria-selected={type === 'food'}
@@ -146,27 +171,44 @@ export default function Menu() {
           >
             {t.drinks}
           </button>
+          <button
+            role="tab"
+            aria-selected={type === 'offers'}
+            className={type === 'offers' ? 'active' : ''}
+            onClick={() => setType('offers')}
+          >
+            {t.offers}
+          </button>
         </div>
       </div>
 
       {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
 
-      {visible.map((c) => (
-        <section key={c.id} id={`menu-cat-${c.id}`} className="menu-section">
-          <h2 className="menu-category-title">{categoryLabel(c)}</h2>
-          {isServedUntil17Category(c.name) && <p className="menu-note">{t.servedUntil}</p>}
-          {c.note && !isServedUntil17Category(c.name) && <p className="menu-note">{c.note}</p>}
-          <ul className="menu-list">
-            {c.items.map((item) => (
-              <MenuItemRow
-                key={item.id}
-                item={item}
-                onOpen={() => openPreview(item, c.items, categoryLabel(c))}
-              />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {type === 'offers' && <p className="menu-note">{t.offersServedUntil}</p>}
+
+      {type === 'offers'
+        ? WEEKDAY_OFFERS.map((offer) => {
+            const day = lang === 'en' ? offer.day_en : offer.day_sq;
+            const item = offerItems.find((i) => i.id === offer.id);
+            return (
+              <section key={offer.id} className="menu-section">
+                <h2 className="menu-category-title">{day}</h2>
+                <ul className="menu-list">
+                  <MenuItemRow
+                    item={item}
+                    onOpen={() => openPreview(item, offerItems, day)}
+                  />
+                </ul>
+              </section>
+            );
+          })
+        : (
+            <CategorySections
+              categories={visible}
+              categoryLabel={categoryLabel}
+              onOpen={openPreview}
+            />
+          )}
 
       {preview.items.length > 0 && (
         <ItemPreviewModal

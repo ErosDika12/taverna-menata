@@ -549,6 +549,16 @@ main {
   margin-bottom: 0;
 }
 
+.menu-type.menu-three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.menu-type.menu-three button {
+  font-size: clamp(0.72rem, 2.6vw, 1.05rem);
+  padding: 10px 4px;
+  line-height: 1.2;
+}
+
 .menu-type button {
   border: none;
   border-radius: 999px;
@@ -1444,7 +1454,12 @@ main {
 }
 
 .menu-category-title {
+  position: sticky;
+  top: calc(var(--topbar-h) + 72px);
+  z-index: 25;
   margin: 0 0 8px;
+  padding: 8px 0 6px;
+  background: var(--bg);
   scroll-margin-top: calc(var(--topbar-h) + 72px);
 }
 

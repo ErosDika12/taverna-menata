@@ -2,13 +2,14 @@
 // Taverna Menata menu and the provided brand material. Prices in EUR.
 
 const { wineItems } = require('./wine-menu');
+const { dailyOfferItems } = require('./daily-offers');
 
 const categories = [
   {
     name: 'Oferte Ditore',
     type: 'food',
-    note: 'Ofertat e ditës ndryshojnë — pyet stafin.',
-    items: []
+    note: null,
+    items: dailyOfferItems
   },
   {
     name: 'Meny Ditore',
@@ -329,7 +330,7 @@ const gallery = [
 ];
 
 const categoryTranslations = {
-  'Oferte Ditore': { name_en: 'Daily Offers', note_en: 'Daily offers change — ask the staff.' },
+  'Oferte Ditore': { name_en: 'Daily Offers' },
   'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },

@@ -1,6 +1,7 @@
 const { wineItems } = require('./wine-menu');
+const { dailyOfferItems } = require('./daily-offers');
 
-const MENU_STRUCTURE_VERSION = '2026-08-menu-verera-v1';
+const MENU_STRUCTURE_VERSION = '2026-08-daily-offers-week-v1';
 
 const FOOD_ORDER = [
   'Oferte Ditore',
@@ -47,7 +48,6 @@ function ensureMenuStructure(db) {
   );
 
   if (getSetting.get('menu_structure_version')?.value === MENU_STRUCTURE_VERSION) {
-    // Still refresh sort order in case admin reordered names we know.
     applySortOrder(db);
     return;
   }
@@ -61,47 +61,54 @@ function ensureMenuStructure(db) {
        VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`
     );
     const deleteItems = db.prepare('DELETE FROM items WHERE category_id = ?');
+    const updateNote = db.prepare('UPDATE categories SET note = ?, note_en = ? WHERE id = ?');
 
     let categories = db.prepare('SELECT * FROM categories').all();
 
     if (!findCategory(categories, 'Oferte Ditore')) {
-      insertCategory.run(
-        'Oferte Ditore',
-        'Daily Offers',
-        'food',
-        'Ofertat e ditës ndryshojnë — pyet stafin.',
-        'Daily offers change — ask the staff.',
-        0
-      );
+      insertCategory.run('Oferte Ditore', 'Daily Offers', 'food', null, null, 0);
       categories = db.prepare('SELECT * FROM categories').all();
     }
 
-    let verera = findCategory(categories, 'Verëra');
-    if (!verera) {
-      const { lastInsertRowid } = insertCategory.run(
-        'Verëra',
-        'Wines',
-        'drinks',
-        null,
-        null,
-        5
-      );
-      verera = { id: lastInsertRowid, name: 'Verëra' };
+    const oferte = findCategory(categories, 'Oferte Ditore');
+    if (oferte) {
+      updateNote.run(null, null, oferte.id);
+      deleteItems.run(oferte.id);
+      dailyOfferItems.forEach((item, i) => {
+        insertItem.run(
+          oferte.id,
+          item.name,
+          item.name_en || null,
+          item.description || null,
+          item.description_en || null,
+          item.price,
+          null,
+          i
+        );
+      });
     }
 
-    deleteItems.run(verera.id);
-    wineItems.forEach((item, i) => {
-      insertItem.run(
-        verera.id,
-        item.name,
-        item.name_en || null,
-        item.description || null,
-        item.description_en || null,
-        item.price,
-        null,
-        i
-      );
-    });
+    const previous = getSetting.get('menu_structure_version')?.value;
+    if (!previous) {
+      let verera = findCategory(categories, 'Verëra');
+      if (!verera) {
+        const { lastInsertRowid } = insertCategory.run('Verëra', 'Wines', 'drinks', null, null, 5);
+        verera = { id: lastInsertRowid, name: 'Verëra' };
+      }
+      deleteItems.run(verera.id);
+      wineItems.forEach((item, i) => {
+        insertItem.run(
+          verera.id,
+          item.name,
+          item.name_en || null,
+          item.description || null,
+          item.description_en || null,
+          item.price,
+          null,
+          i
+        );
+      });
+    }
 
     applySortOrder(db);
     upsertSetting.run('menu_structure_version', MENU_STRUCTURE_VERSION);
