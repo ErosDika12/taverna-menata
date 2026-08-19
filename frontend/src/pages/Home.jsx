@@ -144,7 +144,7 @@ export default function Home() {
 
       {/* 4. Historia — button → text → photo */}
       <section id="historia" className="home-section section home-about">
-        <Link to="/about" className="btn btn-outline home-section-link">
+        <Link to="/about" className="btn btn-primary home-section-link">
           {b.ourStory}
         </Link>
         <p className="home-section-desc">{t.visitText}</p>
@@ -174,12 +174,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. Kontakti — content first; Na Kontakto stays last */}
+      {/* 5. Kontakti — button → text → content */}
       <section id="kontakt" className="home-section section home-contact">
-        <div className="home-section-head">
-          <h2>{tc.title}</h2>
-          <p>{tc.subtitle}</p>
-        </div>
+        <Link to="/contact" className="btn btn-primary home-section-link">
+          {b.contactUs}
+        </Link>
+        <p className="home-section-desc">{tc.subtitle}</p>
 
         <div className="contact-block home-contact-block">
           <p>{tc.callText}</p>
@@ -209,10 +209,6 @@ export default function Home() {
             {b.directions}
           </a>
         </div>
-
-        <Link to="/contact" className="btn btn-outline home-section-link">
-          {b.contactUs}
-        </Link>
       </section>
 
       {preview.items.length > 0 && (
