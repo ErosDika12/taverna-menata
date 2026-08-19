@@ -545,6 +545,10 @@ main {
   margin-bottom: 14px;
 }
 
+.menu-sticky .menu-type {
+  margin-bottom: 0;
+}
+
 .menu-type button {
   border: none;
   border-radius: 999px;
@@ -1435,8 +1439,13 @@ main {
 /* ---------- Menu sections ---------- */
 
 .menu-section {
-  scroll-margin-top: var(--topbar-h);
+  scroll-margin-top: calc(var(--topbar-h) + 72px);
   margin-bottom: 20px;
+}
+
+.menu-category-title {
+  margin: 0 0 8px;
+  scroll-margin-top: calc(var(--topbar-h) + 72px);
 }
 
 .menu-section-sub {

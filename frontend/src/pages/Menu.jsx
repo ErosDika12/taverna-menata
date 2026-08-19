@@ -44,6 +44,14 @@ function isDailyOffersCategory(name = '') {
   return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
 }
 
+function isDailyMenuCategory(name = '') {
+  return /meny\s*ditore/i.test(name) || /menuja\s*ditore/i.test(name) || /daily\s*menu/i.test(name);
+}
+
+function isServedUntil17Category(name = '') {
+  return isDailyOffersCategory(name) || isDailyMenuCategory(name);
+}
+
 function MenuItemRow({ item, onOpen }) {
   return (
     <li className="menu-item">
@@ -71,17 +79,11 @@ export default function Menu() {
   const t = ui[lang].menu;
   const [categories, setCategories] = useState(null);
   const [type, setType] = useState('food');
-  const [activeId, setActiveId] = useState(null);
   const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '' });
 
   useEffect(() => {
     apiGet('/api/menu', lang)
-      .then((data) => {
-        setCategories(data);
-        const food = sortFoodCategories(data.filter((c) => c.type === 'food'));
-        const daily = food.find((c) => isDailyOffersCategory(c.name));
-        setActiveId(daily?.id ?? food[0]?.id ?? data[0]?.id ?? null);
-      })
+      .then(setCategories)
       .catch(() => setCategories([]));
   }, [lang]);
 
@@ -97,19 +99,14 @@ export default function Menu() {
     );
   }, [categories]);
 
-  const visible = type === 'food' ? foodCategories : drinkCategories;
-  const active = visible.find((c) => c.id === activeId) ?? visible[0];
-  const viewingDailyOffers = type === 'food' && isDailyOffersCategory(active?.name || '');
+  const visible = useMemo(() => {
+    const list = type === 'food' ? foodCategories : drinkCategories;
+    return list.filter((c) => (c.items?.length ?? 0) > 0);
+  }, [type, foodCategories, drinkCategories]);
 
   function categoryLabel(c) {
     if (isDailyOffersCategory(c.name)) return t.dailyOffers;
     return c.name;
-  }
-
-  function switchType(next) {
-    setType(next);
-    const list = next === 'food' ? foodCategories : drinkCategories;
-    setActiveId(list[0]?.id ?? null);
   }
 
   function openPreview(item, list, categoryName) {
@@ -137,7 +134,7 @@ export default function Menu() {
             role="tab"
             aria-selected={type === 'food'}
             className={type === 'food' ? 'active' : ''}
-            onClick={() => switchType('food')}
+            onClick={() => setType('food')}
           >
             {t.food}
           </button>
@@ -145,42 +142,31 @@ export default function Menu() {
             role="tab"
             aria-selected={type === 'drinks'}
             className={type === 'drinks' ? 'active' : ''}
-            onClick={() => switchType('drinks')}
+            onClick={() => setType('drinks')}
           >
             {t.drinks}
           </button>
         </div>
-
-        <div className="chips chips-wrap" role="tablist">
-          {visible.map((c) => (
-            <button
-              key={c.id}
-              role="tab"
-              aria-selected={c.id === active?.id}
-              className={c.id === active?.id ? 'active' : ''}
-              onClick={() => setActiveId(c.id)}
-            >
-              {categoryLabel(c)}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <section id="menu" className="menu-section">
-        {viewingDailyOffers && <p className="menu-note">{t.dailyNote}</p>}
-        {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
-        {active?.note && !isDailyOffersCategory(active.name) && <p className="menu-note">{active.note}</p>}
+      {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
 
-        <ul className="menu-list">
-          {active?.items.map((item) => (
-            <MenuItemRow
-              key={item.id}
-              item={item}
-              onOpen={() => openPreview(item, active.items, categoryLabel(active))}
-            />
-          ))}
-        </ul>
-      </section>
+      {visible.map((c) => (
+        <section key={c.id} id={`menu-cat-${c.id}`} className="menu-section">
+          <h2 className="menu-category-title">{categoryLabel(c)}</h2>
+          {isServedUntil17Category(c.name) && <p className="menu-note">{t.servedUntil}</p>}
+          {c.note && !isServedUntil17Category(c.name) && <p className="menu-note">{c.note}</p>}
+          <ul className="menu-list">
+            {c.items.map((item) => (
+              <MenuItemRow
+                key={item.id}
+                item={item}
+                onOpen={() => openPreview(item, c.items, categoryLabel(c))}
+              />
+            ))}
+          </ul>
+        </section>
+      ))}
 
       {preview.items.length > 0 && (
         <ItemPreviewModal
