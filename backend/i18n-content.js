@@ -1,7 +1,7 @@
 /** English translations for menu items and gallery. Keys: "Category::Item name" */
 
 const CATEGORY_EN = {
-  'Oferte Ditore': { name_en: 'Daily Offers', note_en: 'Daily offers change — ask the staff.' },
+  'Oferte Ditore': { name_en: 'Daily Offers' },
   'Meny Ditore': { name_en: 'Daily Menu' },
   Sallata: { name_en: 'Salads' },
   'Pjata Kryesore': { name_en: 'Main Dishes' },
@@ -26,6 +26,12 @@ const DRINK_CATEGORIES = new Set([
 ]);
 
 const ITEM_EN = {
+  'Oferte Ditore::Pasul në Tavë': { name_en: 'Baked beans', description_en: 'Monday' },
+  'Oferte Ditore::Tavë me Patate': { name_en: 'Potato casserole', description_en: 'Tuesday' },
+  'Oferte Ditore::Dollma': { name_en: 'Dolma', description_en: 'Wednesday' },
+  'Oferte Ditore::Tavë me Perime': { name_en: 'Vegetable casserole', description_en: 'Thursday' },
+  'Oferte Ditore::Sarma me fleta rrushi': { name_en: 'Stuffed grape leaves', description_en: 'Friday' },
+  'Oferte Ditore::Tavë me oriz': { name_en: 'Rice casserole', description_en: 'Saturday' },
   'Meny Ditore::Mëngjes Menata': {
     name_en: 'Menata Breakfast',
     description_en: 'Baked egg, spinach tortilla, mozzarella, cherry tomatoes, spring onion'

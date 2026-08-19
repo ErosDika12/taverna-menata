@@ -4,11 +4,14 @@ import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
 import ItemPreviewModal from '../components/ItemPreviewModal';
+import GalleryReelsViewer from '../components/GalleryReelsViewer';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { mediaUrl } from '../media';
 
 export default function Gallery() {
   const { lang } = useLang();
   const t = ui[lang].gallery;
+  const isMobile = useMediaQuery('(max-width: 799px)');
   const modes = [
     { key: 'all', label: t.all },
     { key: 'photos', label: t.photos },
@@ -139,13 +142,22 @@ export default function Gallery() {
       )}
 
       {openPhoto !== null && previewItems.length > 0 && (
-        <ItemPreviewModal
-          items={previewItems}
-          index={openPhoto}
-          categoryName={t.title}
-          onClose={() => setOpenPhoto(null)}
-          onChange={setOpenPhoto}
-        />
+        isMobile ? (
+          <GalleryReelsViewer
+            items={previewItems}
+            index={openPhoto}
+            onClose={() => setOpenPhoto(null)}
+            onChange={setOpenPhoto}
+          />
+        ) : (
+          <ItemPreviewModal
+            items={previewItems}
+            index={openPhoto}
+            categoryName={t.title}
+            onClose={() => setOpenPhoto(null)}
+            onChange={setOpenPhoto}
+          />
+        )
       )}
 
       {openVideo && (
