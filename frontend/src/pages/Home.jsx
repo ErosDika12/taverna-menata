@@ -25,7 +25,6 @@ export default function Home() {
   const tm = ui[lang].menu;
   const tc = ui[lang].contact;
   const b = ui[lang].buttons;
-  const nav = ui[lang].nav;
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
@@ -82,9 +81,6 @@ export default function Home() {
 
       {/* 2. Galeria — button → text → photos (3-col) */}
       <section id="galeria" className="home-section section home-gallery">
-        <div className="home-section-head">
-          <h2>{tg.title}</h2>
-        </div>
         <Link to="/gallery" className="btn btn-primary home-section-link">
           {galleryCta}
         </Link>
@@ -109,9 +105,6 @@ export default function Home() {
 
       {/* 3. Menyja — button → text → photos */}
       <section id="menu" className="home-section section home-menu">
-        <div className="home-section-head">
-          <h2>{tm.title}</h2>
-        </div>
         <Link to="/menu" className="btn btn-primary home-section-link">
           {b.menu}
         </Link>
@@ -151,9 +144,6 @@ export default function Home() {
 
       {/* 4. Historia — button → text → photo */}
       <section id="historia" className="home-section section home-about">
-        <div className="home-section-head">
-          <h2>{nav.about}</h2>
-        </div>
         <Link to="/about" className="btn btn-outline home-section-link">
           {b.ourStory}
         </Link>
@@ -192,7 +182,6 @@ export default function Home() {
         </div>
 
         <div className="contact-block home-contact-block">
-          <h3>{tc.callTitle}</h3>
           <p>{tc.callText}</p>
           <a className="btn btn-primary contact-call-btn" href={`tel:${phone}`}>
             <Phone size={20} aria-hidden="true" />
@@ -201,7 +190,6 @@ export default function Home() {
         </div>
 
         <div className="contact-block home-contact-block">
-          <h3>{tc.directionsTitle}</h3>
           <div className="contact-info-row">
             <MapPin size={22} aria-hidden="true" />
             <div>
