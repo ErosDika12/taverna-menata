@@ -6,8 +6,12 @@ const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getAdminSecret() {
   if (process.env.ADMIN_SECRET) return process.env.ADMIN_SECRET;
-  if (process.env.VERCEL && !getAdminSecret._warned) {
-    console.warn('[security] Set ADMIN_SECRET in Vercel environment variables for stronger token signing.');
+  if (!getAdminSecret._warned) {
+    console.warn(
+      '[SECURITY WARNING] ADMIN_SECRET is not set. Token signing is derived from the admin password hash, ' +
+      'which is weak if the default password has not been changed. ' +
+      'Set ADMIN_SECRET to a long random string in your environment variables (Vercel dashboard or .env).'
+    );
     getAdminSecret._warned = true;
   }
   const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get();

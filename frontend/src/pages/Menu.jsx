@@ -13,15 +13,6 @@ function formatPrice(price) {
 /** Match backend/ensure-menu-structure.js FOOD_ORDER (offers are a main tab, not listed here). */
 const FOOD_ORDER = ['Meny Ditore', 'Sallata', 'Pjata Kryesore', 'Pjata Shtesë'];
 
-const WEEKDAY_OFFERS = [
-  { id: 'offer-mon', day_sq: 'E HËNË', day_en: 'Monday', name: 'Pasul në Tavë', price: 4.9 },
-  { id: 'offer-tue', day_sq: 'E MARTË', day_en: 'Tuesday', name: 'Tavë me Patate', price: 4.9 },
-  { id: 'offer-wed', day_sq: 'E MËRKURË', day_en: 'Wednesday', name: 'Dollma', price: 4.9 },
-  { id: 'offer-thu', day_sq: 'E ENJTE', day_en: 'Thursday', name: 'Tavë me Perime', price: 4.9 },
-  { id: 'offer-fri', day_sq: 'E PREMTE', day_en: 'Friday', name: 'Sarma me fleta rrushi', price: 4.9 },
-  { id: 'offer-sat', day_sq: 'E SHTUNË', day_en: 'Saturday', name: 'Tavë me oriz', price: 4.9 }
-];
-
 function categoryKey(name = '') {
   return String(name)
     .normalize('NFC')
@@ -118,17 +109,16 @@ export default function Menu() {
     return list.filter((c) => (c.items?.length ?? 0) > 0);
   }, [type, foodCategories, drinkCategories]);
 
-  const offerItems = useMemo(
-    () =>
-      WEEKDAY_OFFERS.map((o) => ({
-        id: o.id,
-        name: o.name,
-        price: o.price,
-        image: null,
-        description: null
-      })),
-    []
-  );
+  // The weekday sits in each item's description; it becomes the section heading instead of a row subtitle.
+  const offerEntries = useMemo(() => {
+    const category = categories?.find((c) => c.type === 'food' && isDailyOffersCategory(c.name));
+    return (category?.items ?? []).map((item) => ({
+      day: (item.description ?? '').toUpperCase(),
+      item: { ...item, description: null }
+    }));
+  }, [categories]);
+
+  const offerItems = useMemo(() => offerEntries.map((e) => e.item), [offerEntries]);
 
   function categoryLabel(c) {
     return c.name;
@@ -187,21 +177,14 @@ export default function Menu() {
       {type === 'offers' && <p className="menu-note">{t.offersServedUntil}</p>}
 
       {type === 'offers'
-        ? WEEKDAY_OFFERS.map((offer) => {
-            const day = lang === 'en' ? offer.day_en : offer.day_sq;
-            const item = offerItems.find((i) => i.id === offer.id);
-            return (
-              <section key={offer.id} className="menu-section">
-                <h2 className="menu-category-title">{day}</h2>
-                <ul className="menu-list">
-                  <MenuItemRow
-                    item={item}
-                    onOpen={() => openPreview(item, offerItems, day)}
-                  />
-                </ul>
-              </section>
-            );
-          })
+        ? offerEntries.map(({ day, item }) => (
+            <section key={item.id} className="menu-section">
+              <h2 className="menu-category-title">{day}</h2>
+              <ul className="menu-list">
+                <MenuItemRow item={item} onOpen={() => openPreview(item, offerItems, day)} />
+              </ul>
+            </section>
+          ))
         : (
             <CategorySections
               categories={visible}

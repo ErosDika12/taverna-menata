@@ -28,14 +28,30 @@ function imageStorage(subdir) {
   });
 }
 
+const ALLOWED_IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
+const ALLOWED_VIDEO_EXTS = new Set(['.mp4', '.webm', '.mov', '.avi']);
+
+function extOf(filename) {
+  const dot = String(filename).lastIndexOf('.');
+  return dot >= 0 ? filename.slice(dot).toLowerCase() : '';
+}
+
 const imageFilter = (_req, file, cb) => {
-  if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) cb(null, true);
-  else cb(new Error('Vetëm foto (JPG, PNG, WebP).'));
+  const ext = extOf(file.originalname);
+  if (/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype) && ALLOWED_IMAGE_EXTS.has(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Vetëm foto (JPG, PNG, WebP, GIF).'));
+  }
 };
 
 const videoFilter = (_req, file, cb) => {
-  if (/^video\/(mp4|webm|quicktime|x-msvideo)$/.test(file.mimetype)) cb(null, true);
-  else cb(new Error('Vetëm video (MP4, WebM, MOV).'));
+  const ext = extOf(file.originalname);
+  if (/^video\/(mp4|webm|quicktime|x-msvideo)$/.test(file.mimetype) && ALLOWED_VIDEO_EXTS.has(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Vetëm video (MP4, WebM, MOV).'));
+  }
 };
 
 module.exports = {
