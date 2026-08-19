@@ -144,10 +144,12 @@ export default function Home() {
 
       {/* 4. Historia — button → text → photo */}
       <section id="historia" className="home-section section home-about">
-        <Link to="/about" className="btn btn-primary home-section-link">
-          {b.ourStory}
-        </Link>
-        <p className="home-section-desc">{t.visitText}</p>
+        <div className="home-about-intro">
+          <Link to="/about" className="btn btn-primary home-section-link">
+            {b.ourStory}
+          </Link>
+          <p className="home-section-desc">{t.visitText}</p>
+        </div>
         <div className="home-about-grid">
           <div className="home-about-text">
             <div className="highlights">

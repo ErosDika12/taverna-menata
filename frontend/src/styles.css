@@ -1295,9 +1295,13 @@ main {
   margin-bottom: 6px;
 }
 
+.home-contact.section {
+  padding-top: calc(var(--section-pad-y) - 8px);
+}
+
 .home-contact .home-section-link {
   margin-top: 0;
-  margin-bottom: 26px;
+  margin-bottom: 36px;
 }
 
 .home-section-head p {
@@ -1314,10 +1318,24 @@ main {
   line-height: 1.45;
 }
 
+.home-about-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 28px;
+}
+
+.home-about-intro .home-section-link {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .home-about .home-section-desc {
   text-align: center;
   max-width: 40rem;
-  margin: 6px auto 28px;
+  margin: 0 auto;
   line-height: 1.7;
 }
 
@@ -1330,13 +1348,13 @@ main {
 
 .home-about-grid {
   display: grid;
-  gap: 22px;
+  gap: 24px;
   margin-bottom: 16px;
   align-items: center;
 }
 
 .home-about-grid img {
-  width: 90%;
+  width: 84%;
   max-width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
@@ -1811,8 +1829,12 @@ main {
   }
 
   .home-about-grid img {
-    width: 90%;
+    width: 84%;
     justify-self: center;
+  }
+
+  .home-about-intro {
+    align-items: flex-start;
   }
 
   .home-about .home-section-desc {
@@ -1889,6 +1911,10 @@ main {
 
   .home-about .highlights {
     gap: 14px;
+  }
+
+  .home-about-intro {
+    align-items: flex-start;
   }
 
   .home-about .home-section-desc {
@@ -2018,6 +2044,80 @@ main {
   .menu-type button {
     font-size: 0.92rem;
     padding: 10px;
+  }
+}
+
+/* ---------- Gallery mobile reels (phone only) ---------- */
+
+.gallery-reels {
+  display: none;
+}
+
+@media (max-width: 799px) {
+  .gallery-reels {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    background: #111;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  .gallery-reels-track {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    will-change: transform;
+    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .gallery-reels.is-dragging .gallery-reels-track {
+    transition: none;
+  }
+
+  .gallery-reels-slide {
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 12px 28px;
+    box-sizing: border-box;
+  }
+
+  .gallery-reels-slide img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+
+  .gallery-reels-close {
+    position: absolute;
+    top: calc(8px + env(safe-area-inset-top, 0px));
+    right: 10px;
+    z-index: 20;
+    border: none;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    border-radius: 50%;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .gallery-reels-close:active {
+    transform: scale(0.94);
+    background: rgba(0, 0, 0, 0.7);
   }
 }
 
