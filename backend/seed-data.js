@@ -67,9 +67,9 @@ const categories = [
       { name: 'Kombinim 2', price: 40, description: 'Tul viçi, muskuj, kotlet, brinjë kingji, kofshë pule, këpurdha, perime në skarë, sallatë me patate, sos shpije', image: '/uploads/gallery/dsc09322.jpg' },
       { name: 'Kombinim 3', price: 48, description: 'Kombinim i mishrave në tavë' },
       { name: 'Meze e nxehtë (e madhe)', price: 18, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa', image: '/uploads/gallery/_dsc3487.jpg' },
-      { name: 'Meze e nxehtë (e vogël)', price: 10, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa' },
+      { name: 'Meze e nxehtë (e vogël)', price: 10, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa', image: '/uploads/gallery/dsc01710.jpg' },
       { name: 'Meze e ftohtë (e madhe)', price: 17, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë', image: '/uploads/gallery/_dsc3319.jpg' },
-      { name: 'Meze e ftohtë (e vogël)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë' },
+      { name: 'Meze e ftohtë (e vogël)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë', image: '/uploads/gallery/_dsc3302.jpg' },
       { name: 'Biftek 1 kg', price: 65 },
       { name: 'Specialitet Menata', price: 13, description: 'Mish në tel i mbështjellë me ajvar dhe kaçkavall' }
     ]
