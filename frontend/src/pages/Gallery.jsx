@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Play, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
@@ -7,6 +7,7 @@ import ItemPreviewModal from '../components/ItemPreviewModal';
 import GalleryReelsViewer from '../components/GalleryReelsViewer';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { mediaUrl } from '../media';
+import { GALLERY_VIDEOS } from '../galleryVideos';
 
 export default function Gallery() {
   const { lang } = useLang();
@@ -20,14 +21,12 @@ export default function Gallery() {
 
   const [mode, setMode] = useState('all');
   const [photos, setPhotos] = useState(null);
-  const [videos, setVideos] = useState(null);
   const [openPhoto, setOpenPhoto] = useState(null);
   const [openVideo, setOpenVideo] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     setPhotos(null);
-    setVideos(null);
 
     apiGet('/api/gallery', lang)
       .then((p) => {
@@ -35,14 +34,6 @@ export default function Gallery() {
       })
       .catch(() => {
         if (!cancelled) setPhotos([]);
-      });
-
-    apiGet('/api/videos', lang)
-      .then((v) => {
-        if (!cancelled) setVideos(v);
-      })
-      .catch(() => {
-        if (!cancelled) setVideos([]);
       });
 
     return () => {
@@ -60,7 +51,7 @@ export default function Gallery() {
   }, [openVideo]);
 
   const photoList = photos ?? [];
-  const videoList = videos ?? [];
+  const videoList = GALLERY_VIDEOS;
 
   const previewItems = useMemo(
     () =>
@@ -72,6 +63,16 @@ export default function Gallery() {
         image: p.image
       })),
     [photoList, t.title]
+  );
+
+  const videoPreviewItems = useMemo(
+    () =>
+      videoList.map((v) => ({
+        id: v.id,
+        name: v.title || t.videos,
+        src: v.src
+      })),
+    [videoList, t.videos]
   );
 
   const showPhotos = mode === 'all' || mode === 'photos';
@@ -116,7 +117,7 @@ export default function Gallery() {
       ) : emptyPhotosOnly || emptyAll ? (
         <p className="gallery-empty">{t.loading}</p>
       ) : (
-        <div className={`gallery-grid${mode === 'all' ? ' gallery-grid-mixed' : ''}`}>
+        <div className="gallery-grid">
           {showPhotos &&
             photoList.map((p, i) => (
               <button key={`photo-${p.id}`} className="gallery-cell" onClick={() => setOpenPhoto(i)}>
@@ -125,17 +126,14 @@ export default function Gallery() {
             ))}
 
           {showVideos &&
-            videoList.map((v) => (
-              <button key={`video-${v.id}`} className="video-card gallery-cell-video" onClick={() => setOpenVideo(v)}>
-                {v.thumb ? (
-                  <img src={mediaUrl(v.thumb)} alt={v.title} loading="lazy" decoding="async" />
-                ) : (
-                  <div className="video-placeholder" />
-                )}
-                <span className="video-play">
-                  <Play size={28} fill="currentColor" />
-                </span>
-                {v.title && <span className="video-title">{v.title}</span>}
+            videoList.map((v, i) => (
+              <button
+                key={`video-${v.id}`}
+                className="gallery-cell"
+                onClick={() => setOpenVideo(i)}
+                aria-label={v.title || t.videos}
+              >
+                <video src={mediaUrl(v.src)} muted playsInline preload="metadata" />
               </button>
             ))}
         </div>
@@ -160,19 +158,28 @@ export default function Gallery() {
         )
       )}
 
-      {openVideo && (
-        <div className="lightbox video-lightbox" role="dialog" onClick={() => setOpenVideo(null)}>
-          <video
-            src={mediaUrl(openVideo.src)}
-            controls
-            playsInline
-            preload="metadata"
-            onClick={(e) => e.stopPropagation()}
+      {openVideo !== null && videoPreviewItems.length > 0 && (
+        isMobile ? (
+          <GalleryReelsViewer
+            items={videoPreviewItems}
+            index={openVideo}
+            onClose={() => setOpenVideo(null)}
+            onChange={setOpenVideo}
           />
-          <button type="button" className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
-            <X size={28} />
-          </button>
-        </div>
+        ) : (
+          <div className="lightbox video-lightbox" role="dialog" onClick={() => setOpenVideo(null)}>
+            <video
+              src={mediaUrl(videoPreviewItems[openVideo].src)}
+              controls
+              playsInline
+              preload="metadata"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button type="button" className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
+              <X size={28} />
+            </button>
+          </div>
+        )
       )}
     </div>
   );

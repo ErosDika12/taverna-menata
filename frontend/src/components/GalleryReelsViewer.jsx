@@ -9,6 +9,7 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   const t = ui[lang].preview;
   const tg = ui[lang].gallery;
   const rootRef = useRef(null);
+  const videoRefs = useRef([]);
   const dragYRef = useRef(0);
   const startYRef = useRef(0);
   const startTRef = useRef(0);
@@ -39,6 +40,19 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, goPrev, goNext]);
+
+  useEffect(() => {
+    videoRefs.current.forEach((video, i) => {
+      if (!video) return;
+      if (i === index) {
+        video.muted = true;
+        const play = video.play();
+        if (play && typeof play.catch === 'function') play.catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
+  }, [index, items]);
 
   useEffect(() => {
     const el = rootRef.current;
@@ -114,7 +128,18 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
       <div className="gallery-reels-track" style={{ transform: `translate3d(0, ${translateY}, 0)` }}>
         {items.map((item, i) => (
           <div className="gallery-reels-slide" key={item.id}>
-            {item.image ? (
+            {item.src ? (
+              <video
+                ref={(el) => {
+                  videoRefs.current[i] = el;
+                }}
+                src={mediaUrl(item.src)}
+                controls
+                playsInline
+                preload={Math.abs(i - index) <= 1 ? 'auto' : 'metadata'}
+                muted
+              />
+            ) : item.image ? (
               <img
                 src={mediaUrl(item.image)}
                 alt={item.name}
