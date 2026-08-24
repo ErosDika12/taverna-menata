@@ -2082,87 +2082,85 @@ main {
   }
 }
 
-/* ---------- Gallery mobile reels (phone only) ---------- */
+/* ---------- Gallery mobile reels (phone only; shown when the viewer mounts) ---------- */
 
 .gallery-reels {
-  display: none;
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: #111;
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
-@media (max-width: 799px) {
-  .gallery-reels {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 220;
-    background: #111;
-    overflow: hidden;
-    touch-action: none;
-    overscroll-behavior: none;
-  }
+.gallery-reels-track {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  will-change: transform;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-  .gallery-reels-track {
-    position: relative;
-    z-index: 1;
-    height: 100%;
-    will-change: transform;
-    transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
-  }
+.gallery-reels.is-dragging .gallery-reels-track {
+  transition: none;
+}
 
-  .gallery-reels.is-dragging .gallery-reels-track {
-    transition: none;
-  }
+.gallery-reels-slide {
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 12px 28px;
+  box-sizing: border-box;
+}
 
-  .gallery-reels-slide {
-    height: 100dvh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 64px 12px 28px;
-    box-sizing: border-box;
-  }
+.gallery-reels-slide img,
+.gallery-reels-slide video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
 
-  .gallery-reels-slide img,
-  .gallery-reels-slide video {
-    display: block;
-    width: auto;
-    height: auto;
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
+.gallery-reels-slide video {
+  background: transparent;
+}
 
-  .gallery-reels-slide img {
-    pointer-events: none;
-  }
+.gallery-reels-swipe {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  touch-action: none;
+  background: transparent;
+}
 
-  .gallery-reels-slide video {
-    pointer-events: auto;
-    background: #000;
-  }
+.gallery-reels-close {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  right: 10px;
+  z-index: 20;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
 
-  .gallery-reels-close {
-    position: absolute;
-    top: calc(8px + env(safe-area-inset-top, 0px));
-    right: 10px;
-    z-index: 20;
-    border: none;
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    border-radius: 50%;
-    width: 52px;
-    height: 52px;
-    display: grid;
-    place-items: center;
-    cursor: pointer;
-    touch-action: manipulation;
-  }
-
-  .gallery-reels-close:active {
-    transform: scale(0.94);
-    background: rgba(0, 0, 0, 0.7);
-  }
+.gallery-reels-close:active {
+  transform: scale(0.94);
+  background: rgba(0, 0, 0, 0.7);
 }
 
 /* ---------- History final centering (must stay last) ---------- */

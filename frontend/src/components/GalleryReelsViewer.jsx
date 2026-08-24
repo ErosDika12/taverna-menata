@@ -9,12 +9,16 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   const t = ui[lang].preview;
   const tg = ui[lang].gallery;
   const rootRef = useRef(null);
+  const swipeRef = useRef(null);
   const videoRefs = useRef([]);
   const dragYRef = useRef(0);
   const startYRef = useRef(0);
+  const startXRef = useRef(0);
   const startTRef = useRef(0);
+  const rafRef = useRef(0);
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const isVideoFeed = items.some((item) => item.src);
 
   const goPrev = useCallback(() => {
     if (index > 0) onChange(index - 1);
@@ -23,6 +27,17 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   const goNext = useCallback(() => {
     if (index < items.length - 1) onChange(index + 1);
   }, [index, items.length, onChange]);
+
+  const toggleCurrentVideo = useCallback(() => {
+    const video = videoRefs.current[index];
+    if (!video) return;
+    if (video.paused) {
+      const play = video.play();
+      if (play && typeof play.catch === 'function') play.catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [index]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -44,23 +59,27 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   useEffect(() => {
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
       if (i === index) {
-        video.muted = true;
         const play = video.play();
         if (play && typeof play.catch === 'function') play.catch(() => {});
       } else {
         video.pause();
+        video.currentTime = 0;
       }
     });
   }, [index, items]);
 
   useEffect(() => {
-    const el = rootRef.current;
+    const el = isVideoFeed ? swipeRef.current : rootRef.current;
     if (!el) return;
 
     function onTouchStart(e) {
       if (e.target.closest('.gallery-reels-close')) return;
       const touch = e.touches[0];
+      startXRef.current = touch.clientX;
       startYRef.current = touch.clientY;
       startTRef.current = Date.now();
       dragYRef.current = 0;
@@ -74,49 +93,66 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
       const atEnd = index === items.length - 1 && dy < 0;
       const next = atStart || atEnd ? dy * 0.28 : dy;
       dragYRef.current = next;
-      setDragY(next);
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = 0;
+          setDragY(dragYRef.current);
+        });
+      }
       if (e.cancelable) e.preventDefault();
     }
 
-    function onTouchEnd() {
+    function onTouchEnd(e) {
       if (!startTRef.current) return;
       const dy = dragYRef.current;
+      const dx = (e.changedTouches?.[0]?.clientX ?? startXRef.current) - startXRef.current;
       const dt = Date.now() - startTRef.current;
       const velocity = dy / Math.max(dt, 1);
-      const threshold = Math.max(72, window.innerHeight * 0.14);
+      const threshold = Math.max(48, window.innerHeight * 0.1);
 
       startTRef.current = 0;
       dragYRef.current = 0;
       setDragging(false);
       setDragY(0);
 
-      if ((dy < -threshold || velocity < -0.45) && dy < 0) {
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dy) < threshold) {
+        return;
+      }
+
+      if (Math.abs(dy) < 18 && Math.abs(dx) < 18 && dt < 350) {
+        if (isVideoFeed) toggleCurrentVideo();
+        return;
+      }
+
+      if ((dy < -threshold || velocity < -0.4) && dy < 0) {
         goNext();
         return;
       }
-      if ((dy > threshold || velocity > 0.45) && dy > 0) {
+      if ((dy > threshold || velocity > 0.4) && dy > 0) {
         goPrev();
       }
     }
 
+    const moveOpts = { passive: false };
     el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, moveOpts);
     el.addEventListener('touchend', onTouchEnd);
     el.addEventListener('touchcancel', onTouchEnd);
     return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchmove', onTouchMove);
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [index, items.length, goPrev, goNext]);
+  }, [index, items.length, goPrev, goNext, isVideoFeed, toggleCurrentVideo]);
 
   const translateY = `calc(${-index * 100}dvh + ${dragY}px)`;
 
   return (
     <div
       ref={rootRef}
-      className={`gallery-reels${dragging ? ' is-dragging' : ''}`}
+      className={`gallery-reels${dragging ? ' is-dragging' : ''}${isVideoFeed ? ' is-video' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={tg.title}
@@ -134,10 +170,13 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
                   videoRefs.current[i] = el;
                 }}
                 src={mediaUrl(item.src)}
-                controls
+                poster={item.poster ? mediaUrl(item.poster) : undefined}
                 playsInline
                 preload={Math.abs(i - index) <= 1 ? 'auto' : 'metadata'}
                 muted
+                loop
+                controls={false}
+                disablePictureInPicture
               />
             ) : item.image ? (
               <img
@@ -151,6 +190,8 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
           </div>
         ))}
       </div>
+
+      {isVideoFeed ? <div ref={swipeRef} className="gallery-reels-swipe" /> : null}
     </div>
   );
 }

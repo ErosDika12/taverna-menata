@@ -13,6 +13,8 @@ export default function Gallery() {
   const { lang } = useLang();
   const t = ui[lang].gallery;
   const isMobile = useMediaQuery('(max-width: 799px)');
+  const isTouchPhone = useMediaQuery('(hover: none) and (pointer: coarse)');
+  const useVideoReels = isMobile || isTouchPhone;
   const modes = [
     { key: 'all', label: t.all },
     { key: 'photos', label: t.photos },
@@ -70,7 +72,8 @@ export default function Gallery() {
       videoList.map((v) => ({
         id: v.id,
         name: v.title || t.videos,
-        src: v.src
+        src: v.src,
+        poster: v.poster
       })),
     [videoList, t.videos]
   );
@@ -133,7 +136,7 @@ export default function Gallery() {
                 onClick={() => setOpenVideo(i)}
                 aria-label={v.title || t.videos}
               >
-                <video src={mediaUrl(v.src)} muted playsInline preload="metadata" />
+                <img src={mediaUrl(v.poster)} alt={v.title || t.videos} loading="lazy" decoding="async" />
               </button>
             ))}
         </div>
@@ -159,7 +162,7 @@ export default function Gallery() {
       )}
 
       {openVideo !== null && videoPreviewItems.length > 0 && (
-        isMobile ? (
+        useVideoReels ? (
           <GalleryReelsViewer
             items={videoPreviewItems}
             index={openVideo}
@@ -170,6 +173,7 @@ export default function Gallery() {
           <div className="lightbox video-lightbox" role="dialog" onClick={() => setOpenVideo(null)}>
             <video
               src={mediaUrl(videoPreviewItems[openVideo].src)}
+              poster={mediaUrl(videoPreviewItems[openVideo].poster)}
               controls
               playsInline
               preload="metadata"
