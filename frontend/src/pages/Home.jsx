@@ -141,19 +141,23 @@ export default function Home() {
         {heroPoster ? (
           <img className="hero-bg hero-bg-photo" src={heroPoster} alt="" fetchPriority="high" decoding="async" />
         ) : null}
-        <video
-          ref={heroVideoRef}
-          className={`hero-bg hero-video${heroVideoReady ? ' is-visible' : ''}`}
-          src={HERO_VIDEO_SRC}
-          poster={heroPoster || undefined}
-          muted={heroMuted}
-          autoPlay
-          playsInline
-          loop
-          preload="auto"
-          onLoadedData={() => setHeroVideoReady(true)}
-          onPlaying={() => setHeroVideoReady(true)}
-        />
+        <div className="hero-video-frame">
+          <div className="hero-video-wide">
+            <video
+              ref={heroVideoRef}
+              className={`hero-video${heroVideoReady ? ' is-visible' : ''}`}
+              src={HERO_VIDEO_SRC}
+              poster={heroPoster || undefined}
+              muted={heroMuted}
+              autoPlay
+              playsInline
+              loop
+              preload="auto"
+              onLoadedData={() => setHeroVideoReady(true)}
+              onPlaying={() => setHeroVideoReady(true)}
+            />
+          </div>
+        </div>
         <button
           type="button"
           className="hero-mute-btn"
