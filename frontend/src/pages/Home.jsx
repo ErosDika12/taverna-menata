@@ -37,7 +37,6 @@ export default function Home() {
   const [heroMuted, setHeroMuted] = useState(false);
   const [heroVideoReady, setHeroVideoReady] = useState(false);
   const heroVideoRef = useRef(null);
-  const heroPoster = mediaUrl(settings.hero_image);
 
   useEffect(() => {
     apiGet('/api/menu', lang)
@@ -139,15 +138,11 @@ export default function Home() {
     <div className="home-scroll">
       {/* 1. Ballina — matches bottom nav */}
       <section id="ballina" className="home-section hero">
-        {heroPoster ? (
-          <img className="hero-bg hero-bg-photo" src={heroPoster} alt="" fetchPriority="high" decoding="async" />
-        ) : null}
         <div className="hero-video-frame">
           <video
             ref={heroVideoRef}
             className={`hero-video${heroVideoReady ? ' is-visible' : ''}`}
             src={HERO_VIDEO_SRC}
-            poster={heroPoster || undefined}
             muted={heroMuted}
             autoPlay
             playsInline
