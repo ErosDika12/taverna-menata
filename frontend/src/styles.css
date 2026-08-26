@@ -357,40 +357,17 @@ main {
   inset: 0;
   z-index: 1;
   overflow: hidden;
-  container-type: size;
-}
-
-.hero-video-landscape {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 100cqh;
-  height: 100cqw;
-  overflow: hidden;
-  transform: translate(-50%, -50%) rotate(90deg);
-  transform-origin: center center;
-  backface-visibility: hidden;
 }
 
 .hero-video {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: fill;
   background: transparent;
   opacity: 0;
-}
-
-@supports not (width: 1cqh) {
-  .hero-video-landscape {
-    inset: 0;
-    left: auto;
-    top: auto;
-    width: 100%;
-    height: 100%;
-    transform: none;
-  }
 }
 
 .hero-video.is-visible {
