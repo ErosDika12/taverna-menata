@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { ui } from '../translations';
@@ -8,7 +7,6 @@ export default function About() {
   const settings = useSettings();
   const { lang } = useLang();
   const t = ui[lang].about;
-  const b = ui[lang].buttons;
 
   return (
     <div className="page page-about">
@@ -27,9 +25,6 @@ export default function About() {
 
         <div className="about-cta">
           <p>{t.cta}</p>
-          <Link to="/contact" className="btn btn-primary">
-            {b.contactUs}
-          </Link>
         </div>
       </div>
     </div>

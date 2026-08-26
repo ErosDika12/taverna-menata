@@ -57,15 +57,21 @@ export default function Contact() {
             <p>{settings.hours}</p>
           </div>
         </div>
-        <div className="contact-map">
+        <a
+          className="contact-map"
+          href={settings.maps_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={t.mapTitle}
+        >
           <iframe
             title={t.mapTitle}
             src="https://maps.google.com/maps?q=Taverna+Menata+Prishtina&z=16&output=embed"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            allowFullScreen
+            tabIndex={-1}
           />
-        </div>
+        </a>
       </section>
 
       <section id="review" className="contact-block">
