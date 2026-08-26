@@ -107,6 +107,7 @@ export default function Home() {
     if (!video) return;
     const nextMuted = !video.muted;
     video.muted = nextMuted;
+    video.volume = 1;
     setHeroMuted(nextMuted);
     if (video.paused) {
       const play = video.play();
@@ -142,7 +143,7 @@ export default function Home() {
           <img className="hero-bg hero-bg-photo" src={heroPoster} alt="" fetchPriority="high" decoding="async" />
         ) : null}
         <div className="hero-video-frame">
-          <div className="hero-video-wide">
+          <div className="hero-video-landscape">
             <video
               ref={heroVideoRef}
               className={`hero-video${heroVideoReady ? ' is-visible' : ''}`}
