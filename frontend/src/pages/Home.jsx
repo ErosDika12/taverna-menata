@@ -1,7 +1,7 @@
 ﻿import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ChefHat, Leaf, Users, Phone, MapPin, Clock, Navigation } from 'lucide-react';
+import { ChefHat, Leaf, Users, Phone, MapPin, Clock, Navigation, Volume2, VolumeX } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { apiGet } from '../api';
@@ -19,6 +19,7 @@ function formatPrice(price) {
 
 const PREVIEW_MENU_ITEMS = 6;
 const PREVIEW_GALLERY_PHOTOS = 9;
+const HERO_VIDEO_SRC = '/videos/Video-61801.mp4';
 
 export default function Home() {
   const settings = useSettings();
@@ -33,6 +34,10 @@ export default function Home() {
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
   const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '', type: 'menu' });
+  const [heroMuted, setHeroMuted] = useState(false);
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
+  const heroVideoRef = useRef(null);
+  const heroPoster = mediaUrl(settings.hero_image);
 
   useEffect(() => {
     apiGet('/api/menu', lang)
@@ -42,6 +47,45 @@ export default function Home() {
       .then(setPhotos)
       .catch(() => setPhotos([]));
   }, [lang]);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.defaultMuted = false;
+    video.volume = 1;
+
+    async function tryAutoplay() {
+      if (cancelled) return;
+      video.muted = false;
+      try {
+        await video.play();
+        if (!cancelled) setHeroMuted(false);
+      } catch {
+        video.muted = true;
+        try {
+          await video.play();
+          if (!cancelled) setHeroMuted(true);
+        } catch {
+          /* Poster stays visible if autoplay is fully blocked. */
+        }
+      }
+    }
+
+    if (video.readyState >= 2) {
+      tryAutoplay();
+    } else {
+      video.addEventListener('loadeddata', tryAutoplay);
+    }
+
+    return () => {
+      cancelled = true;
+      video.removeEventListener('loadeddata', tryAutoplay);
+    };
+  }, []);
 
   const regularMenuPreview = useMemo(() => {
     if (!menuCategories?.length) return [];
@@ -56,6 +100,18 @@ export default function Home() {
 
   function closePreview() {
     setPreview({ items: [], index: 0, categoryName: '', type: 'menu' });
+  }
+
+  function toggleHeroMute() {
+    const video = heroVideoRef.current;
+    if (!video) return;
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setHeroMuted(nextMuted);
+    if (video.paused) {
+      const play = video.play();
+      if (play && typeof play.catch === 'function') play.catch(() => {});
+    }
   }
 
   function openMenuPreview(item, list, categoryName) {
@@ -82,7 +138,31 @@ export default function Home() {
     <div className="home-scroll">
       {/* 1. Ballina — matches bottom nav */}
       <section id="ballina" className="home-section hero">
-        <img className="hero-bg" src={mediaUrl(settings.hero_image)} alt="" fetchPriority="high" decoding="async" />
+        {heroPoster ? (
+          <img className="hero-bg hero-bg-photo" src={heroPoster} alt="" fetchPriority="high" decoding="async" />
+        ) : null}
+        <video
+          ref={heroVideoRef}
+          className={`hero-bg hero-video${heroVideoReady ? ' is-visible' : ''}`}
+          src={HERO_VIDEO_SRC}
+          poster={heroPoster || undefined}
+          muted={heroMuted}
+          autoPlay
+          playsInline
+          loop
+          preload="auto"
+          onLoadedData={() => setHeroVideoReady(true)}
+          onPlaying={() => setHeroVideoReady(true)}
+        />
+        <button
+          type="button"
+          className="hero-mute-btn"
+          onClick={toggleHeroMute}
+          aria-label={heroMuted ? (lang === 'en' ? 'Unmute video' : 'Ndiz zërin') : lang === 'en' ? 'Mute video' : 'Fik zërin'}
+          aria-pressed={heroMuted}
+        >
+          {heroMuted ? <VolumeX size={20} aria-hidden="true" /> : <Volume2 size={20} aria-hidden="true" />}
+        </button>
         <div className="hero-content">
           <h1>{settings.site_name}</h1>
           <p className="hero-tagline">{settings.tagline}</p>

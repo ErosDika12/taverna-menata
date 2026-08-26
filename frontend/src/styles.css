@@ -348,8 +348,46 @@ main {
   object-fit: cover;
 }
 
+.hero-bg-photo {
+  z-index: 0;
+}
+
+.hero-video {
+  z-index: 1;
+  background: transparent;
+  opacity: 0;
+}
+
+.hero-video.is-visible {
+  opacity: 1;
+}
+
+.hero-mute-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  background: rgba(24, 33, 26, 0.55);
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.hero-mute-btn:hover {
+  background: rgba(24, 33, 26, 0.75);
+}
+
 .hero-content {
   position: relative;
+  z-index: 2;
   width: 100%;
   padding: 56px 18px 24px;
   background: linear-gradient(to top, rgba(24, 33, 26, 0.92) 0%, rgba(24, 33, 26, 0.6) 50%, transparent 100%);
@@ -1205,6 +1243,11 @@ main {
 
   .hero {
     min-height: 560px;
+  }
+
+  .hero-mute-btn {
+    top: 20px;
+    right: 24px;
   }
 
   .hero-content {
