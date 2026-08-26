@@ -16,7 +16,7 @@ export const ui = {
       directions: 'Si të vish',
       menu: 'Shiko Menynë',
       ourStory: 'Historia jonë',
-      contactUs: 'Na kontakto'
+      contactUs: 'Kontakti'
     },
     home: {
       aboutTitle: 'Historia',
