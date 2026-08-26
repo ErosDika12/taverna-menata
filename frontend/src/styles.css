@@ -1422,6 +1422,24 @@ main {
   margin-bottom: 0;
 }
 
+.home-menu-list > li {
+  display: block;
+  min-width: 0;
+}
+
+.home-menu-list .menu-item {
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.home-menu-list .menu-item-thumb {
+  cursor: inherit;
+}
+
 .home-gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

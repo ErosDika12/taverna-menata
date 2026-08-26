@@ -6,6 +6,8 @@ import { useSettings } from '../settings';
 import { apiGet } from '../api';
 import { ui } from '../translations';
 import ItemPreviewModal from '../components/ItemPreviewModal';
+import GalleryReelsViewer from '../components/GalleryReelsViewer';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { mediaUrl } from '../media';
 
 const highlightIcons = [ChefHat, Leaf, Users, Phone];
@@ -25,10 +27,11 @@ export default function Home() {
   const tm = ui[lang].menu;
   const tc = ui[lang].contact;
   const b = ui[lang].buttons;
+  const isMobile = useMediaQuery('(max-width: 799px)');
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
-  const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '' });
+  const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '', type: 'menu' });
 
   useEffect(() => {
     apiGet('/api/menu', lang)
@@ -50,9 +53,13 @@ export default function Home() {
   const phone = settings.phone?.replace(/\s/g, '');
   const galleryCta = lang === 'en' ? 'See Gallery' : 'Shiko Galerinë';
 
+  function closePreview() {
+    setPreview({ items: [], index: 0, categoryName: '', type: 'menu' });
+  }
+
   function openMenuPreview(item, list, categoryName) {
     const index = list.findIndex((i) => i.id === item.id);
-    setPreview({ items: list, index: index >= 0 ? index : 0, categoryName });
+    setPreview({ items: list, index: index >= 0 ? index : 0, categoryName, type: 'menu' });
   }
 
   function openGalleryPreview(photo, list) {
@@ -64,8 +71,11 @@ export default function Home() {
       image: p.image
     }));
     const index = list.findIndex((p) => p.id === photo.id);
-    setPreview({ items, index: index >= 0 ? index : 0, categoryName: tg.title });
+    setPreview({ items, index: index >= 0 ? index : 0, categoryName: tg.title, type: 'gallery' });
   }
+
+  const galleryViewerOpen = preview.items.length > 0 && preview.type === 'gallery';
+  const menuViewerOpen = preview.items.length > 0 && preview.type === 'menu';
 
   return (
     <div className="home-scroll">
@@ -79,7 +89,47 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Galeria — button → text → photos (3-col) */}
+      {/* 2. Menyja — matches nav order */}
+      <section id="menu" className="home-section section home-menu">
+        <Link to="/menu" className="btn btn-primary home-section-link">
+          {b.menu}
+        </Link>
+        <p className="home-section-desc">{t.menuIntro}</p>
+        {menuCategories === null ? (
+          <p className="home-loading">{tm.loading}</p>
+        ) : regularMenuPreview.length === 0 ? (
+          <p className="home-loading">{tm.loading}</p>
+        ) : (
+          <ul className="menu-list home-menu-list">
+            {regularMenuPreview.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className="menu-item"
+                  onClick={() => openMenuPreview(item, regularMenuPreview, item.categoryName)}
+                >
+                  <span className="menu-item-thumb">
+                    {item.image ? (
+                      <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
+                    ) : (
+                      <span className="menu-item-no-img" />
+                    )}
+                  </span>
+                  <div className="menu-item-body">
+                    <div className="menu-item-row">
+                      <h3>{item.name}</h3>
+                      <span className="menu-item-price">{formatPrice(item.price)}</span>
+                    </div>
+                    {item.description && <p>{item.description}</p>}
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* 3. Galeria — button → text → photos (3-col) */}
       <section id="galeria" className="home-section section home-gallery">
         <Link to="/gallery" className="btn btn-primary home-section-link">
           {galleryCta}
@@ -100,45 +150,6 @@ export default function Home() {
               </button>
             ))}
           </div>
-        )}
-      </section>
-
-      {/* 3. Menyja — button → text → photos */}
-      <section id="menu" className="home-section section home-menu">
-        <Link to="/menu" className="btn btn-primary home-section-link">
-          {b.menu}
-        </Link>
-        <p className="home-section-desc">{t.menuIntro}</p>
-        {menuCategories === null ? (
-          <p className="home-loading">{tm.loading}</p>
-        ) : regularMenuPreview.length === 0 ? (
-          <p className="home-loading">{tm.loading}</p>
-        ) : (
-          <ul className="menu-list home-menu-list">
-            {regularMenuPreview.map((item) => (
-              <li key={item.id} className="menu-item">
-                <button
-                  type="button"
-                  className="menu-item-thumb"
-                  onClick={() => openMenuPreview(item, regularMenuPreview, item.categoryName)}
-                  aria-label={item.name}
-                >
-                  {item.image ? (
-                    <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
-                  ) : (
-                    <span className="menu-item-no-img" />
-                  )}
-                </button>
-                <div className="menu-item-body">
-                  <div className="menu-item-row">
-                    <h3>{item.name}</h3>
-                    <span className="menu-item-price">{formatPrice(item.price)}</span>
-                  </div>
-                  {item.description && <p>{item.description}</p>}
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
       </section>
 
@@ -185,8 +196,8 @@ export default function Home() {
 
         <div className="contact-block home-contact-block">
           <p>{tc.callText}</p>
-          <a className="btn btn-primary contact-call-btn" href={`tel:${phone}`}>
-            <Phone size={20} aria-hidden="true" />
+          <a className="btn btn-outline" href={`tel:${phone}`}>
+            <Phone size={18} aria-hidden="true" />
             {tc.callTitle}
           </a>
         </div>
@@ -213,12 +224,31 @@ export default function Home() {
         </div>
       </section>
 
-      {preview.items.length > 0 && (
+      {galleryViewerOpen && (
+        isMobile ? (
+          <GalleryReelsViewer
+            items={preview.items}
+            index={preview.index}
+            onClose={closePreview}
+            onChange={(index) => setPreview((p) => ({ ...p, index }))}
+          />
+        ) : (
+          <ItemPreviewModal
+            items={preview.items}
+            index={preview.index}
+            categoryName={preview.categoryName}
+            onClose={closePreview}
+            onChange={(index) => setPreview((p) => ({ ...p, index }))}
+          />
+        )
+      )}
+
+      {menuViewerOpen && (
         <ItemPreviewModal
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
-          onClose={() => setPreview({ items: [], index: 0, categoryName: '' })}
+          onClose={closePreview}
           onChange={(index) => setPreview((p) => ({ ...p, index }))}
         />
       )}
