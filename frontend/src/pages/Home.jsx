@@ -1,5 +1,6 @@
 ﻿import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ChefHat, Leaf, Users, Phone, MapPin, Clock, Navigation } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
@@ -102,27 +103,27 @@ export default function Home() {
         ) : (
           <ul className="menu-list home-menu-list">
             {regularMenuPreview.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="menu-item">
+                <span className="menu-item-thumb">
+                  {item.image ? (
+                    <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
+                  ) : (
+                    <span className="menu-item-no-img" />
+                  )}
+                </span>
+                <div className="menu-item-body">
+                  <div className="menu-item-row">
+                    <h3>{item.name}</h3>
+                    <span className="menu-item-price">{formatPrice(item.price)}</span>
+                  </div>
+                  {item.description && <p>{item.description}</p>}
+                </div>
                 <button
                   type="button"
-                  className="menu-item"
+                  className="home-menu-item-hit"
+                  aria-label={item.name}
                   onClick={() => openMenuPreview(item, regularMenuPreview, item.categoryName)}
-                >
-                  <span className="menu-item-thumb">
-                    {item.image ? (
-                      <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <span className="menu-item-no-img" />
-                    )}
-                  </span>
-                  <div className="menu-item-body">
-                    <div className="menu-item-row">
-                      <h3>{item.name}</h3>
-                      <span className="menu-item-price">{formatPrice(item.price)}</span>
-                    </div>
-                    {item.description && <p>{item.description}</p>}
-                  </div>
-                </button>
+                />
               </li>
             ))}
           </ul>
@@ -224,24 +225,26 @@ export default function Home() {
         </div>
       </section>
 
-      {galleryViewerOpen && (
-        isMobile ? (
-          <GalleryReelsViewer
-            items={preview.items}
-            index={preview.index}
-            onClose={closePreview}
-            onChange={(index) => setPreview((p) => ({ ...p, index }))}
-          />
-        ) : (
-          <ItemPreviewModal
-            items={preview.items}
-            index={preview.index}
-            categoryName={preview.categoryName}
-            onClose={closePreview}
-            onChange={(index) => setPreview((p) => ({ ...p, index }))}
-          />
-        )
-      )}
+      {galleryViewerOpen &&
+        createPortal(
+          isMobile ? (
+            <GalleryReelsViewer
+              items={preview.items}
+              index={preview.index}
+              onClose={closePreview}
+              onChange={(index) => setPreview((p) => ({ ...p, index }))}
+            />
+          ) : (
+            <ItemPreviewModal
+              items={preview.items}
+              index={preview.index}
+              categoryName={preview.categoryName}
+              onClose={closePreview}
+              onChange={(index) => setPreview((p) => ({ ...p, index }))}
+            />
+          ),
+          document.body
+        )}
 
       {menuViewerOpen && (
         <ItemPreviewModal

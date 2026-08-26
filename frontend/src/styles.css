@@ -1422,22 +1422,22 @@ main {
   margin-bottom: 0;
 }
 
-.home-menu-list > li {
-  display: block;
-  min-width: 0;
-}
-
 .home-menu-list .menu-item {
-  appearance: none;
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  box-sizing: border-box;
+  position: relative;
 }
 
-.home-menu-list .menu-item-thumb {
-  cursor: inherit;
+.home-menu-item-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
 }
 
 .home-gallery-grid {
