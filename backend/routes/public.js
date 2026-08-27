@@ -89,19 +89,20 @@ router.get('/videos', (req, res) => {
 });
 
 /**
- * One chronological feed of photos and videos. `created_at` is the persistent
- * ordering key, so media type never decides the position and new uploads slot
- * into place on their own.
+ * One chronological feed of photos and videos, newest first. `created_at` is
+ * the persistent ordering key, so media type never decides the position and a
+ * fresh upload appears at the top on its own. `id` breaks ties deterministically.
  */
 router.get('/media', (req, res) => {
   const l = lang(req);
   const photos = db.prepare('SELECT * FROM gallery').all().map((p) => photoRow(p, l));
   const videos = db.prepare('SELECT * FROM videos').all().map((v) => videoRow(v, l));
   const media = [...photos, ...videos].sort((a, b) => {
-    const at = (a.created_at ?? 0) - (b.created_at ?? 0);
+    const at = (b.created_at ?? 0) - (a.created_at ?? 0);
     if (at !== 0) return at;
-    if (a.type !== b.type) return a.type === 'photo' ? -1 : 1;
-    return a.id - b.id;
+    if (a.id !== b.id) return b.id - a.id;
+    if (a.type === b.type) return 0;
+    return a.type === 'photo' ? -1 : 1;
   });
   res.json(media);
 });
