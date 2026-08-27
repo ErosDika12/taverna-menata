@@ -10,7 +10,7 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-/** Match backend/ensure-menu-structure.js FOOD_ORDER (offers are a main tab, not listed here). */
+/** Match backend/ensure-menu-structure.js FOOD_ORDER (offers open the Ushqime tab separately). */
 const FOOD_ORDER = ['Meny Ditore', 'Sallata', 'Pjata Kryesore', 'Pjata Shtesë'];
 
 function categoryKey(name = '') {
@@ -37,16 +37,18 @@ function isDailyOffersCategory(name = '') {
   return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
 }
 
-function MenuItemRow({ item, onOpen }) {
+/** The whole card is one hit target: an overlay button on top of static markup
+ *  keeps the click handling in a single place and the heading markup valid. */
+function MenuItemRow({ item, onOpen, openLabel }) {
   return (
-    <li className="menu-item">
-      <button type="button" className="menu-item-thumb" onClick={() => onOpen(item)} aria-label={item.name}>
+    <li className="menu-item menu-item-card">
+      <span className="menu-item-thumb">
         {item.image ? (
           <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
         ) : (
           <span className="menu-item-no-img" />
         )}
-      </button>
+      </span>
       <div className="menu-item-body">
         <div className="menu-item-row">
           <h3>{item.name}</h3>
@@ -54,11 +56,17 @@ function MenuItemRow({ item, onOpen }) {
         </div>
         {item.description && <p>{item.description}</p>}
       </div>
+      <button
+        type="button"
+        className="menu-item-hit"
+        aria-label={`${item.name} – ${openLabel}`}
+        onClick={() => onOpen(item)}
+      />
     </li>
   );
 }
 
-function CategorySections({ categories, categoryLabel, onOpen }) {
+function CategorySections({ categories, categoryLabel, onOpen, openLabel }) {
   return categories.map((c) => (
     <section key={c.id} id={`menu-cat-${c.id}`} className="menu-section">
       <h2 className="menu-category-title">{categoryLabel(c)}</h2>
@@ -68,6 +76,7 @@ function CategorySections({ categories, categoryLabel, onOpen }) {
           <MenuItemRow
             key={item.id}
             item={item}
+            openLabel={openLabel}
             onOpen={() => onOpen(item, c.items, categoryLabel(c))}
           />
         ))}
@@ -105,11 +114,11 @@ export default function Menu() {
   }, [categories]);
 
   const visible = useMemo(() => {
-    const list = type === 'food' ? foodCategories : type === 'drinks' ? drinkCategories : [];
+    const list = type === 'food' ? foodCategories : drinkCategories;
     return list.filter((c) => (c.items?.length ?? 0) > 0);
   }, [type, foodCategories, drinkCategories]);
 
-  // The weekday sits in each item's description; it becomes the section heading instead of a row subtitle.
+  // The weekday sits in each item's description; it becomes the row heading instead of a subtitle.
   const offerEntries = useMemo(() => {
     const category = categories?.find((c) => c.type === 'food' && isDailyOffersCategory(c.name));
     return (category?.items ?? []).map((item) => ({
@@ -144,7 +153,7 @@ export default function Menu() {
       </header>
 
       <div className="menu-sticky">
-        <div className="menu-type menu-three" role="tablist">
+        <div className="menu-type" role="tablist">
           <button
             role="tab"
             aria-selected={type === 'food'}
@@ -161,37 +170,37 @@ export default function Menu() {
           >
             {t.drinks}
           </button>
-          <button
-            role="tab"
-            aria-selected={type === 'offers'}
-            className={type === 'offers' ? 'active' : ''}
-            onClick={() => setType('offers')}
-          >
-            {t.offers}
-          </button>
         </div>
       </div>
 
       {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
 
-      {type === 'offers' && <p className="menu-note">{t.offersServedUntil}</p>}
-
-      {type === 'offers'
-        ? offerEntries.map(({ day, item }) => (
-            <section key={item.id} className="menu-section">
-              <h2 className="menu-category-title">{day}</h2>
+      {/* Oferta Ditore is a section inside Ushqime, not a primary tab. */}
+      {type === 'food' && offerEntries.length > 0 && (
+        <section id="menu-cat-offers" className="menu-section menu-section-offers">
+          <h2 className="menu-category-title">{t.offers}</h2>
+          <p className="menu-note">{t.offersServedUntil}</p>
+          {offerEntries.map(({ day, item }) => (
+            <div key={item.id} className="menu-offer-day">
+              {day && <h3 className="menu-day-title">{day}</h3>}
               <ul className="menu-list">
-                <MenuItemRow item={item} onOpen={() => openPreview(item, offerItems, day)} />
+                <MenuItemRow
+                  item={item}
+                  openLabel={t.openPhoto}
+                  onOpen={() => openPreview(item, offerItems, t.offers)}
+                />
               </ul>
-            </section>
-          ))
-        : (
-            <CategorySections
-              categories={visible}
-              categoryLabel={categoryLabel}
-              onOpen={openPreview}
-            />
-          )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      <CategorySections
+        categories={visible}
+        categoryLabel={categoryLabel}
+        onOpen={openPreview}
+        openLabel={t.openPhoto}
+      />
 
       {preview.items.length > 0 && (
         <ItemPreviewModal

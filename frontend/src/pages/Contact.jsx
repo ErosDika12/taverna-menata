@@ -57,12 +57,13 @@ export default function Contact() {
             <p>{settings.hours}</p>
           </div>
         </div>
+        {/* The whole map surface is the link: same destination as "Si të vish". */}
         <a
           className="contact-map"
           href={settings.maps_url}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={t.mapTitle}
+          aria-label={`${t.mapTitle} — ${b.directions}`}
         >
           <iframe
             title={t.mapTitle}
@@ -70,7 +71,9 @@ export default function Contact() {
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
             tabIndex={-1}
+            aria-hidden="true"
           />
+          <span className="contact-map-hit" aria-hidden="true" />
         </a>
       </section>
 

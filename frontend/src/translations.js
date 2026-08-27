@@ -43,6 +43,7 @@ export const ui = {
       offers: 'Oferta Ditore',
       servedUntil: 'Shërbehet deri në orën 17:00.',
       offersServedUntil: 'Ofertat Ditore shërbehen deri në orën 17:00.',
+      openPhoto: 'hap foton',
       loading: 'Duke e ngarkuar menynë…',
       foundTitle: 'Gjete diçka që të pëlqen?',
       foundText: 'Rezervo tavolinën me një telefonatë.',
@@ -66,7 +67,11 @@ export const ui = {
       prev: 'Artikulli i mëparshëm',
       next: 'Artikulli tjetër',
       swipeHorizontal: 'Rrëshqit majtas / djathtas',
-      swipeClose: 'Rrëshqit poshtë për mbyllje'
+      swipeClose: 'Rrëshqit poshtë për mbyllje',
+      mute: 'Fik zërin',
+      unmute: 'Ndiz zërin',
+      play: 'Luaj videon',
+      pause: 'Ndalo videon'
     },
     about: {
       title: 'Historia jonë',
@@ -132,6 +137,7 @@ export const ui = {
       offers: 'Daily Offers',
       servedUntil: 'Served until 17:00.',
       offersServedUntil: 'Daily Offers are served until 17:00.',
+      openPhoto: 'open photo',
       loading: 'Loading menu…',
       foundTitle: 'Found something you like?',
       foundText: 'Reserve your table with a phone call.',
@@ -155,7 +161,11 @@ export const ui = {
       prev: 'Previous item',
       next: 'Next item',
       swipeHorizontal: 'Swipe left / right',
-      swipeClose: 'Swipe down to close'
+      swipeClose: 'Swipe down to close',
+      mute: 'Mute',
+      unmute: 'Unmute',
+      play: 'Play video',
+      pause: 'Pause video'
     },
     about: {
       title: 'Our story',

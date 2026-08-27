@@ -18,6 +18,7 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
   const touchStart = useRef({ x: 0, y: 0, t: 0, scrollTop: 0 });
   const contentRef = useRef(null);
   const gestureRef = useRef(null);
+  const videoRef = useRef(null);
   const [visible, setVisible] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [dragX, setDragX] = useState(0);
@@ -41,6 +42,30 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
     setImageLoaded(false);
   }, [item?.id, item?.image]);
 
+  // The user opened this deliberately, so try with sound first and only fall
+  // back to muted when the browser blocks unmuted autoplay. Native controls
+  // stay visible either way, so the sound can always be turned back on.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    let cancelled = false;
+    video.muted = false;
+    video.volume = 1;
+    const play = video.play();
+    if (play && typeof play.catch === 'function') {
+      play.catch(() => {
+        if (cancelled) return;
+        video.muted = true;
+        const retry = video.play();
+        if (retry && typeof retry.catch === 'function') retry.catch(() => {});
+      });
+    }
+    return () => {
+      cancelled = true;
+      video.pause();
+    };
+  }, [item?.id, item?.src]);
+
   useEffect(() => {
     if (item == null) return;
     function onKey(e) {
@@ -61,7 +86,7 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
     let acc = 0;
     let lockedUntil = 0;
     function onWheel(e) {
-      if (e.target.closest?.('.preview-modal-body-scroll')) return;
+      if (e.target.closest?.('.preview-modal-body-scroll, .preview-modal-media')) return;
       const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (!delta) return;
       e.preventDefault();
@@ -84,7 +109,7 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
   }
 
   function onTouchStart(e) {
-    if (e.target.closest('.preview-modal-body-scroll')) {
+    if (e.target.closest('.preview-modal-body-scroll') || e.target.closest('.preview-modal-media')) {
       gestureRef.current = null;
       return;
     }
@@ -205,7 +230,20 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
 
         <div className="preview-modal-content" ref={contentRef}>
           <div className="preview-modal-image-wrap">
-            {item.image ? (
+            {item.src ? (
+              <video
+                key={item.id}
+                ref={videoRef}
+                className="preview-modal-media is-loaded"
+                src={mediaUrl(item.src)}
+                poster={item.poster ? mediaUrl(item.poster) : undefined}
+                controls
+                playsInline
+                loop
+                preload="metadata"
+                aria-label={item.name}
+              />
+            ) : item.image ? (
               <img
                 className={imageLoaded ? 'is-loaded' : ''}
                 src={mediaUrl(item.image)}

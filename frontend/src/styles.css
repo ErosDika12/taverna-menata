@@ -1035,9 +1035,13 @@ main {
   text-align: center;
   background: var(--cream);
   border-radius: var(--radius);
-  padding: 24px;
+  padding: 18px 20px;
   box-sizing: border-box;
   align-self: stretch;
+}
+
+.page.page-about .about-cta p {
+  margin: 0;
 }
 
 /* ---------- Contact ---------- */
@@ -2245,6 +2249,149 @@ main {
 .gallery-reels-close:active {
   transform: scale(0.94);
   background: rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- Menu card: the whole box is one hit target ---------- */
+
+.menu-item-card {
+  position: relative;
+  cursor: pointer;
+}
+
+.menu-item-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.menu-item-hit:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+.menu-item-card:has(.menu-item-hit:active) {
+  border-color: var(--green-soft);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Oferta Ditore lives inside Ushqime, with the weekday as a small label. */
+.menu-section-offers .menu-offer-day {
+  margin-bottom: 12px;
+}
+
+.menu-section-offers .menu-offer-day:last-child {
+  margin-bottom: 0;
+}
+
+.menu-day-title {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--green);
+  margin: 0 0 6px;
+}
+
+/* ---------- Gallery: mixed photo / video feed ---------- */
+
+.gallery-cell {
+  position: relative;
+}
+
+.gallery-cell-play {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+}
+
+/* ---------- Media viewers ---------- */
+
+.gallery-reels-slide {
+  padding: 0;
+}
+
+.gallery-reels-sound {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top, 0px));
+  left: 10px;
+  z-index: 20;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.gallery-reels-sound:active {
+  transform: scale(0.94);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.preview-modal-media {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  max-height: min(62dvh, 62vh);
+  object-fit: contain;
+  background: #000;
+}
+
+/* ---------- Contact map ---------- */
+
+.contact-map-hit {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: transparent;
+}
+
+.contact-map:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+  /* Near-fullscreen product photo on phones. */
+  .preview-modal {
+    max-height: min(96dvh, 96vh);
+  }
+
+  .preview-modal-image-wrap {
+    min-height: min(52dvh, 52vh);
+    padding: 0;
+  }
+
+  .preview-modal-image-wrap img {
+    max-height: min(64dvh, 64vh);
+  }
+
+  .preview-modal-media {
+    max-height: min(64dvh, 64vh);
+  }
 }
 
 /* ---------- History final centering (must stay last) ---------- */
