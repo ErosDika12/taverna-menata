@@ -110,7 +110,7 @@ export const ui = {
       directions: 'Directions',
       menu: 'View Menu',
       ourStory: 'Our story',
-      contactUs: 'Contact us'
+      contactUs: 'Contact'
     },
     home: {
       aboutTitle: 'Our story',
