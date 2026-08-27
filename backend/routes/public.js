@@ -51,32 +51,59 @@ router.get('/menu', (req, res) => {
   );
 });
 
+function photoRow(p, l) {
+  return {
+    id: p.id,
+    type: 'photo',
+    image: p.image,
+    thumb: p.thumb,
+    category: p.category,
+    created_at: p.created_at,
+    alt: pick(p, 'alt', l) || 'Taverna Menata'
+  };
+}
+
+function videoRow(v, l) {
+  return {
+    id: v.id,
+    type: 'video',
+    src: v.src,
+    thumb: v.thumb,
+    poster: v.thumb,
+    category: v.category,
+    created_at: v.created_at,
+    title: pick(v, 'title', l) || ''
+  };
+}
+
 router.get('/gallery', (req, res) => {
   const l = lang(req);
-  const rows = db.prepare('SELECT * FROM gallery ORDER BY sort, id').all();
-  res.json(
-    rows.map((p) => ({
-      id: p.id,
-      image: p.image,
-      thumb: p.thumb,
-      category: p.category,
-      alt: pick(p, 'alt', l) || 'Taverna Menata'
-    }))
-  );
+  const rows = db.prepare('SELECT * FROM gallery ORDER BY created_at, sort, id').all();
+  res.json(rows.map((p) => photoRow(p, l)));
 });
 
 router.get('/videos', (req, res) => {
   const l = lang(req);
-  const rows = db.prepare('SELECT * FROM videos ORDER BY sort, id').all();
-  res.json(
-    rows.map((v) => ({
-      id: v.id,
-      src: v.src,
-      thumb: v.thumb,
-      category: v.category,
-      title: pick(v, 'title', l) || ''
-    }))
-  );
+  const rows = db.prepare('SELECT * FROM videos ORDER BY created_at, sort, id').all();
+  res.json(rows.map((v) => videoRow(v, l)));
+});
+
+/**
+ * One chronological feed of photos and videos. `created_at` is the persistent
+ * ordering key, so media type never decides the position and new uploads slot
+ * into place on their own.
+ */
+router.get('/media', (req, res) => {
+  const l = lang(req);
+  const photos = db.prepare('SELECT * FROM gallery').all().map((p) => photoRow(p, l));
+  const videos = db.prepare('SELECT * FROM videos').all().map((v) => videoRow(v, l));
+  const media = [...photos, ...videos].sort((a, b) => {
+    const at = (a.created_at ?? 0) - (b.created_at ?? 0);
+    if (at !== 0) return at;
+    if (a.type !== b.type) return a.type === 'photo' ? -1 : 1;
+    return a.id - b.id;
+  });
+  res.json(media);
 });
 
 router.get('/settings', (req, res) => {
