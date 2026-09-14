@@ -34,6 +34,7 @@ export const ui = {
     },
     menu: {
       title: 'Menyja',
+      heading: 'MENY',
       dailyTitle: 'Ofertat Ditore',
       dailyOffers: 'Ofertat Ditore',
       dailyNote: 'Çdo ditë specialitete të ndryshme nga kuzhina jonë.',
@@ -45,9 +46,11 @@ export const ui = {
       offersServedUntil: 'Ofertat Ditore shërbehen deri në orën 17:00.',
       openPhoto: 'hap foton',
       loading: 'Duke e ngarkuar menynë…',
+      emptyCategory: 'Nuk ka produkte në këtë kategori.',
       foundTitle: 'Gjete diçka që të pëlqen?',
       foundText: 'Rezervo tavolinën me një telefonatë.',
       reserveNow: 'Rezervo tani',
+      back: 'Prapa',
       backToMenu: 'Kthehu te Menyja',
       backToFood: 'Kthehu te Ushqimet',
       backToDrinks: 'Kthehu te Pijet'
@@ -131,6 +134,7 @@ export const ui = {
     },
     menu: {
       title: 'Menu',
+      heading: 'MENU',
       dailyTitle: 'Daily Specials',
       dailyOffers: 'Daily Specials',
       dailyNote: 'Different specialties from our kitchen every day.',
@@ -142,9 +146,11 @@ export const ui = {
       offersServedUntil: 'Daily Offers are served until 17:00.',
       openPhoto: 'open photo',
       loading: 'Loading menu…',
+      emptyCategory: 'No products in this category.',
       foundTitle: 'Found something you like?',
       foundText: 'Reserve your table with a phone call.',
       reserveNow: 'Reserve now',
+      back: 'Back',
       backToMenu: 'Back to Menu',
       backToFood: 'Back to Food',
       backToDrinks: 'Back to Drinks'

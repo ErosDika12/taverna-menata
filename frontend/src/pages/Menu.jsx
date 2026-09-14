@@ -44,6 +44,13 @@ const DRINK_ORDER = [
   { keys: ['shampanje', 'champagne'], icon: CupSoda }
 ];
 
+function formatPrice(price) {
+  if (price == null || price === '') return null;
+  const n = Number(price);
+  if (Number.isNaN(n)) return null;
+  return `${n % 1 === 0 ? n : n.toFixed(2).replace(/0$/, '')} €`;
+}
+
 function categoryKey(name = '') {
   return String(name)
     .normalize('NFC')
@@ -92,6 +99,7 @@ function CategoryCard({ label, Icon, onClick }) {
 }
 
 function ProductCard({ item, onOpen }) {
+  const price = formatPrice(item.price);
   return (
     <button type="button" className="menu-product-card" onClick={() => onOpen(item)} aria-label={item.name}>
       <span className="menu-product-media">
@@ -101,7 +109,11 @@ function ProductCard({ item, onOpen }) {
           <span className="menu-product-placeholder" aria-hidden="true" />
         )}
       </span>
-      <span className="menu-product-name">{item.name}</span>
+      <span className="menu-product-body">
+        <span className="menu-product-name">{item.name}</span>
+        {item.description ? <span className="menu-product-desc">{item.description}</span> : null}
+        {price ? <span className="menu-product-price">{price}</span> : null}
+      </span>
     </button>
   );
 }
@@ -110,8 +122,8 @@ export default function Menu() {
   const { lang } = useLang();
   const t = ui[lang].menu;
   const [categories, setCategories] = useState(null);
-  const [view, setView] = useState('root'); // root | categories | items
-  const [type, setType] = useState(null); // food | drinks
+  const [view, setView] = useState('root');
+  const [type, setType] = useState(null);
   const [activeId, setActiveId] = useState(null);
   const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '' });
 
@@ -120,6 +132,33 @@ export default function Menu() {
       .then(setCategories)
       .catch(() => setCategories([]));
   }, [lang]);
+
+  useEffect(() => {
+    window.history.replaceState({ menuLevel: 'root' }, '');
+
+    function onPopState(e) {
+      const state = e.state || { menuLevel: 'root' };
+      const level = state.menuLevel || 'root';
+      if (level === 'items') {
+        setView('items');
+        setType(state.type ?? null);
+        setActiveId(state.activeId ?? null);
+        return;
+      }
+      if (level === 'categories') {
+        setView('categories');
+        setType(state.type ?? null);
+        setActiveId(null);
+        return;
+      }
+      setView('root');
+      setType(null);
+      setActiveId(null);
+    }
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const foodCategories = useMemo(() => {
     if (!categories) return [];
@@ -147,44 +186,28 @@ export default function Menu() {
   }
 
   function openType(next) {
+    const state = { menuLevel: 'categories', type: next };
+    window.history.pushState(state, '');
     setType(next);
     setActiveId(null);
     setView('categories');
   }
 
   function openCategory(cat) {
+    const state = { menuLevel: 'items', type, activeId: cat.id };
+    window.history.pushState(state, '');
     setActiveId(cat.id);
     setView('items');
   }
 
   function goBack() {
-    if (view === 'items') {
-      setActiveId(null);
-      setView('categories');
-      return;
-    }
-    if (view === 'categories') {
-      setType(null);
-      setView('root');
-    }
-  }
-
-  function backLabel() {
-    if (view === 'items') {
-      return type === 'drinks' ? t.backToDrinks : t.backToFood;
-    }
-    return t.backToMenu;
+    window.history.back();
   }
 
   function openPreview(item, list, categoryName) {
     const index = list.findIndex((i) => i.id === item.id);
-    const cleaned = list.map((i) => ({
-      ...i,
-      price: null,
-      description: null
-    }));
     setPreview({
-      items: cleaned,
+      items: list,
       index: index >= 0 ? index : 0,
       categoryName
     });
@@ -197,18 +220,18 @@ export default function Menu() {
   return (
     <div className="page menu-browse">
       <header className="page-head">
-        <h1>{t.title}</h1>
+        <h1>{t.heading}</h1>
       </header>
 
       {view !== 'root' && (
         <button type="button" className="menu-back-btn" onClick={goBack}>
           <ArrowLeft size={18} aria-hidden="true" />
-          {backLabel()}
+          {t.back}
         </button>
       )}
 
       {view === 'root' && (
-        <section className="menu-root" aria-label={t.title}>
+        <section className="menu-root" aria-label={t.heading}>
           <button type="button" className="menu-root-card" onClick={() => openType('food')}>
             <span className="menu-root-icon" aria-hidden="true">
               <UtensilsCrossed size={40} strokeWidth={1.6} />
@@ -247,7 +270,7 @@ export default function Menu() {
           {active.note && !isDailyOffersCategory(active.name) && <p className="menu-note">{active.note}</p>}
 
           {active.items.length === 0 ? (
-            <p className="menu-note">{t.loading}</p>
+            <p className="menu-note">{t.emptyCategory}</p>
           ) : (
             <div className="menu-product-grid">
               {active.items.map((item) => (
@@ -267,7 +290,6 @@ export default function Menu() {
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
-          hidePrice
           onClose={() => setPreview({ items: [], index: 0, categoryName: '' })}
           onChange={(index) => setPreview((p) => ({ ...p, index }))}
         />
