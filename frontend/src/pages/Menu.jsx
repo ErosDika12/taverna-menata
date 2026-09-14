@@ -1,17 +1,48 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowLeft,
+  Beer,
+  BookOpen,
+  Coffee,
+  CupSoda,
+  GlassWater,
+  Grape,
+  Martini,
+  Percent,
+  Salad,
+  Soup,
+  UtensilsCrossed,
+  Wine
+} from 'lucide-react';
 import { useLang } from '../i18n';
-import { useSettings } from '../settings';
 import { apiGet } from '../api';
 import { ui } from '../translations';
 import ItemPreviewModal from '../components/ItemPreviewModal';
 import { mediaUrl } from '../media';
 
-function formatPrice(price) {
-  return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
-}
+const FOOD_ORDER = [
+  { keys: ['oferte ditore', 'ofertat ditore', 'daily offers', 'daily specials'], icon: Percent },
+  { keys: ['meny ditore', 'daily menu'], icon: BookOpen },
+  { keys: ['sallata', 'sallatat', 'salads'], icon: Salad },
+  { keys: ['pjata kryesore', 'main dishes'], icon: Soup },
+  { keys: ['pjata shtese', 'side dishes'], icon: Coffee }
+];
 
-/** Match backend/ensure-menu-structure.js FOOD_ORDER (offers open the Ushqime tab separately). */
-const FOOD_ORDER = ['Meny Ditore', 'Sallata', 'Pjata Kryesore', 'Pjata Shtesë'];
+const DRINK_ORDER = [
+  { keys: ['birrat', 'beers'], icon: Beer },
+  { keys: ['verera', 'wines'], icon: Wine },
+  { keys: ['koktella', 'koktelet', 'cocktails'], icon: Martini },
+  { keys: ['shots'], icon: GlassWater },
+  { keys: ['raki'], icon: CupSoda },
+  { keys: ['whiskey'], icon: GlassWater },
+  { keys: ['vodka'], icon: GlassWater },
+  { keys: ['gin'], icon: GlassWater },
+  { keys: ['rum'], icon: GlassWater },
+  { keys: ['tequila'], icon: GlassWater },
+  { keys: ['likere', 'liker', 'liqueurs'], icon: Grape },
+  { keys: ['cognac'], icon: Wine },
+  { keys: ['shampanje', 'champagne'], icon: CupSoda }
+];
 
 function categoryKey(name = '') {
   return String(name)
@@ -22,75 +53,66 @@ function categoryKey(name = '') {
     .trim();
 }
 
-const FOOD_RANK = new Map(FOOD_ORDER.map((n, i) => [categoryKey(n), i]));
+function matchOrderEntry(name, orderList) {
+  const key = categoryKey(name);
+  return orderList.findIndex((entry) => entry.keys.some((k) => key === k || key.includes(k)));
+}
 
-function sortFoodCategories(food) {
-  return [...food].sort((a, b) => {
-    const ra = FOOD_RANK.has(categoryKey(a.name)) ? FOOD_RANK.get(categoryKey(a.name)) : 999;
-    const rb = FOOD_RANK.has(categoryKey(b.name)) ? FOOD_RANK.get(categoryKey(b.name)) : 999;
-    if (ra !== rb) return ra - rb;
+function sortByOrder(list, orderList) {
+  return [...list].sort((a, b) => {
+    const ra = matchOrderEntry(a.name, orderList);
+    const rb = matchOrderEntry(b.name, orderList);
+    const ia = ra >= 0 ? ra : 999;
+    const ib = rb >= 0 ? rb : 999;
+    if (ia !== ib) return ia - ib;
     return (a.sort ?? 0) - (b.sort ?? 0);
   });
+}
+
+function iconForCategory(name, type) {
+  const order = type === 'food' ? FOOD_ORDER : DRINK_ORDER;
+  const idx = matchOrderEntry(name, order);
+  if (idx >= 0) return order[idx].icon;
+  return type === 'food' ? UtensilsCrossed : Wine;
 }
 
 function isDailyOffersCategory(name = '') {
   return /ofert/i.test(name) || /daily\s*(specials?|offers?)/i.test(name);
 }
 
-/** The whole card is one hit target: an overlay button on top of static markup
- *  keeps the click handling in a single place and the heading markup valid. */
-function MenuItemRow({ item, onOpen, openLabel }) {
+function CategoryCard({ label, Icon, onClick }) {
   return (
-    <li className="menu-item menu-item-card">
-      <span className="menu-item-thumb">
-        {item.image ? (
-          <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <span className="menu-item-no-img" />
-        )}
+    <button type="button" className="menu-cat-card" onClick={onClick}>
+      <span className="menu-cat-card-icon" aria-hidden="true">
+        <Icon size={28} strokeWidth={1.75} />
       </span>
-      <div className="menu-item-body">
-        <div className="menu-item-row">
-          <h3>{item.name}</h3>
-          <span className="menu-item-price">{formatPrice(item.price)}</span>
-        </div>
-        {item.description && <p>{item.description}</p>}
-      </div>
-      <button
-        type="button"
-        className="menu-item-hit"
-        aria-label={`${item.name} – ${openLabel}`}
-        onClick={() => onOpen(item)}
-      />
-    </li>
+      <span className="menu-cat-card-label">{label}</span>
+    </button>
   );
 }
 
-function CategorySections({ categories, categoryLabel, onOpen, openLabel }) {
-  return categories.map((c) => (
-    <section key={c.id} id={`menu-cat-${c.id}`} className="menu-section">
-      <h2 className="menu-category-title">{categoryLabel(c)}</h2>
-      {c.note && <p className="menu-note">{c.note}</p>}
-      <ul className="menu-list">
-        {c.items.map((item) => (
-          <MenuItemRow
-            key={item.id}
-            item={item}
-            openLabel={openLabel}
-            onOpen={() => onOpen(item, c.items, categoryLabel(c))}
-          />
-        ))}
-      </ul>
-    </section>
-  ));
+function ProductCard({ item, onOpen }) {
+  return (
+    <button type="button" className="menu-product-card" onClick={() => onOpen(item)} aria-label={item.name}>
+      <span className="menu-product-media">
+        {item.image ? (
+          <img src={mediaUrl(item.image)} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <span className="menu-product-placeholder" aria-hidden="true" />
+        )}
+      </span>
+      <span className="menu-product-name">{item.name}</span>
+    </button>
+  );
 }
 
 export default function Menu() {
   const { lang } = useLang();
-  const settings = useSettings();
   const t = ui[lang].menu;
   const [categories, setCategories] = useState(null);
-  const [type, setType] = useState('food');
+  const [view, setView] = useState('root'); // root | categories | items
+  const [type, setType] = useState(null); // food | drinks
+  const [activeId, setActiveId] = useState(null);
   const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '' });
 
   useEffect(() => {
@@ -101,42 +123,68 @@ export default function Menu() {
 
   const foodCategories = useMemo(() => {
     if (!categories) return [];
-    return sortFoodCategories(
-      categories.filter((c) => c.type === 'food' && !isDailyOffersCategory(c.name))
+    return sortByOrder(
+      categories.filter((c) => c.type === 'food'),
+      FOOD_ORDER
     );
   }, [categories]);
 
   const drinkCategories = useMemo(() => {
     if (!categories) return [];
-    return [...categories.filter((c) => c.type === 'drinks')].sort(
-      (a, b) => (a.sort ?? 0) - (b.sort ?? 0)
+    return sortByOrder(
+      categories.filter((c) => c.type === 'drinks'),
+      DRINK_ORDER
     );
   }, [categories]);
 
-  const visible = useMemo(() => {
-    const list = type === 'food' ? foodCategories : drinkCategories;
-    return list.filter((c) => (c.items?.length ?? 0) > 0);
-  }, [type, foodCategories, drinkCategories]);
-
-  // The weekday sits in each item's description; it becomes the row heading instead of a subtitle.
-  const offerEntries = useMemo(() => {
-    const category = categories?.find((c) => c.type === 'food' && isDailyOffersCategory(c.name));
-    return (category?.items ?? []).map((item) => ({
-      day: (item.description ?? '').toUpperCase(),
-      item: { ...item, description: null }
-    }));
-  }, [categories]);
-
-  const offerItems = useMemo(() => offerEntries.map((e) => e.item), [offerEntries]);
+  const visibleCategories = type === 'food' ? foodCategories : type === 'drinks' ? drinkCategories : [];
+  const active = visibleCategories.find((c) => c.id === activeId) ?? null;
 
   function categoryLabel(c) {
+    if (!c) return '';
+    if (isDailyOffersCategory(c.name)) return t.dailyOffers;
     return c.name;
+  }
+
+  function openType(next) {
+    setType(next);
+    setActiveId(null);
+    setView('categories');
+  }
+
+  function openCategory(cat) {
+    setActiveId(cat.id);
+    setView('items');
+  }
+
+  function goBack() {
+    if (view === 'items') {
+      setActiveId(null);
+      setView('categories');
+      return;
+    }
+    if (view === 'categories') {
+      setType(null);
+      setView('root');
+    }
+  }
+
+  function backLabel() {
+    if (view === 'items') {
+      return type === 'drinks' ? t.backToDrinks : t.backToFood;
+    }
+    return t.backToMenu;
   }
 
   function openPreview(item, list, categoryName) {
     const index = list.findIndex((i) => i.id === item.id);
+    const cleaned = list.map((i) => ({
+      ...i,
+      price: null,
+      description: null
+    }));
     setPreview({
-      items: list,
+      items: cleaned,
       index: index >= 0 ? index : 0,
       categoryName
     });
@@ -147,66 +195,79 @@ export default function Menu() {
   }
 
   return (
-    <div className="page">
+    <div className="page menu-browse">
       <header className="page-head">
         <h1>{t.title}</h1>
       </header>
 
-      <div className="menu-sticky">
-        <div className="menu-type" role="tablist">
-          <button
-            role="tab"
-            aria-selected={type === 'food'}
-            className={type === 'food' ? 'active' : ''}
-            onClick={() => setType('food')}
-          >
-            {t.food}
-          </button>
-          <button
-            role="tab"
-            aria-selected={type === 'drinks'}
-            className={type === 'drinks' ? 'active' : ''}
-            onClick={() => setType('drinks')}
-          >
-            {t.drinks}
-          </button>
-        </div>
-      </div>
+      {view !== 'root' && (
+        <button type="button" className="menu-back-btn" onClick={goBack}>
+          <ArrowLeft size={18} aria-hidden="true" />
+          {backLabel()}
+        </button>
+      )}
 
-      {type === 'drinks' && settings.drinks_note && <p className="menu-note">{settings.drinks_note}</p>}
-
-      {/* Oferta Ditore is a section inside Ushqime, not a primary tab. */}
-      {type === 'food' && offerEntries.length > 0 && (
-        <section id="menu-cat-offers" className="menu-section menu-section-offers">
-          <h2 className="menu-category-title">{t.offers}</h2>
-          <p className="menu-note">{t.offersServedUntil}</p>
-          {offerEntries.map(({ day, item }) => (
-            <div key={item.id} className="menu-offer-day">
-              {day && <h3 className="menu-day-title">{day}</h3>}
-              <ul className="menu-list">
-                <MenuItemRow
-                  item={item}
-                  openLabel={t.openPhoto}
-                  onOpen={() => openPreview(item, offerItems, t.offers)}
-                />
-              </ul>
-            </div>
-          ))}
+      {view === 'root' && (
+        <section className="menu-root" aria-label={t.title}>
+          <button type="button" className="menu-root-card" onClick={() => openType('food')}>
+            <span className="menu-root-icon" aria-hidden="true">
+              <UtensilsCrossed size={40} strokeWidth={1.6} />
+            </span>
+            <span className="menu-root-label">{t.food}</span>
+          </button>
+          <button type="button" className="menu-root-card" onClick={() => openType('drinks')}>
+            <span className="menu-root-icon" aria-hidden="true">
+              <Wine size={40} strokeWidth={1.6} />
+            </span>
+            <span className="menu-root-label">{t.drinks}</span>
+          </button>
         </section>
       )}
 
-      <CategorySections
-        categories={visible}
-        categoryLabel={categoryLabel}
-        onOpen={openPreview}
-        openLabel={t.openPhoto}
-      />
+      {view === 'categories' && (
+        <section className="menu-cat-grid" aria-label={type === 'food' ? t.food : t.drinks}>
+          {visibleCategories.map((c) => {
+            const Icon = iconForCategory(c.name, type);
+            return (
+              <CategoryCard
+                key={c.id}
+                label={categoryLabel(c)}
+                Icon={Icon}
+                onClick={() => openCategory(c)}
+              />
+            );
+          })}
+        </section>
+      )}
+
+      {view === 'items' && active && (
+        <section id="menu" className="menu-products-section" aria-label={categoryLabel(active)}>
+          <h2 className="menu-products-title">{categoryLabel(active)}</h2>
+          {isDailyOffersCategory(active.name) && <p className="menu-note">{t.dailyNote}</p>}
+          {active.note && !isDailyOffersCategory(active.name) && <p className="menu-note">{active.note}</p>}
+
+          {active.items.length === 0 ? (
+            <p className="menu-note">{t.loading}</p>
+          ) : (
+            <div className="menu-product-grid">
+              {active.items.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  item={item}
+                  onOpen={() => openPreview(item, active.items, categoryLabel(active))}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {preview.items.length > 0 && (
         <ItemPreviewModal
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
+          hidePrice
           onClose={() => setPreview({ items: [], index: 0, categoryName: '' })}
           onChange={(index) => setPreview((p) => ({ ...p, index }))}
         />

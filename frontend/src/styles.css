@@ -1545,6 +1545,224 @@ main {
   margin-bottom: 14px;
 }
 
+/* ---------- Menu browse (category cards + products) ---------- */
+
+.menu-browse .menu-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--green);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.menu-browse .menu-back-btn:active {
+  opacity: 0.88;
+}
+
+.menu-root {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.menu-root-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 160px;
+  width: 100%;
+  padding: 28px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--green);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.menu-root-card:active {
+  transform: scale(0.99);
+}
+
+.menu-root-icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--green);
+}
+
+.menu-root-label {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.menu-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.menu-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 120px;
+  width: 100%;
+  padding: 18px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-cat-card:active {
+  transform: scale(0.99);
+}
+
+.menu-cat-card-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--green);
+}
+
+.menu-cat-card-label {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.menu-products-title {
+  margin: 0 0 12px;
+  font-size: 1.25rem;
+  color: var(--green);
+}
+
+.menu-product-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+}
+
+.menu-product-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.menu-product-card:active {
+  transform: scale(0.99);
+}
+
+.menu-product-media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--cream);
+  overflow: hidden;
+}
+
+.menu-product-media img,
+.menu-product-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.menu-product-placeholder {
+  background: linear-gradient(145deg, var(--cream), #e8dfcb);
+}
+
+.menu-product-name {
+  display: block;
+  padding: 10px 12px 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-root-card:hover,
+  .menu-cat-card:hover,
+  .menu-product-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+}
+
+@media (min-width: 768px) {
+  .menu-root {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .menu-root-card {
+    min-height: 220px;
+  }
+
+  .menu-cat-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .menu-product-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .menu-cat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .menu-product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 /* ---------- Menu sections ---------- */
 
 .menu-section {

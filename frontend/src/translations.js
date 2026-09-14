@@ -47,7 +47,10 @@ export const ui = {
       loading: 'Duke e ngarkuar menynë…',
       foundTitle: 'Gjete diçka që të pëlqen?',
       foundText: 'Rezervo tavolinën me një telefonatë.',
-      reserveNow: 'Rezervo tani'
+      reserveNow: 'Rezervo tani',
+      backToMenu: 'Kthehu te Menyja',
+      backToFood: 'Kthehu te Ushqimet',
+      backToDrinks: 'Kthehu te Pijet'
     },
     gallery: {
       title: 'Galeria',
@@ -141,7 +144,10 @@ export const ui = {
       loading: 'Loading menu…',
       foundTitle: 'Found something you like?',
       foundText: 'Reserve your table with a phone call.',
-      reserveNow: 'Reserve now'
+      reserveNow: 'Reserve now',
+      backToMenu: 'Back to Menu',
+      backToFood: 'Back to Food',
+      backToDrinks: 'Back to Drinks'
     },
     gallery: {
       title: 'Gallery',

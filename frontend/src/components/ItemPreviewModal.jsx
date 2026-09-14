@@ -10,7 +10,7 @@ function formatPrice(price) {
   return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
 }
 
-export default function ItemPreviewModal({ items, index, onClose, onChange, categoryName }) {
+export default function ItemPreviewModal({ items, index, onClose, onChange, categoryName, hidePrice = false }) {
   const { lang } = useLang();
   const t = ui[lang].preview;
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -187,7 +187,7 @@ export default function ItemPreviewModal({ items, index, onClose, onChange, cate
 
   if (!item) return null;
 
-  const price = formatPrice(item.price);
+  const price = hidePrice ? null : formatPrice(item.price);
   const showCategory = Boolean(categoryName);
   const backdropOpacity = Math.max(0.35, 1 - dragY / 280);
   const modalTransform = `translateY(calc(${visible ? '0px' : '100%'} + ${dragY}px)) translateX(${dragX}px)`;
