@@ -44,13 +44,6 @@ const DRINK_ORDER = [
   { keys: ['shampanje', 'champagne'], icon: CupSoda }
 ];
 
-function formatPrice(price) {
-  if (price == null || price === '') return null;
-  const n = Number(price);
-  if (Number.isNaN(n)) return null;
-  return `${n % 1 === 0 ? n : n.toFixed(2).replace(/0$/, '')} €`;
-}
-
 function categoryKey(name = '') {
   return String(name)
     .normalize('NFC')
@@ -99,7 +92,6 @@ function CategoryCard({ label, Icon, onClick }) {
 }
 
 function ProductCard({ item, onOpen }) {
-  const price = formatPrice(item.price);
   return (
     <button type="button" className="menu-product-card" onClick={() => onOpen(item)} aria-label={item.name}>
       <span className="menu-product-media">
@@ -112,7 +104,6 @@ function ProductCard({ item, onOpen }) {
       <span className="menu-product-body">
         <span className="menu-product-name">{item.name}</span>
         {item.description ? <span className="menu-product-desc">{item.description}</span> : null}
-        {price ? <span className="menu-product-price">{price}</span> : null}
       </span>
     </button>
   );
@@ -290,6 +281,7 @@ export default function Menu() {
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
+          hidePrice
           onClose={() => setPreview({ items: [], index: 0, categoryName: '' })}
           onChange={(index) => setPreview((p) => ({ ...p, index }))}
         />

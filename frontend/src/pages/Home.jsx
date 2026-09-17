@@ -13,10 +13,6 @@ import { mediaUrl } from '../media';
 
 const highlightIcons = [ChefHat, Leaf, Users, Phone];
 
-function formatPrice(price) {
-  return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
-}
-
 const PREVIEW_MENU_ITEMS = 6;
 const PREVIEW_GALLERY_PHOTOS = 9;
 const HERO_VIDEO_SRC = '/videos/Video-61801.mp4';
@@ -192,7 +188,6 @@ export default function Home() {
                 <div className="menu-item-body">
                   <div className="menu-item-row">
                     <h3>{item.name}</h3>
-                    <span className="menu-item-price">{formatPrice(item.price)}</span>
                   </div>
                   {item.description && <p>{item.description}</p>}
                 </div>
@@ -329,6 +324,7 @@ export default function Home() {
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
+          hidePrice
           onClose={closePreview}
           onChange={(index) => setPreview((p) => ({ ...p, index }))}
         />
