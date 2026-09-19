@@ -91,7 +91,15 @@ function CategoryCard({ label, Icon, onClick }) {
   );
 }
 
+function formatPrice(price) {
+  if (price == null || price === '') return null;
+  const n = Number(price);
+  if (Number.isNaN(n)) return null;
+  return `${n % 1 === 0 ? n : n.toFixed(2).replace(/0$/, '')} €`;
+}
+
 function ProductCard({ item, onOpen }) {
+  const price = formatPrice(item.price);
   return (
     <button type="button" className="menu-product-card" onClick={() => onOpen(item)} aria-label={item.name}>
       <span className="menu-product-media">
@@ -104,6 +112,7 @@ function ProductCard({ item, onOpen }) {
       <span className="menu-product-body">
         <span className="menu-product-name">{item.name}</span>
         {item.description ? <span className="menu-product-desc">{item.description}</span> : null}
+        {price ? <span className="menu-product-price">{price}</span> : null}
       </span>
     </button>
   );
