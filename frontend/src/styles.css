@@ -1745,13 +1745,6 @@ main {
   line-height: 1.4;
 }
 
-.menu-product-price {
-  margin-top: 2px;
-  font-weight: 700;
-  color: var(--green);
-  font-size: 1.05rem;
-}
-
 @media (hover: hover) and (pointer: fine) {
   .menu-root-card:hover,
   .menu-cat-card:hover,
