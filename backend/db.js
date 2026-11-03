@@ -51,8 +51,7 @@ db.exec(`
       CHECK (category IN ('food', 'interior', 'exterior', 'atmosphere')),
     alt      TEXT,
     alt_en   TEXT,
-    sort     INTEGER NOT NULL DEFAULT 0,
-    created_at INTEGER
+    sort     INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS videos (
@@ -63,8 +62,7 @@ db.exec(`
       CHECK (category IN ('food', 'interior', 'exterior', 'atmosphere')),
     title    TEXT,
     title_en TEXT,
-    sort     INTEGER NOT NULL DEFAULT 0,
-    created_at INTEGER
+    sort     INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS settings (
@@ -115,8 +113,6 @@ const migrations = [
   'ALTER TABLE items ADD COLUMN description_en TEXT',
   'ALTER TABLE items ADD COLUMN available INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE gallery ADD COLUMN alt_en TEXT',
-  'ALTER TABLE gallery ADD COLUMN created_at INTEGER',
-  'ALTER TABLE videos ADD COLUMN created_at INTEGER',
   'ALTER TABLE admins ADD COLUMN updated_at INTEGER',
   'ALTER TABLE admin_notifications ADD COLUMN actor_email TEXT',
   'ALTER TABLE admin_notifications ADD COLUMN actor_name TEXT',
@@ -433,8 +429,6 @@ seedIfEmpty();
 
 const { ensureI18n } = require('./ensure-i18n');
 const { ensureMenuStructure } = require('./ensure-menu-structure');
-const { ensureMenuImages } = require('./ensure-menu-images');
-const { ensureGalleryMedia } = require('./ensure-gallery-media');
 ensureI18n(db);
 ensureAdminPassword(db);
 migrateAdminRolesSchema();
@@ -446,8 +440,6 @@ exportAdminsRegistry();
 migrateOpeningHours();
 migrateCategoryNotes();
 ensureMenuStructure(db);
-ensureMenuImages(db);
-ensureGalleryMedia(db);
 
 if (require.main === module) {
   reseed();

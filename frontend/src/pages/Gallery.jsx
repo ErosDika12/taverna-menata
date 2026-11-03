@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Play } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
@@ -7,13 +7,14 @@ import ItemPreviewModal from '../components/ItemPreviewModal';
 import GalleryReelsViewer from '../components/GalleryReelsViewer';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { mediaUrl } from '../media';
+import { GALLERY_VIDEOS } from '../galleryVideos';
 
 export default function Gallery() {
   const { lang } = useLang();
   const t = ui[lang].gallery;
   const isMobile = useMediaQuery('(max-width: 799px)');
   const isTouchPhone = useMediaQuery('(hover: none) and (pointer: coarse)');
-  const useReels = isMobile || isTouchPhone;
+  const useVideoReels = isMobile || isTouchPhone;
   const modes = [
     { key: 'all', label: t.all },
     { key: 'photos', label: t.photos },
@@ -21,21 +22,20 @@ export default function Gallery() {
   ];
 
   const [mode, setMode] = useState('all');
-  // One collection for both media types, already ordered by the backend on the
-  // persistent `created_at` field, so photos and videos stay interleaved.
-  const [media, setMedia] = useState(null);
-  const [open, setOpen] = useState(null);
+  const [photos, setPhotos] = useState(null);
+  const [openPhoto, setOpenPhoto] = useState(null);
+  const [openVideo, setOpenVideo] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    setMedia(null);
+    setPhotos(null);
 
-    apiGet('/api/media', lang)
-      .then((m) => {
-        if (!cancelled) setMedia(m);
+    apiGet('/api/gallery', lang)
+      .then((p) => {
+        if (!cancelled) setPhotos(p);
       })
       .catch(() => {
-        if (!cancelled) setMedia([]);
+        if (!cancelled) setPhotos([]);
       });
 
     return () => {
@@ -43,37 +43,50 @@ export default function Gallery() {
     };
   }, [lang]);
 
-  const mediaList = media ?? [];
+  useEffect(() => {
+    if (openVideo === null) return;
+    function onKey(e) {
+      if (e.key === 'Escape') setOpenVideo(null);
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openVideo]);
 
-  const visible = useMemo(() => {
-    if (mode === 'photos') return mediaList.filter((m) => m.type === 'photo');
-    if (mode === 'videos') return mediaList.filter((m) => m.type === 'video');
-    return mediaList;
-  }, [mediaList, mode]);
+  const photoList = photos ?? [];
+  const videoList = GALLERY_VIDEOS;
 
-  // The viewer walks exactly the sequence shown in the grid, so opening an
-  // item from "Të gjitha" keeps photos and videos in one continuous run.
-  const viewerItems = useMemo(
+  const previewItems = useMemo(
     () =>
-      visible.map((m) =>
-        m.type === 'video'
-          ? { id: `video-${m.id}`, name: m.title || t.videos, src: m.src, poster: m.thumb }
-          : {
-              id: `photo-${m.id}`,
-              name: m.alt || t.title,
-              description: null,
-              price: null,
-              image: m.image
-            }
-      ),
-    [visible, t.title, t.videos]
+      photoList.map((p) => ({
+        id: p.id,
+        name: p.alt || t.title,
+        description: null,
+        price: null,
+        image: p.image
+      })),
+    [photoList, t.title]
   );
 
-  if (media === null) {
+  const videoPreviewItems = useMemo(
+    () =>
+      videoList.map((v) => ({
+        id: v.id,
+        name: v.title || t.videos,
+        src: v.src,
+        poster: v.poster
+      })),
+    [videoList, t.videos]
+  );
+
+  const showPhotos = mode === 'all' || mode === 'photos';
+  const showVideos = mode === 'all' || mode === 'videos';
+  const emptyPhotosOnly = mode === 'photos' && photoList.length === 0;
+  const emptyVideosOnly = mode === 'videos' && videoList.length === 0;
+  const emptyAll = mode === 'all' && photoList.length === 0 && videoList.length === 0;
+
+  if (photos === null) {
     return <div className="page-loading">{t.loading}</div>;
   }
-
-  const emptyLabel = mode === 'videos' ? t.noVideos : t.loading;
 
   return (
     <div className="page" id="galeria">
@@ -92,7 +105,8 @@ export default function Gallery() {
               className={mode === key ? 'active' : ''}
               onClick={() => {
                 setMode(key);
-                setOpen(null);
+                setOpenPhoto(null);
+                setOpenVideo(null);
               }}
             >
               {label}
@@ -101,52 +115,76 @@ export default function Gallery() {
         </div>
       </div>
 
-      {visible.length === 0 ? (
-        <p className="gallery-empty">{emptyLabel}</p>
+      {emptyVideosOnly ? (
+        <p className="gallery-empty">{t.noVideos}</p>
+      ) : emptyPhotosOnly || emptyAll ? (
+        <p className="gallery-empty">{t.loading}</p>
       ) : (
         <div className="gallery-grid">
-          {visible.map((m, i) => (
-            <button
-              key={`${m.type}-${m.id}`}
-              type="button"
-              className={`gallery-cell${m.type === 'video' ? ' gallery-cell-video' : ''}`}
-              onClick={() => setOpen(i)}
-              aria-label={m.type === 'video' ? m.title || t.videos : m.alt}
-            >
-              <img
-                src={mediaUrl(m.type === 'video' ? m.thumb : m.thumb || m.image)}
-                alt={m.type === 'video' ? '' : m.alt}
-                loading="lazy"
-                decoding="async"
-              />
-              {m.type === 'video' && (
-                <span className="gallery-cell-play" aria-hidden="true">
-                  <Play size={16} fill="currentColor" />
-                </span>
-              )}
-            </button>
-          ))}
+          {showPhotos &&
+            photoList.map((p, i) => (
+              <button key={`photo-${p.id}`} className="gallery-cell" onClick={() => setOpenPhoto(i)}>
+                <img src={mediaUrl(p.thumb)} alt={p.alt} loading="lazy" decoding="async" />
+              </button>
+            ))}
+
+          {showVideos &&
+            videoList.map((v, i) => (
+              <button
+                key={`video-${v.id}`}
+                className="gallery-cell"
+                onClick={() => setOpenVideo(i)}
+                aria-label={v.title || t.videos}
+              >
+                <img src={mediaUrl(v.poster)} alt={v.title || t.videos} loading="lazy" decoding="async" />
+              </button>
+            ))}
         </div>
       )}
 
-      {open !== null &&
-        viewerItems.length > 0 &&
-        (useReels ? (
+      {openPhoto !== null && previewItems.length > 0 && (
+        isMobile ? (
           <GalleryReelsViewer
-            items={viewerItems}
-            index={open}
-            onClose={() => setOpen(null)}
-            onChange={setOpen}
+            items={previewItems}
+            index={openPhoto}
+            onClose={() => setOpenPhoto(null)}
+            onChange={setOpenPhoto}
           />
         ) : (
           <ItemPreviewModal
-            items={viewerItems}
-            index={open}
+            items={previewItems}
+            index={openPhoto}
             categoryName={t.title}
-            onClose={() => setOpen(null)}
-            onChange={setOpen}
+            onClose={() => setOpenPhoto(null)}
+            onChange={setOpenPhoto}
           />
-        ))}
+        )
+      )}
+
+      {openVideo !== null && videoPreviewItems.length > 0 && (
+        useVideoReels ? (
+          <GalleryReelsViewer
+            items={videoPreviewItems}
+            index={openVideo}
+            onClose={() => setOpenVideo(null)}
+            onChange={setOpenVideo}
+          />
+        ) : (
+          <div className="lightbox video-lightbox" role="dialog" onClick={() => setOpenVideo(null)}>
+            <video
+              src={mediaUrl(videoPreviewItems[openVideo].src)}
+              poster={mediaUrl(videoPreviewItems[openVideo].poster)}
+              controls
+              playsInline
+              preload="metadata"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button type="button" className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
+              <X size={28} />
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
 }

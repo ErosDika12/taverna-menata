@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Volume2, VolumeX } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useLang } from '../i18n';
 import { ui } from '../translations';
 import { mediaUrl } from '../media';
 
-/**
- * Full-screen mobile media viewer. `items` is a single mixed sequence, so a
- * swipe moves from a photo to a video (and back) without leaving the viewer.
- */
 export default function GalleryReelsViewer({ items, index, onClose, onChange }) {
   const { lang } = useLang();
   const t = ui[lang].preview;
@@ -22,10 +18,7 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   const rafRef = useRef(0);
   const [dragY, setDragY] = useState(0);
   const [dragging, setDragging] = useState(false);
-  // Videos open with sound; the browser may refuse, and then the button below
-  // lets the visitor turn it on with a deliberate tap.
-  const [soundOn, setSoundOn] = useState(true);
-  const currentIsVideo = Boolean(items[index]?.src);
+  const isVideoFeed = items.some((item) => item.src);
 
   const goPrev = useCallback(() => {
     if (index > 0) onChange(index - 1);
@@ -46,17 +39,6 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
     }
   }, [index]);
 
-  const toggleSound = useCallback(() => {
-    const video = videoRefs.current[index];
-    const next = !soundOn;
-    setSoundOn(next);
-    if (!video) return;
-    video.muted = !next;
-    video.volume = 1;
-    const play = video.play();
-    if (play && typeof play.catch === 'function') play.catch(() => {});
-  }, [index, soundOn]);
-
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -67,50 +49,35 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') goPrev();
-      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowUp') goPrev();
+      if (e.key === 'ArrowDown') goNext();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, goPrev, goNext]);
 
   useEffect(() => {
-    let cancelled = false;
     videoRefs.current.forEach((video, i) => {
       if (!video) return;
       video.setAttribute('playsinline', 'true');
       video.setAttribute('webkit-playsinline', 'true');
-      if (i !== index) {
+      video.muted = true;
+      if (i === index) {
+        const play = video.play();
+        if (play && typeof play.catch === 'function') play.catch(() => {});
+      } else {
         video.pause();
         video.currentTime = 0;
-        return;
-      }
-      video.muted = !soundOn;
-      video.volume = 1;
-      const play = video.play();
-      if (play && typeof play.catch === 'function') {
-        play.catch(() => {
-          // Unmuted autoplay is blocked here: fall back to muted playback and
-          // surface the unmute control instead of failing silently.
-          if (cancelled) return;
-          video.muted = true;
-          setSoundOn(false);
-          const retry = video.play();
-          if (retry && typeof retry.catch === 'function') retry.catch(() => {});
-        });
       }
     });
-    return () => {
-      cancelled = true;
-    };
-  }, [index, items, soundOn]);
+  }, [index, items]);
 
   useEffect(() => {
-    const el = swipeRef.current || rootRef.current;
+    const el = isVideoFeed ? swipeRef.current : rootRef.current;
     if (!el) return;
 
     function onTouchStart(e) {
-      if (e.target.closest('.gallery-reels-close, .gallery-reels-sound')) return;
+      if (e.target.closest('.gallery-reels-close')) return;
       const touch = e.touches[0];
       startXRef.current = touch.clientX;
       startYRef.current = touch.clientY;
@@ -148,17 +115,12 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
       setDragging(false);
       setDragY(0);
 
-      // A clear horizontal flick moves through the feed as well.
       if (Math.abs(dx) > Math.abs(dy) && Math.abs(dy) < threshold) {
-        if (Math.abs(dx) > 56) {
-          if (dx < 0) goNext();
-          else goPrev();
-        }
         return;
       }
 
       if (Math.abs(dy) < 18 && Math.abs(dx) < 18 && dt < 350) {
-        if (items[index]?.src) toggleCurrentVideo();
+        if (isVideoFeed) toggleCurrentVideo();
         return;
       }
 
@@ -183,14 +145,14 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchcancel', onTouchEnd);
     };
-  }, [index, items, goPrev, goNext, toggleCurrentVideo]);
+  }, [index, items.length, goPrev, goNext, isVideoFeed, toggleCurrentVideo]);
 
   const translateY = `calc(${-index * 100}dvh + ${dragY}px)`;
 
   return (
     <div
       ref={rootRef}
-      className={`gallery-reels${dragging ? ' is-dragging' : ''}`}
+      className={`gallery-reels${dragging ? ' is-dragging' : ''}${isVideoFeed ? ' is-video' : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={tg.title}
@@ -199,21 +161,9 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
         <X size={26} strokeWidth={2.5} />
       </button>
 
-      {currentIsVideo && (
-        <button
-          type="button"
-          className="gallery-reels-sound"
-          aria-label={soundOn ? t.mute : t.unmute}
-          aria-pressed={!soundOn}
-          onClick={toggleSound}
-        >
-          {soundOn ? <Volume2 size={22} aria-hidden="true" /> : <VolumeX size={22} aria-hidden="true" />}
-        </button>
-      )}
-
       <div className="gallery-reels-track" style={{ transform: `translate3d(0, ${translateY}, 0)` }}>
         {items.map((item, i) => (
-          <div className="gallery-reels-slide" key={`${item.src ? 'v' : 'p'}-${item.id}`}>
+          <div className="gallery-reels-slide" key={item.id}>
             {item.src ? (
               <video
                 ref={(el) => {
@@ -223,6 +173,7 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
                 poster={item.poster ? mediaUrl(item.poster) : undefined}
                 playsInline
                 preload={Math.abs(i - index) <= 1 ? 'auto' : 'metadata'}
+                muted
                 loop
                 controls={false}
                 disablePictureInPicture
@@ -240,7 +191,7 @@ export default function GalleryReelsViewer({ items, index, onClose, onChange }) 
         ))}
       </div>
 
-      <div ref={swipeRef} className="gallery-reels-swipe" />
+      {isVideoFeed ? <div ref={swipeRef} className="gallery-reels-swipe" /> : null}
     </div>
   );
 }

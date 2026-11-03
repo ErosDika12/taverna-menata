@@ -67,9 +67,9 @@ const categories = [
       { name: 'Kombinim 2', price: 40, description: 'Tul viçi, muskuj, kotlet, brinjë kingji, kofshë pule, këpurdha, perime në skarë, sallatë me patate, sos shpije', image: '/uploads/gallery/dsc09322.jpg' },
       { name: 'Kombinim 3', price: 48, description: 'Kombinim i mishrave në tavë' },
       { name: 'Meze e nxehtë (e madhe)', price: 18, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa', image: '/uploads/gallery/_dsc3487.jpg' },
-      { name: 'Meze e nxehtë (e vogël)', price: 10, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa', image: '/uploads/gallery/dsc01710.jpg' },
+      { name: 'Meze e nxehtë (e vogël)', price: 10, description: 'Patate të fërguara, virshlle viçi, krahë pule, djath me susam, këpurdha, onion rings, 2 sosa' },
       { name: 'Meze e ftohtë (e madhe)', price: 17, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë', image: '/uploads/gallery/_dsc3319.jpg' },
-      { name: 'Meze e ftohtë (e vogël)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë', image: '/uploads/gallery/_dsc3302.jpg' },
+      { name: 'Meze e ftohtë (e vogël)', price: 9, description: 'Tranguj turshi, karrota, djath sharri, kaçkavall, suxhuk, përshutë, ullinj, arra, cranberry, sos i bardhë' },
       { name: 'Biftek 1 kg', price: 65 },
       { name: 'Specialitet Menata', price: 13, description: 'Mish në tel i mbështjellë me ajvar dhe kaçkavall' }
     ]
@@ -321,11 +321,11 @@ const gallery = [
   { file: '_dsc4000.jpg', category: 'exterior', alt: 'Pamje e terracës mes gjelbërimit' },
   { file: '_dsc9727.jpg', category: 'exterior', alt: 'Korridori i jashtëm me stola' },
   { file: 'dsc07530.jpg', category: 'atmosphere', alt: 'Terraca në mbrëmje' },
+  { file: 'dsc08124.jpg', category: 'atmosphere', alt: 'Drekë nën hijen e pemës në oborr' },
+  { file: 'dsc09312.jpg', category: 'atmosphere', alt: 'Mish i freskët duke u pjekur në skarë' },
   { file: 'dsc09338.jpg', category: 'atmosphere', alt: 'Shoqëria duke i shijuar pijet në oborr' },
   { file: 'dsc09350.jpg', category: 'atmosphere', alt: 'Mbrëmje me drita në oborr' },
-  { file: 'dsc08124.jpg', category: 'atmosphere', alt: 'Drekë nën hijen e pemës në oborr' },
-  { file: 'dsc09312.jpg', category: 'food', alt: 'Mish i freskët duke u pjekur në skarë' },
-  { file: '_dsc3472.jpg', category: 'food', alt: 'Meze dhe verë në mbrëmje' },
+  { file: '_dsc3472.jpg', category: 'atmosphere', alt: 'Meze dhe verë në mbrëmje' },
   { file: '_dsc9857.jpg', category: 'atmosphere', alt: 'Birrë e freskët nga banaku' }
 ];
 

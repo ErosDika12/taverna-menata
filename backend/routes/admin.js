@@ -359,7 +359,7 @@ router.post('/items/:id/image', requireAdmin, handleUpload(uploadMenuImage.singl
 
 // --- Gallery photos ---
 router.get('/gallery', requireAdmin, (_req, res) => {
-  res.json(db.prepare('SELECT * FROM gallery ORDER BY created_at, sort, id').all());
+  res.json(db.prepare('SELECT * FROM gallery ORDER BY sort, id').all());
 });
 
 router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image')), (req, res) => {
@@ -369,10 +369,8 @@ router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image')),
   const thumb = image;
   const max = db.prepare('SELECT COALESCE(MAX(sort), -1) AS m FROM gallery').get().m;
   const r = db
-    .prepare(
-      'INSERT INTO gallery (image, thumb, category, alt, alt_en, sort, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    )
-    .run(image, thumb, category || 'food', alt || '', alt_en || null, max + 1, Date.now());
+    .prepare('INSERT INTO gallery (image, thumb, category, alt, alt_en, sort) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(image, thumb, category || 'food', alt || '', alt_en || null, max + 1);
   logAdminActivity(req.admin, 'gallery', 'uploaded photo', alt || category);
   res.json({ id: r.lastInsertRowid, image, thumb });
 });
@@ -399,7 +397,7 @@ router.delete('/gallery/:id', requireAdmin, (req, res) => {
 
 // --- Videos ---
 router.get('/videos', requireAdmin, (_req, res) => {
-  res.json(db.prepare('SELECT * FROM videos ORDER BY created_at, sort, id').all());
+  res.json(db.prepare('SELECT * FROM videos ORDER BY sort, id').all());
 });
 
 router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video')), (req, res) => {
@@ -408,10 +406,8 @@ router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video')), 
   const src = toUrl(req.file.filename, 'videos');
   const max = db.prepare('SELECT COALESCE(MAX(sort), -1) AS m FROM videos').get().m;
   const r = db
-    .prepare(
-      'INSERT INTO videos (src, thumb, category, title, title_en, sort, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    )
-    .run(src, null, category || 'food', title || '', title_en || null, max + 1, Date.now());
+    .prepare('INSERT INTO videos (src, thumb, category, title, title_en, sort) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(src, null, category || 'food', title || '', title_en || null, max + 1);
   logAdminActivity(req.admin, 'gallery', 'uploaded video', title || category);
   res.json({ id: r.lastInsertRowid, src });
 });
