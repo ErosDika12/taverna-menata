@@ -23,25 +23,25 @@ export default function MenuAdmin() {
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState(null);
   const [newCat, setNewCat] = useState(null);
-  const [editCat, setEditCat] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const formRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // "New item" and "New category" open as their own page (?view=...), so the browser Back button works.
+  // "New item", "New category" and "Edit category" open as their own page (?view=...), so the browser Back button works.
   const view = searchParams.get('view');
-  const fullPage = view === 'new-item' || view === 'new-category';
+  const fullPage = view === 'new-item' || view === 'new-category' || view === 'edit-category';
 
   useEffect(() => {
     if (view === 'new-item') {
       setNewCat(null);
-      setEditCat(false);
       setForm((f) => (f && !f.id ? { ...f, category_id: f.category_id ?? catId } : blankItem(catId)));
     } else if (view === 'new-category') {
       setForm(null);
-      setEditCat(false);
       setNewCat((c) => c || blankCategory());
+    } else if (view === 'edit-category') {
+      setForm(null);
+      setNewCat(null);
     } else {
       setNewCat(null);
       setForm((f) => (f && !f.id ? null : f));
@@ -53,7 +53,7 @@ export default function MenuAdmin() {
   }, [view]);
 
   // Only one form is open at a time; this key changes whenever a different form opens.
-  const openFormKey = form ? `item-${form.id ?? 'new'}` : newCat ? 'new-cat' : editCat ? 'edit-cat' : null;
+  const openFormKey = form ? `item-${form.id ?? 'new'}` : newCat ? 'new-cat' : null;
 
   useEffect(() => {
     if (openFormKey && !fullPage) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -91,7 +91,7 @@ export default function MenuAdmin() {
     setSaving(true);
     try {
       await adminFetch(`/categories/${activeCat.id}`, { method: 'PUT', body: activeCat });
-      setEditCat(false);
+      setSearchParams({});
       setMsg('Kategoria u ruajt.');
     } catch (err) {
       setMsg(err.message);
@@ -123,7 +123,7 @@ export default function MenuAdmin() {
     setSaving(true);
     try {
       await adminFetch(`/categories/${id}`, { method: 'DELETE' });
-      setEditCat(false);
+      setSearchParams({});
       await load();
       setMsg('Kategoria u fshi.');
     } catch (err) {
@@ -193,7 +193,6 @@ export default function MenuAdmin() {
   function closeForms() {
     setForm(null);
     setNewCat(null);
-    setEditCat(false);
   }
 
   function editItem(item) {
@@ -209,7 +208,8 @@ export default function MenuAdmin() {
 
   function openEditCategory() {
     closeForms();
-    setEditCat(true);
+    setMsg('');
+    setSearchParams({ view: 'edit-category' });
   }
 
   function newItem() {
@@ -309,7 +309,7 @@ export default function MenuAdmin() {
         </form>
       )}
 
-      {!fullPage && editCat && activeCat && (
+      {view === 'edit-category' && activeCat && (
         <form ref={formRef} className="admin-form" onSubmit={saveCategory}>
           <h2>Kategoria: {activeCat.name}</h2>
           <label>
@@ -355,7 +355,7 @@ export default function MenuAdmin() {
             <button type="submit" className="btn btn-outline" disabled={saving}>
               Ruaj kategorinë
             </button>
-            <button type="button" className="btn btn-outline" onClick={() => setEditCat(false)}>
+            <button type="button" className="btn btn-outline" onClick={backToMenu}>
               Anulo
             </button>
             <button type="button" className="danger admin-inline-danger" disabled={saving} onClick={() => removeCategory(activeCat.id)}>
