@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { adminFetch, adminUpload } from '../api';
+
+const blankCategory = () => ({ name: '', name_en: '', type: 'food', note: '', note_en: '' });
+
+const blankItem = (categoryId) => ({
+  category_id: categoryId,
+  name: '',
+  name_en: '',
+  description: '',
+  description_en: '',
+  price: 0,
+  image: '',
+  available: 1,
+  sort: 0
+});
 
 export default function MenuAdmin() {
   const [categories, setCategories] = useState([]);
@@ -12,12 +27,36 @@ export default function MenuAdmin() {
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const formRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // "New item" and "New category" open as their own page (?view=...), so the browser Back button works.
+  const view = searchParams.get('view');
+  const fullPage = view === 'new-item' || view === 'new-category';
+
+  useEffect(() => {
+    if (view === 'new-item') {
+      setNewCat(null);
+      setEditCat(false);
+      setForm((f) => (f && !f.id ? { ...f, category_id: f.category_id ?? catId } : blankItem(catId)));
+    } else if (view === 'new-category') {
+      setForm(null);
+      setEditCat(false);
+      setNewCat((c) => c || blankCategory());
+    } else {
+      setNewCat(null);
+      setForm((f) => (f && !f.id ? null : f));
+    }
+  }, [view, catId]);
+
+  useEffect(() => {
+    if (fullPage) window.scrollTo({ top: 0 });
+  }, [view]);
 
   // Only one form is open at a time; this key changes whenever a different form opens.
   const openFormKey = form ? `item-${form.id ?? 'new'}` : newCat ? 'new-cat' : editCat ? 'edit-cat' : null;
 
   useEffect(() => {
-    if (openFormKey) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (openFormKey && !fullPage) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [openFormKey]);
 
   function showError(err) {
@@ -68,6 +107,7 @@ export default function MenuAdmin() {
     try {
       await adminFetch('/categories', { method: 'POST', body: newCat });
       setNewCat(null);
+      setSearchParams({});
       await load();
       setMsg('Kategoria u shtua.');
     } catch (err) {
@@ -103,6 +143,8 @@ export default function MenuAdmin() {
         await adminFetch(`/items/${form.id}`, { method: 'PUT', body: payload });
       } else {
         await adminFetch('/items', { method: 'POST', body: payload });
+        setCatId(payload.category_id);
+        setSearchParams({});
       }
       setForm(null);
       await load();
@@ -161,7 +203,8 @@ export default function MenuAdmin() {
 
   function openNewCategory() {
     closeForms();
-    setNewCat({ name: '', name_en: '', type: 'food', note: '', note_en: '' });
+    setMsg('');
+    setSearchParams({ view: 'new-category' });
   }
 
   function openEditCategory() {
@@ -171,18 +214,32 @@ export default function MenuAdmin() {
 
   function newItem() {
     closeForms();
-    setForm({
-      category_id: catId,
-      name: '',
-      name_en: '',
-      description: '',
-      description_en: '',
-      price: 0,
-      image: '',
-      available: 1,
-      sort: 0
-    });
+    setMsg('');
+    setSearchParams({ view: 'new-item' });
   }
+
+  function backToMenu() {
+    setSearchParams({});
+  }
+
+  const categoryOptions = (
+    <>
+      <optgroup label="USHQIM">
+        {foodCategories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label="PIJE">
+        {drinkCategories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </optgroup>
+    </>
+  );
 
   return (
     <div className="admin-page">
@@ -195,24 +252,18 @@ export default function MenuAdmin() {
         <p className="admin-lead">Duke u ngarkuar menyja…</p>
       ) : (
         <>
+      {fullPage && (
+        <button type="button" className="btn btn-outline" onClick={backToMenu}>
+          ← Kthehu te menyja
+        </button>
+      )}
+
+      {!fullPage && (
       <div className="admin-row">
         <label>
           Kategoria
           <select value={catId || ''} onChange={(e) => setCatId(Number(e.target.value))}>
-            <optgroup label="USHQIM">
-              {foodCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="PIJE">
-              {drinkCategories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </optgroup>
+            {categoryOptions}
           </select>
         </label>
         <button type="button" className="btn btn-primary" onClick={newItem}>
@@ -227,8 +278,9 @@ export default function MenuAdmin() {
           </button>
         )}
       </div>
+      )}
 
-      {newCat && (
+      {view === 'new-category' && newCat && (
         <form ref={formRef} className="admin-form" onSubmit={createCategory}>
           <h2>Kategori e re</h2>
           <label>
@@ -250,14 +302,14 @@ export default function MenuAdmin() {
             <button type="submit" className="btn btn-primary" disabled={saving}>
               Shto
             </button>
-            <button type="button" className="btn btn-outline" onClick={() => setNewCat(null)}>
+            <button type="button" className="btn btn-outline" onClick={backToMenu}>
               Anulo
             </button>
           </div>
         </form>
       )}
 
-      {editCat && activeCat && (
+      {!fullPage && editCat && activeCat && (
         <form ref={formRef} className="admin-form" onSubmit={saveCategory}>
           <h2>Kategoria: {activeCat.name}</h2>
           <label>
@@ -313,6 +365,7 @@ export default function MenuAdmin() {
         </form>
       )}
 
+      {!fullPage && (
       <div className="admin-list">
         {catItems.map((item) => (
           <div key={item.id} className="admin-list-row">
@@ -332,10 +385,21 @@ export default function MenuAdmin() {
           </div>
         ))}
       </div>
+      )}
 
-      {form && (
+      {form && (form.id ? !fullPage : view === 'new-item') && (
         <form ref={formRef} className="admin-form" onSubmit={saveItem}>
           <h2>{form.id ? 'Ndrysho artikullin' : 'Artikull i ri'}</h2>
+          <label>
+            Kategoria
+            <select
+              value={form.category_id || ''}
+              onChange={(e) => setForm({ ...form, category_id: Number(e.target.value) })}
+              required
+            >
+              {categoryOptions}
+            </select>
+          </label>
           <label>
             Emri (AL)
             <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -383,7 +447,7 @@ export default function MenuAdmin() {
             <button type="submit" className="btn btn-primary" disabled={saving}>
               {saving ? 'Duke u ruajtur…' : 'Ruaj'}
             </button>
-            <button type="button" className="btn btn-outline" onClick={() => setForm(null)}>
+            <button type="button" className="btn btn-outline" onClick={() => (form.id ? setForm(null) : backToMenu())}>
               Anulo
             </button>
           </div>
