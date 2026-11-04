@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { adminFetch, adminUpload } from '../api';
 
 export default function MenuAdmin() {
@@ -8,8 +8,17 @@ export default function MenuAdmin() {
   const [msg, setMsg] = useState('');
   const [form, setForm] = useState(null);
   const [newCat, setNewCat] = useState(null);
+  const [editCat, setEditCat] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const formRef = useRef(null);
+
+  // Only one form is open at a time; this key changes whenever a different form opens.
+  const openFormKey = form ? `item-${form.id ?? 'new'}` : newCat ? 'new-cat' : editCat ? 'edit-cat' : null;
+
+  useEffect(() => {
+    if (openFormKey) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [openFormKey]);
 
   function showError(err) {
     if (err.message === 'LOGIN_REQUIRED') return;
@@ -43,6 +52,7 @@ export default function MenuAdmin() {
     setSaving(true);
     try {
       await adminFetch(`/categories/${activeCat.id}`, { method: 'PUT', body: activeCat });
+      setEditCat(false);
       setMsg('Kategoria u ruajt.');
     } catch (err) {
       setMsg(err.message);
@@ -73,6 +83,7 @@ export default function MenuAdmin() {
     setSaving(true);
     try {
       await adminFetch(`/categories/${id}`, { method: 'DELETE' });
+      setEditCat(false);
       await load();
       setMsg('Kategoria u fshi.');
     } catch (err) {
@@ -137,11 +148,29 @@ export default function MenuAdmin() {
     }
   }
 
+  function closeForms() {
+    setForm(null);
+    setNewCat(null);
+    setEditCat(false);
+  }
+
   function editItem(item) {
+    closeForms();
     setForm({ ...item, available: item.available ? 1 : 0 });
   }
 
+  function openNewCategory() {
+    closeForms();
+    setNewCat({ name: '', name_en: '', type: 'food', note: '', note_en: '' });
+  }
+
+  function openEditCategory() {
+    closeForms();
+    setEditCat(true);
+  }
+
   function newItem() {
+    closeForms();
     setForm({
       category_id: catId,
       name: '',
@@ -189,17 +218,18 @@ export default function MenuAdmin() {
         <button type="button" className="btn btn-primary" onClick={newItem}>
           + Artikull i ri
         </button>
-        <button
-          type="button"
-          className="btn btn-outline"
-          onClick={() => setNewCat({ name: '', name_en: '', type: 'food', note: '', note_en: '' })}
-        >
+        <button type="button" className="btn btn-outline" onClick={openNewCategory}>
           + Kategori e re
         </button>
+        {activeCat && (
+          <button type="button" className="btn btn-outline" onClick={openEditCategory}>
+            Ndrysho kategorinë
+          </button>
+        )}
       </div>
 
       {newCat && (
-        <form className="admin-form" onSubmit={createCategory}>
+        <form ref={formRef} className="admin-form" onSubmit={createCategory}>
           <h2>Kategori e re</h2>
           <label>
             Emri (AL)
@@ -227,8 +257,8 @@ export default function MenuAdmin() {
         </form>
       )}
 
-      {activeCat && (
-        <form className="admin-form" onSubmit={saveCategory}>
+      {editCat && activeCat && (
+        <form ref={formRef} className="admin-form" onSubmit={saveCategory}>
           <h2>Kategoria: {activeCat.name}</h2>
           <label>
             Emri (AL)
@@ -273,6 +303,9 @@ export default function MenuAdmin() {
             <button type="submit" className="btn btn-outline" disabled={saving}>
               Ruaj kategorinë
             </button>
+            <button type="button" className="btn btn-outline" onClick={() => setEditCat(false)}>
+              Anulo
+            </button>
             <button type="button" className="danger admin-inline-danger" disabled={saving} onClick={() => removeCategory(activeCat.id)}>
               Fshi kategorinë
             </button>
@@ -301,7 +334,7 @@ export default function MenuAdmin() {
       </div>
 
       {form && (
-        <form className="admin-form" onSubmit={saveItem}>
+        <form ref={formRef} className="admin-form" onSubmit={saveItem}>
           <h2>{form.id ? 'Ndrysho artikullin' : 'Artikull i ri'}</h2>
           <label>
             Emri (AL)

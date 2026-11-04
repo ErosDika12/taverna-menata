@@ -348,6 +348,7 @@
 }
 
 .admin-form {
+  scroll-margin-top: 80px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 18px;
