@@ -1,6 +1,7 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  ArrowUp,
   Beer,
   BookOpen,
   Coffee,
@@ -17,7 +18,7 @@ import {
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
-import ItemPreviewModal from '../components/ItemPreviewModal';
+import MediaViewer from '../components/MediaViewer';
 import { mediaUrl } from '../media';
 
 const FOOD_ORDER = [
@@ -125,7 +126,7 @@ export default function Menu() {
   }, [lang]);
 
   useEffect(() => {
-    window.history.replaceState({ menuLevel: 'root' }, '');
+    window.history.replaceState({ ...(window.history.state || {}), menuLevel: 'root' }, '');
 
     function onPopState(e) {
       const state = e.state || { menuLevel: 'root' };
@@ -150,6 +151,46 @@ export default function Menu() {
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
+
+  // Re-tapping the active "Menu" tab (dispatched from Layout) returns to the root.
+  useEffect(() => {
+    function onReset() {
+      setPreview({ items: [], index: 0, categoryName: '' });
+      setView('root');
+      setType(null);
+      setActiveId(null);
+      // Unwind the category/item history entries we pushed so Back never
+      // lands on a phantom level.
+      const level = window.history.state?.menuLevel;
+      const depth = level === 'items' ? 2 : level === 'categories' ? 1 : 0;
+      if (depth > 0) window.history.go(-depth);
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+    window.addEventListener('menu:reset', onReset);
+    return () => window.removeEventListener('menu:reset', onReset);
+  }, []);
+
+  // Floating back-to-top button.
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    function onScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setShowTop(window.scrollY > 480);
+      });
+    }
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  const closePreview = useCallback(() => setPreview({ items: [], index: 0, categoryName: '' }), []);
+  const changePreview = useCallback((index) => setPreview((p) => ({ ...p, index })), []);
 
   const foodCategories = useMemo(() => {
     if (!categories) return [];
@@ -277,15 +318,25 @@ export default function Menu() {
       )}
 
       {preview.items.length > 0 && (
-        <ItemPreviewModal
+        <MediaViewer
+          variant="menu"
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}
-          hidePrice
-          onClose={() => setPreview({ items: [], index: 0, categoryName: '' })}
-          onChange={(index) => setPreview((p) => ({ ...p, index }))}
+          onClose={closePreview}
+          onChange={changePreview}
         />
       )}
+
+      <button
+        type="button"
+        className={`menu-top-btn${showTop ? ' is-visible' : ''}`}
+        aria-label={t.backToTop}
+        tabIndex={showTop ? 0 : -1}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      >
+        <ArrowUp size={22} aria-hidden="true" />
+      </button>
     </div>
   );
 }

@@ -1,21 +1,14 @@
 ﻿import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { ChefHat, Leaf, Users, Phone, MapPin, Clock, Navigation, Volume2, VolumeX } from 'lucide-react';
 import { useLang } from '../i18n';
 import { useSettings } from '../settings';
 import { apiGet } from '../api';
 import { ui } from '../translations';
-import ItemPreviewModal from '../components/ItemPreviewModal';
-import GalleryReelsViewer from '../components/GalleryReelsViewer';
-import { useMediaQuery } from '../hooks/useMediaQuery';
+import MediaViewer from '../components/MediaViewer';
 import { mediaUrl } from '../media';
 
 const highlightIcons = [ChefHat, Leaf, Users, Phone];
-
-function formatPrice(price) {
-  return `${price % 1 === 0 ? price : price.toFixed(2).replace(/0$/, '')} €`;
-}
 
 const PREVIEW_MENU_ITEMS = 6;
 const PREVIEW_GALLERY_PHOTOS = 9;
@@ -29,12 +22,11 @@ export default function Home() {
   const tm = ui[lang].menu;
   const tc = ui[lang].contact;
   const b = ui[lang].buttons;
-  const isMobile = useMediaQuery('(max-width: 799px)');
 
   const [menuCategories, setMenuCategories] = useState(null);
   const [photos, setPhotos] = useState(null);
   const [preview, setPreview] = useState({ items: [], index: 0, categoryName: '', type: 'menu' });
-  const [heroMuted, setHeroMuted] = useState(false);
+  const [heroMuted, setHeroMuted] = useState(true);
   const [heroVideoReady, setHeroVideoReady] = useState(false);
   const heroVideoRef = useRef(null);
 
@@ -47,43 +39,28 @@ export default function Home() {
       .catch(() => setPhotos([]));
   }, [lang]);
 
+  // The hero always starts muted (sound OFF). Only a deliberate tap on the sound
+  // button may enable audio; nothing here ever sets muted = false.
   useEffect(() => {
     const video = heroVideoRef.current;
-    if (!video) return;
+    if (!video) return undefined;
 
-    let cancelled = false;
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
-    video.defaultMuted = false;
-    video.volume = 1;
+    video.defaultMuted = true;
+    video.muted = true;
 
-    async function tryAutoplay() {
-      if (cancelled) return;
-      video.muted = false;
-      try {
-        await video.play();
-        if (!cancelled) setHeroMuted(false);
-      } catch {
-        video.muted = true;
-        try {
-          await video.play();
-          if (!cancelled) setHeroMuted(true);
-        } catch {
-          /* Poster stays visible if autoplay is fully blocked. */
-        }
-      }
+    function tryPlay() {
+      const play = video.play();
+      if (play && typeof play.catch === 'function') play.catch(() => {});
     }
 
     if (video.readyState >= 2) {
-      tryAutoplay();
-    } else {
-      video.addEventListener('loadeddata', tryAutoplay);
+      tryPlay();
+      return undefined;
     }
-
-    return () => {
-      cancelled = true;
-      video.removeEventListener('loadeddata', tryAutoplay);
-    };
+    video.addEventListener('loadeddata', tryPlay);
+    return () => video.removeEventListener('loadeddata', tryPlay);
   }, []);
 
   const regularMenuPreview = useMemo(() => {
@@ -123,16 +100,12 @@ export default function Home() {
     const items = list.map((p) => ({
       id: p.id,
       name: p.alt || tg.title,
-      description: null,
-      price: null,
+      caption: p.alt && p.alt !== 'Taverna Menata' ? p.alt : '',
       image: p.image
     }));
     const index = list.findIndex((p) => p.id === photo.id);
     setPreview({ items, index: index >= 0 ? index : 0, categoryName: tg.title, type: 'gallery' });
   }
-
-  const galleryViewerOpen = preview.items.length > 0 && preview.type === 'gallery';
-  const menuViewerOpen = preview.items.length > 0 && preview.type === 'menu';
 
   return (
     <div className="home-scroll">
@@ -192,7 +165,6 @@ export default function Home() {
                 <div className="menu-item-body">
                   <div className="menu-item-row">
                     <h3>{item.name}</h3>
-                    <span className="menu-item-price">{formatPrice(item.price)}</span>
                   </div>
                   {item.description && <p>{item.description}</p>}
                 </div>
@@ -303,29 +275,9 @@ export default function Home() {
         </div>
       </section>
 
-      {galleryViewerOpen &&
-        createPortal(
-          isMobile ? (
-            <GalleryReelsViewer
-              items={preview.items}
-              index={preview.index}
-              onClose={closePreview}
-              onChange={(index) => setPreview((p) => ({ ...p, index }))}
-            />
-          ) : (
-            <ItemPreviewModal
-              items={preview.items}
-              index={preview.index}
-              categoryName={preview.categoryName}
-              onClose={closePreview}
-              onChange={(index) => setPreview((p) => ({ ...p, index }))}
-            />
-          ),
-          document.body
-        )}
-
-      {menuViewerOpen && (
-        <ItemPreviewModal
+      {preview.items.length > 0 && (
+        <MediaViewer
+          variant={preview.type === 'gallery' ? 'gallery' : 'menu'}
           items={preview.items}
           index={preview.index}
           categoryName={preview.categoryName}

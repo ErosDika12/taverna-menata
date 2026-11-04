@@ -16,6 +16,15 @@ const navIcons = [
   { to: '/contact', key: 'contact', icon: Phone }
 ];
 
+// Tapping the already-active Menu tab must reset the Menu to its root. A NavLink
+// to the current route does nothing in React Router, so signal the page instead.
+function resetMenuIfActive(e, to, pathname) {
+  if (to === '/menu' && pathname === '/menu') {
+    e.preventDefault();
+    window.dispatchEvent(new Event('menu:reset'));
+  }
+}
+
 export default function Layout() {
   const settings = useSettings();
   const { lang } = useLang();
@@ -40,7 +49,7 @@ export default function Layout() {
         </NavLink>
         <nav className="topbar-nav">
           {navIcons.map(({ to, key }) => (
-            <NavLink key={to} to={to} end={to === '/'}>
+            <NavLink key={to} to={to} end={to === '/'} onClick={(e) => resetMenuIfActive(e, to, pathname)}>
               {t.nav[key]}
             </NavLink>
           ))}
@@ -68,7 +77,13 @@ export default function Layout() {
 
       <nav className="bottomnav" aria-label={t.a11y.mainNav}>
         {navIcons.map(({ to, key, icon: Icon }) => (
-          <NavLink key={to} to={to} end={to === '/'} className="bottomnav-item">
+          <NavLink
+            key={to}
+            to={to}
+            end={to === '/'}
+            className="bottomnav-item"
+            onClick={(e) => resetMenuIfActive(e, to, pathname)}
+          >
             <span className="bottomnav-icon">
               <Icon size={24} aria-hidden="true" />
             </span>

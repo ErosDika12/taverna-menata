@@ -53,7 +53,8 @@ export const ui = {
       back: 'Prapa',
       backToMenu: 'Kthehu te Menyja',
       backToFood: 'Kthehu te Ushqimet',
-      backToDrinks: 'Kthehu te Pijet'
+      backToDrinks: 'Kthehu te Pijet',
+      backToTop: 'Kthehu lart'
     },
     gallery: {
       title: 'Galeria',
@@ -66,13 +67,15 @@ export const ui = {
       sections: { all: 'Të gjitha', food: 'Ushqimi', interior: 'Brenda', exterior: 'Oborri', atmosphere: 'Atmosfera' },
       close: 'Mbyll',
       prevPhoto: 'Foto e mëparshme',
-      nextPhoto: 'Foto tjetër'
+      nextPhoto: 'Foto tjetër',
+      seeMore: 'Shiko më shumë',
+      seeLess: 'Shiko më pak'
     },
     preview: {
       close: 'Mbyll',
       prev: 'Artikulli i mëparshëm',
       next: 'Artikulli tjetër',
-      swipeHorizontal: 'Rrëshqit majtas / djathtas',
+      swipeVertical: 'Rrëshqit lart / poshtë',
       swipeClose: 'Rrëshqit poshtë për mbyllje',
       mute: 'Fik zërin',
       unmute: 'Ndiz zërin',
@@ -153,7 +156,8 @@ export const ui = {
       back: 'Back',
       backToMenu: 'Back to Menu',
       backToFood: 'Back to Food',
-      backToDrinks: 'Back to Drinks'
+      backToDrinks: 'Back to Drinks',
+      backToTop: 'Back to top'
     },
     gallery: {
       title: 'Gallery',
@@ -166,13 +170,15 @@ export const ui = {
       sections: { all: 'All', food: 'Food', interior: 'Interior', exterior: 'Exterior', atmosphere: 'Atmosphere' },
       close: 'Close',
       prevPhoto: 'Previous photo',
-      nextPhoto: 'Next photo'
+      nextPhoto: 'Next photo',
+      seeMore: 'See more',
+      seeLess: 'See less'
     },
     preview: {
       close: 'Close',
       prev: 'Previous item',
       next: 'Next item',
-      swipeHorizontal: 'Swipe left / right',
+      swipeVertical: 'Swipe up / down',
       swipeClose: 'Swipe down to close',
       mute: 'Mute',
       unmute: 'Unmute',

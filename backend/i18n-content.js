@@ -115,12 +115,12 @@ const ITEM_EN = {
   'Sallata::Speca turshi': { name_en: 'Pickled peppers' },
 
   'Pjata Kryesore::Pleskavicë': {
-    name_en: 'Pljeskavica',
-    description_en: 'Pljeskavica, fried mushrooms and vegetables, potato salad, house sauce'
+    name_en: 'Pleskavicë',
+    description_en: 'Pleskavicë, fried mushrooms and vegetables, potato salad, house sauce'
   },
   'Pjata Kryesore::Ushtipka': {
-    name_en: 'Uštipci',
-    description_en: 'Uštipci, fried mushrooms and vegetables, potato salad, house sauce'
+    name_en: 'Ushtipka',
+    description_en: 'Ushtipka, fried mushrooms and vegetables, potato salad, house sauce'
   },
   'Pjata Kryesore::Kofshë pule': {
     name_en: 'Chicken thigh',

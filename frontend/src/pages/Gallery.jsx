@@ -1,20 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
-import ItemPreviewModal from '../components/ItemPreviewModal';
-import GalleryReelsViewer from '../components/GalleryReelsViewer';
-import { useMediaQuery } from '../hooks/useMediaQuery';
+import MediaViewer from '../components/MediaViewer';
 import { mediaUrl } from '../media';
 import { GALLERY_VIDEOS } from '../galleryVideos';
 
 export default function Gallery() {
   const { lang } = useLang();
   const t = ui[lang].gallery;
-  const isMobile = useMediaQuery('(max-width: 799px)');
-  const isTouchPhone = useMediaQuery('(hover: none) and (pointer: coarse)');
-  const useVideoReels = isMobile || isTouchPhone;
   const modes = [
     { key: 'all', label: t.all },
     { key: 'photos', label: t.photos },
@@ -43,15 +37,6 @@ export default function Gallery() {
     };
   }, [lang]);
 
-  useEffect(() => {
-    if (openVideo === null) return;
-    function onKey(e) {
-      if (e.key === 'Escape') setOpenVideo(null);
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [openVideo]);
-
   const photoList = photos ?? [];
   const videoList = GALLERY_VIDEOS;
 
@@ -60,8 +45,7 @@ export default function Gallery() {
       photoList.map((p) => ({
         id: p.id,
         name: p.alt || t.title,
-        description: null,
-        price: null,
+        caption: p.alt && p.alt !== 'Taverna Menata' ? p.alt : '',
         image: p.image
       })),
     [photoList, t.title]
@@ -72,6 +56,7 @@ export default function Gallery() {
       videoList.map((v) => ({
         id: v.id,
         name: v.title || t.videos,
+        caption: v.title || '',
         src: v.src,
         poster: v.poster
       })),
@@ -143,47 +128,23 @@ export default function Gallery() {
       )}
 
       {openPhoto !== null && previewItems.length > 0 && (
-        isMobile ? (
-          <GalleryReelsViewer
-            items={previewItems}
-            index={openPhoto}
-            onClose={() => setOpenPhoto(null)}
-            onChange={setOpenPhoto}
-          />
-        ) : (
-          <ItemPreviewModal
-            items={previewItems}
-            index={openPhoto}
-            categoryName={t.title}
-            onClose={() => setOpenPhoto(null)}
-            onChange={setOpenPhoto}
-          />
-        )
+        <MediaViewer
+          variant="gallery"
+          items={previewItems}
+          index={openPhoto}
+          onClose={() => setOpenPhoto(null)}
+          onChange={setOpenPhoto}
+        />
       )}
 
       {openVideo !== null && videoPreviewItems.length > 0 && (
-        useVideoReels ? (
-          <GalleryReelsViewer
-            items={videoPreviewItems}
-            index={openVideo}
-            onClose={() => setOpenVideo(null)}
-            onChange={setOpenVideo}
-          />
-        ) : (
-          <div className="lightbox video-lightbox" role="dialog" onClick={() => setOpenVideo(null)}>
-            <video
-              src={mediaUrl(videoPreviewItems[openVideo].src)}
-              poster={mediaUrl(videoPreviewItems[openVideo].poster)}
-              controls
-              playsInline
-              preload="metadata"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <button type="button" className="lightbox-close" aria-label={t.close} onClick={() => setOpenVideo(null)}>
-              <X size={28} />
-            </button>
-          </div>
-        )
+        <MediaViewer
+          variant="gallery"
+          items={videoPreviewItems}
+          index={openVideo}
+          onClose={() => setOpenVideo(null)}
+          onChange={setOpenVideo}
+        />
       )}
     </div>
   );

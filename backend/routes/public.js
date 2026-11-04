@@ -15,6 +15,17 @@ function pick(row, field, l) {
   return row[field] || '';
 }
 
+// Product/category names must never be blank: if the English name is missing,
+// fall back to the original Albanian/base name (traditional dish and brand
+// names are intentionally left untranslated).
+function pickName(row, l) {
+  if (l === 'en') {
+    const v = row.name_en;
+    if (v != null && String(v).trim() !== '') return v;
+  }
+  return row.name || '';
+}
+
 function localized(raw, base, l) {
   const suffix = l === 'en' ? '_en' : '_sq';
   const val = raw[`${base}${suffix}`];
@@ -32,7 +43,7 @@ router.get('/menu', (req, res) => {
     (m[item.category_id] = m[item.category_id] || []).push({
       id: item.id,
       category_id: item.category_id,
-      name: pick(item, 'name', l),
+      name: pickName(item, l),
       description: pick(item, 'description', l) || null,
       price: item.price,
       image: item.image
@@ -43,7 +54,7 @@ router.get('/menu', (req, res) => {
   res.json(
     categories.map((c) => ({
       id: c.id,
-      name: pick(c, 'name', l),
+      name: pickName(c, l),
       type: c.type,
       note: pick(c, 'note', l) || null,
       items: byCat[c.id] || []
