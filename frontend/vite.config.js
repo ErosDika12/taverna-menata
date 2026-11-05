@@ -49,8 +49,22 @@ function serveLocalUploads() {
   };
 }
 
+// Ship the committed photos/videos as static files so the CDN serves them instead of
+// the serverless function (which made ~55 gallery thumbnails queue up). Anything not
+// in the build (runtime admin uploads) still falls back to the /uploads rewrite.
+function copyUploadsToDist() {
+  return {
+    name: 'copy-uploads-to-dist',
+    apply: 'build',
+    closeBundle() {
+      if (!fs.existsSync(uploadsRoot)) return;
+      fs.cpSync(uploadsRoot, path.resolve(__dirname, 'dist/uploads'), { recursive: true });
+    }
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), serveLocalUploads()],
+  plugins: [react(), serveLocalUploads(), copyUploadsToDist()],
   server: {
     host: '0.0.0.0',
     port: 5173,
