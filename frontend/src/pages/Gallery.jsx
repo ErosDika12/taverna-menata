@@ -1,10 +1,37 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Play } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiGet } from '../api';
 import { ui } from '../translations';
 import MediaViewer from '../components/MediaViewer';
 import { mediaUrl } from '../media';
-import { GALLERY_VIDEOS } from '../galleryVideos';
+
+/** Turn one /api/media row into the shape the grid and MediaViewer share.
+ *  Ids are namespaced because photos and videos come from separate tables. */
+function normalize(m, t) {
+  if (m.type === 'video') {
+    const title = m.title || '';
+    return {
+      id: `video-${m.id}`,
+      type: 'video',
+      src: m.src,
+      poster: m.poster || m.thumb,
+      name: title || t.videos,
+      caption: title,
+      created_at: m.created_at
+    };
+  }
+  const alt = m.alt && m.alt !== 'Taverna Menata' ? m.alt : '';
+  return {
+    id: `photo-${m.id}`,
+    type: 'photo',
+    image: m.image,
+    thumb: m.thumb,
+    name: m.alt || t.title,
+    caption: alt,
+    created_at: m.created_at
+  };
+}
 
 export default function Gallery() {
   const { lang } = useLang();
@@ -16,60 +43,34 @@ export default function Gallery() {
   ];
 
   const [mode, setMode] = useState('all');
-  const [photos, setPhotos] = useState(null);
-  const [openPhoto, setOpenPhoto] = useState(null);
-  const [openVideo, setOpenVideo] = useState(null);
+  const [media, setMedia] = useState(null);
+  const [openIndex, setOpenIndex] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
-    setPhotos(null);
-
-    apiGet('/api/gallery', lang)
-      .then((p) => {
-        if (!cancelled) setPhotos(p);
+    setMedia(null);
+    apiGet('/api/media', lang)
+      .then((rows) => {
+        if (!cancelled) setMedia(rows);
       })
       .catch(() => {
-        if (!cancelled) setPhotos([]);
+        if (!cancelled) setMedia([]);
       });
-
     return () => {
       cancelled = true;
     };
   }, [lang]);
 
-  const photoList = photos ?? [];
-  const videoList = GALLERY_VIDEOS;
+  // One chronological array (already newest first from the API). The filters
+  // only drop items; they never re-sort, so every mode keeps the same order.
+  const feed = useMemo(() => (media ?? []).map((m) => normalize(m, t)), [media, t]);
+  const visible = useMemo(() => {
+    if (mode === 'photos') return feed.filter((m) => m.type === 'photo');
+    if (mode === 'videos') return feed.filter((m) => m.type === 'video');
+    return feed;
+  }, [feed, mode]);
 
-  const previewItems = useMemo(
-    () =>
-      photoList.map((p) => ({
-        id: p.id,
-        name: p.alt || t.title,
-        caption: p.alt && p.alt !== 'Taverna Menata' ? p.alt : '',
-        image: p.image
-      })),
-    [photoList, t.title]
-  );
-
-  const videoPreviewItems = useMemo(
-    () =>
-      videoList.map((v) => ({
-        id: v.id,
-        name: v.title || t.videos,
-        caption: v.title || '',
-        src: v.src,
-        poster: v.poster
-      })),
-    [videoList, t.videos]
-  );
-
-  const showPhotos = mode === 'all' || mode === 'photos';
-  const showVideos = mode === 'all' || mode === 'videos';
-  const emptyPhotosOnly = mode === 'photos' && photoList.length === 0;
-  const emptyVideosOnly = mode === 'videos' && videoList.length === 0;
-  const emptyAll = mode === 'all' && photoList.length === 0 && videoList.length === 0;
-
-  if (photos === null) {
+  if (media === null) {
     return <div className="page-loading">{t.loading}</div>;
   }
 
@@ -90,8 +91,7 @@ export default function Gallery() {
               className={mode === key ? 'active' : ''}
               onClick={() => {
                 setMode(key);
-                setOpenPhoto(null);
-                setOpenVideo(null);
+                setOpenIndex(null);
               }}
             >
               {label}
@@ -100,50 +100,40 @@ export default function Gallery() {
         </div>
       </div>
 
-      {emptyVideosOnly ? (
-        <p className="gallery-empty">{t.noVideos}</p>
-      ) : emptyPhotosOnly || emptyAll ? (
-        <p className="gallery-empty">{t.loading}</p>
+      {visible.length === 0 ? (
+        <p className="gallery-empty">{mode === 'videos' ? t.noVideos : t.loading}</p>
       ) : (
         <div className="gallery-grid">
-          {showPhotos &&
-            photoList.map((p, i) => (
-              <button key={`photo-${p.id}`} className="gallery-cell" onClick={() => setOpenPhoto(i)}>
-                <img src={mediaUrl(p.thumb)} alt={p.alt} loading="lazy" decoding="async" />
-              </button>
-            ))}
-
-          {showVideos &&
-            videoList.map((v, i) => (
-              <button
-                key={`video-${v.id}`}
-                className="gallery-cell"
-                onClick={() => setOpenVideo(i)}
-                aria-label={v.title || t.videos}
-              >
-                <img src={mediaUrl(v.poster)} alt={v.title || t.videos} loading="lazy" decoding="async" />
-              </button>
-            ))}
+          {visible.map((m, i) => (
+            <button
+              key={m.id}
+              className="gallery-cell"
+              onClick={() => setOpenIndex(i)}
+              aria-label={m.type === 'video' ? m.name : undefined}
+            >
+              <img
+                src={mediaUrl(m.type === 'video' ? m.poster : m.thumb)}
+                alt={m.name}
+                loading="lazy"
+                decoding="async"
+              />
+              {m.type === 'video' && (
+                <span className="gallery-cell-play" aria-hidden="true">
+                  <Play size={16} fill="currentColor" />
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       )}
 
-      {openPhoto !== null && previewItems.length > 0 && (
+      {openIndex !== null && visible.length > 0 && (
         <MediaViewer
           variant="gallery"
-          items={previewItems}
-          index={openPhoto}
-          onClose={() => setOpenPhoto(null)}
-          onChange={setOpenPhoto}
-        />
-      )}
-
-      {openVideo !== null && videoPreviewItems.length > 0 && (
-        <MediaViewer
-          variant="gallery"
-          items={videoPreviewItems}
-          index={openVideo}
-          onClose={() => setOpenVideo(null)}
-          onChange={setOpenVideo}
+          items={visible}
+          index={Math.min(openIndex, visible.length - 1)}
+          onClose={() => setOpenIndex(null)}
+          onChange={setOpenIndex}
         />
       )}
     </div>
