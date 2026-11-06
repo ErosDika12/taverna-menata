@@ -16,13 +16,16 @@ const navIcons = [
   { to: '/contact', key: 'contact', icon: Phone }
 ];
 
-// Tapping the already-active Menu tab must reset the Menu to its root. A NavLink
-// to the current route does nothing in React Router, so signal the page instead.
-function resetMenuIfActive(e, to, pathname) {
-  if (to === '/menu' && pathname === '/menu') {
-    e.preventDefault();
-    window.dispatchEvent(new Event('menu:reset'));
-  }
+// Tapping a nav tab that is ALREADY active does nothing by default (a NavLink
+// to the current route doesn't navigate), which used to leave a scrolled page
+// looking "stuck". Re-tapping the active tab now always returns to the top of
+// that page; Menu additionally resets back to its root category list.
+function onSameTabRetap(e, to, pathname) {
+  const isActive = to === '/' ? pathname === '/' : pathname === to;
+  if (!isActive) return;
+  e.preventDefault();
+  if (to === '/menu') window.dispatchEvent(new Event('menu:reset'));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 export default function Layout() {
@@ -49,7 +52,7 @@ export default function Layout() {
         </NavLink>
         <nav className="topbar-nav">
           {navIcons.map(({ to, key }) => (
-            <NavLink key={to} to={to} end={to === '/'} onClick={(e) => resetMenuIfActive(e, to, pathname)}>
+            <NavLink key={to} to={to} end={to === '/'} onClick={(e) => onSameTabRetap(e, to, pathname)}>
               {t.nav[key]}
             </NavLink>
           ))}
@@ -82,7 +85,7 @@ export default function Layout() {
             to={to}
             end={to === '/'}
             className="bottomnav-item"
-            onClick={(e) => resetMenuIfActive(e, to, pathname)}
+            onClick={(e) => onSameTabRetap(e, to, pathname)}
           >
             <span className="bottomnav-icon">
               <Icon size={24} aria-hidden="true" />

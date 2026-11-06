@@ -39,8 +39,12 @@ function Slide({ item, offset, active, variant, muted, onMutedChange, categoryNa
   const videoRef = useRef(null);
   const [paused, setPaused] = useState(false);
 
-  // Only the active slide plays. The viewer is opened by a deliberate tap, so
-  // try with sound first and fall back to muted if the browser refuses.
+  // Only the active slide plays. Every time a video BECOMES active it starts
+  // muted, full stop — no "try with sound first" guesswork, which is what
+  // made audio inconsistently on/off depending on the browser's autoplay
+  // policy. The sound button is the only way to turn audio on, and it only
+  // applies to the slide that's active when it's pressed (see onMutedChange
+  // below, which resets back to muted on every slide change).
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return undefined;
@@ -53,21 +57,10 @@ function Slide({ item, offset, active, variant, muted, onMutedChange, categoryNa
       }
       return undefined;
     }
-    let cancelled = false;
-    video.muted = muted;
+    video.muted = true;
+    onMutedChange(true);
     setPaused(false);
-    const p = video.play();
-    if (p && p.catch) {
-      p.catch(() => {
-        if (cancelled || video.muted) return;
-        video.muted = true;
-        onMutedChange(true);
-        video.play()?.catch?.(() => {});
-      });
-    }
-    return () => {
-      cancelled = true;
-    };
+    video.play()?.catch?.(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, item.id]);
 
@@ -159,7 +152,7 @@ export default function MediaViewer({ items, index, variant = 'gallery', categor
   const { lang } = useLang();
   const t = { ...ui[lang].preview, seeMore: ui[lang].gallery.seeMore, seeLess: ui[lang].gallery.seeLess };
   const rootRef = useRef(null);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(true);
   const count = items.length;
   const current = items[index];
   const hasVideo = Boolean(current?.src);
