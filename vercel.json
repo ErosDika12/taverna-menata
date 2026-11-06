@@ -32,6 +32,10 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api" },
     { "source": "/uploads/:path*", "destination": "/api" },
+    {
+      "source": "/(\\.env(.*)|\\.git/(.*)|backend/(.*)|package(-lock)?\\.json|vercel\\.json|railway\\.json)",
+      "destination": "/api"
+    },
     { "source": "/((?!api|uploads|assets|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
