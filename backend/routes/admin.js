@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const db = require('../db');
 const { hashPassword, verifyPassword } = require('../password');
-const { requireAdmin, createAdminToken, revokeSession, revokeAllSessionsForAdmin } = require('../middleware/auth');
+const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { requireMainAdmin, COOKIE_NAME } = require('../middleware/adminRoles');
 const { loginRateLimit, recordLoginFailure, recordLoginSuccess } = require('../middleware/rateLimit');
 const { sameOriginGuard } = require('../middleware/csrf');
@@ -124,7 +124,7 @@ router.post('/login', loginRateLimit, (req, res) => {
     db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(rehashed, Date.now(), admin.id);
   }
 
-  const { token, exp } = createAdminToken(admin.id);
+  const { token, exp } = createAdminToken(admin.id, admin.token_version ?? 1);
   setSessionCookie(req, res, token, exp);
   res.json({
     ok: true,
@@ -134,7 +134,11 @@ router.post('/login', loginRateLimit, (req, res) => {
 });
 
 router.post('/logout', requireAdmin, (req, res) => {
-  revokeSession(req.sid);
+  // Bumping token_version invalidates every token for this admin, not just
+  // this one — see auth.js for why: there's no reliable way to revoke a
+  // single session on Vercel's per-instance-isolated storage. Logging out
+  // logs out everywhere, which is a documented tradeoff, not a bug.
+  bumpTokenVersion(req.admin.id);
   clearSessionCookie(req, res);
   res.json({ ok: true });
 });
@@ -248,7 +252,7 @@ router.put('/admins/:id/suspend', requireAdmin, requireMainAdmin, (req, res) => 
 
   const now = Date.now();
   db.prepare("UPDATE admins SET status = 'suspended', updated_at = ? WHERE id = ?").run(now, req.params.id);
-  revokeAllSessionsForAdmin(target.id); // suspension must kill any session already in flight
+  bumpTokenVersion(target.id); // kills any session already in flight immediately
   logAdminActivity(req.admin, 'settings', 'suspended admin', target.name);
   res.json({ ok: true });
 });
@@ -326,7 +330,7 @@ router.put('/password', requireAdmin, requireMainAdmin, (req, res) => {
   // Every existing session for this admin — including the one making this
   // request — is invalidated; the caller must log in again with the new
   // password. This is what actually makes a password change meaningful.
-  revokeAllSessionsForAdmin(req.admin.id);
+  bumpTokenVersion(req.admin.id);
   clearSessionCookie(req, res);
 
   logAdminActivity(req.admin, 'settings', 'changed password');

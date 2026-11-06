@@ -82,6 +82,17 @@ db.exec(`
     value TEXT NOT NULL
   );
 
+  -- token_version is the single source of truth for whether a signed token
+  -- is still valid — bumping it (logout/password-change/suspend) instantly
+  -- invalidates every token issued before the bump, because this row is
+  -- read fresh on every request regardless of which serverless instance
+  -- answers. (An earlier design used a separate per-session table keyed by
+  -- a random session id; on Vercel, each instance has its own isolated
+  -- copy of this SQLite file, so a session created by the instance that
+  -- handled /login simply didn't exist on a different instance handling
+  -- the very next request — that 401'd legitimate, still-active admins at
+  -- random. token_version lives on the SAME row every instance already
+  -- reads per-request for status/role, so it doesn't have that gap.)
   CREATE TABLE IF NOT EXISTS admins (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT NOT NULL UNIQUE,
@@ -89,18 +100,9 @@ db.exec(`
     password_hash TEXT NOT NULL,
     role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
     status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+    token_version INTEGER NOT NULL DEFAULT 1,
     created_at    INTEGER NOT NULL,
     updated_at    INTEGER NOT NULL
-  );
-
-  -- Sessions are the single source of truth for whether a signed token is
-  -- still valid. The token only carries a random session id (sid); it never
-  -- carries role/status/email. Deleting a row here revokes that session.
-  CREATE TABLE IF NOT EXISTS admin_sessions (
-    sid        TEXT PRIMARY KEY,
-    admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
-    created_at INTEGER NOT NULL,
-    expires_at INTEGER NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS admin_activity (
@@ -133,6 +135,7 @@ const migrations = [
   'ALTER TABLE gallery ADD COLUMN created_at INTEGER',
   'ALTER TABLE videos ADD COLUMN created_at INTEGER',
   'ALTER TABLE admins ADD COLUMN updated_at INTEGER',
+  'ALTER TABLE admins ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE admin_notifications ADD COLUMN actor_email TEXT',
   'ALTER TABLE admin_notifications ADD COLUMN actor_name TEXT',
   'ALTER TABLE admin_notifications ADD COLUMN action TEXT',
@@ -143,22 +146,11 @@ for (const sql of migrations) {
 }
 db.prepare('UPDATE admins SET updated_at = created_at WHERE updated_at IS NULL').run();
 
-// Legacy shape from the pre-remediation token design (the bearer token itself
-// was the primary key). Replace it with the sid-based table above so no raw
-// session token is ever persisted.
+// Drop any leftover session table from either prior design (the bearer
+// token itself as PK, or the sid-keyed table that caused the cross-instance
+// logout bug) — sessions are no longer tracked in a table at all.
 try {
-  const oldShape = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='admin_sessions'").get();
-  if (oldShape?.sql && /token\s+TEXT PRIMARY KEY/.test(oldShape.sql)) {
-    db.exec('DROP TABLE admin_sessions');
-    db.exec(`
-      CREATE TABLE admin_sessions (
-        sid        TEXT PRIMARY KEY,
-        admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
-        created_at INTEGER NOT NULL,
-        expires_at INTEGER NOT NULL
-      );
-    `);
-  }
+  db.exec('DROP TABLE IF EXISTS admin_sessions');
 } catch { /* best effort */ }
 
 function seedIfEmpty() {
@@ -321,6 +313,7 @@ function migrateAdminRolesSchema() {
       password_hash TEXT NOT NULL,
       role          TEXT NOT NULL DEFAULT 'website_editor' CHECK (role IN ('main_admin', 'website_editor')),
       status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+      token_version INTEGER NOT NULL DEFAULT 1,
       created_at    INTEGER NOT NULL,
       updated_at    INTEGER NOT NULL
     );

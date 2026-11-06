@@ -46,28 +46,45 @@ function sign(body) {
 }
 
 /**
- * Tokens carry only a random session id, issued-at and expiry — no role,
- * status, email or name. Authorization is always re-derived server-side
- * from the CURRENT admins row and the CURRENT admin_sessions row for `sid`.
+ * Tokens carry: adminId, the admin's token_version AT ISSUE TIME, issued-at
+ * and expiry. No role/status/email/name — those are always re-read fresh
+ * from the admins row on every request (see adminRoles.getAdminFromToken).
+ *
+ * IMPORTANT ARCHITECTURE NOTE — why there's no separate sessions table:
+ * an earlier version of this stored each login in an `admin_sessions` table
+ * and required that exact row to exist on every request. On Vercel, each
+ * serverless instance has its OWN separate copy of the SQLite file with no
+ * shared storage between them — a session created by the instance that
+ * handled /login simply doesn't exist on a different instance that handles
+ * the very next request, which 401'd a perfectly legitimate, still-active
+ * admin at random. That bug is why this now uses token_version on the
+ * admins row instead: logout/password-change/suspend/delete all bump or
+ * are reflected by that one row, which (like every other admin-panel
+ * value) is read fresh per request regardless of which instance answers —
+ * no per-session row needs to "exist" anywhere for the token to work.
+ *
+ * The real tradeoff this accepts: logout and password-change now invalidate
+ * ALL of that admin's sessions (every device/tab), not just the one acting.
+ * That's a deliberate, documented choice — coarser revocation that actually
+ * works reliably beats precise revocation that randomly breaks legitimate
+ * use on this hosting architecture. True per-session revocation needs a
+ * shared store (Redis/Vercel KV/Postgres), not per-instance SQLite.
  */
-function createAdminToken(adminId) {
-  const sid = crypto.randomBytes(24).toString('base64url');
+function createAdminToken(adminId, tokenVersion) {
   const now = Date.now();
   const exp = now + TOKEN_TTL_MS;
-
-  db.prepare('INSERT INTO admin_sessions (sid, admin_id, created_at, expires_at) VALUES (?, ?, ?, ?)').run(
-    sid,
-    adminId,
-    now,
-    exp
-  );
-
-  const payload = { sid, iat: now, exp };
+  const payload = { adminId, v: tokenVersion, iat: now, exp };
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const sig = sign(body);
-  return { token: `${body}.${sig}`, sid, exp };
+  return { token: `${body}.${sig}`, exp };
 }
 
+/**
+ * Verifies signature + expiry and returns the raw claims. It does NOT touch
+ * the database — see adminRoles.getAdminFromToken for the token_version
+ * comparison against the current admins row, which is what actually
+ * decides whether the token is still honored.
+ */
 function verifyAdminToken(token) {
   if (!token || !token.includes('.')) return null;
 
@@ -96,27 +113,14 @@ function verifyAdminToken(token) {
     return null;
   }
 
-  if (!payload.sid || !payload.exp || payload.exp < Date.now()) return null;
+  if (!payload.adminId || typeof payload.v !== 'number' || !payload.exp || payload.exp < Date.now()) return null;
 
-  // The session row is the actual source of truth: logout, password change,
-  // suspension and deletion all work by deleting rows here, which makes the
-  // still-correctly-signed token worthless immediately.
-  const session = db.prepare('SELECT * FROM admin_sessions WHERE sid = ?').get(payload.sid);
-  if (!session || session.expires_at < Date.now()) return null;
-
-  return { sid: payload.sid, adminId: session.admin_id };
+  return { adminId: payload.adminId, v: payload.v };
 }
 
-function revokeSession(sid) {
-  db.prepare('DELETE FROM admin_sessions WHERE sid = ?').run(sid);
-}
-
-function revokeAllSessionsForAdmin(adminId) {
-  db.prepare('DELETE FROM admin_sessions WHERE admin_id = ?').run(adminId);
-}
-
-function cleanExpiredSessions() {
-  db.prepare('DELETE FROM admin_sessions WHERE expires_at < ?').run(Date.now());
+/** Bumping this invalidates every existing token for the admin at once. */
+function bumpTokenVersion(adminId) {
+  db.prepare('UPDATE admins SET token_version = token_version + 1 WHERE id = ?').run(adminId);
 }
 
 function requireAdmin(req, res, next) {
@@ -128,8 +132,6 @@ module.exports = {
   requireAdmin,
   createAdminToken,
   verifyAdminToken,
-  revokeSession,
-  revokeAllSessionsForAdmin,
-  cleanExpiredSessions,
+  bumpTokenVersion,
   TOKEN_TTL_MS
 };
