@@ -39,8 +39,6 @@ export default function AdminLayout({ admin, onLogout }) {
     } catch {
       /* session may already be gone */
     }
-    localStorage.removeItem('menata-admin-token');
-    localStorage.removeItem('menata-admin-user');
     onLogout();
     navigate('/admin/login', { replace: true });
   }

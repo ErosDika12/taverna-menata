@@ -19,23 +19,17 @@ export default function AdminApp() {
   const [admin, setAdmin] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('menata-admin-token');
-    if (!token) {
-      setReady(true);
-      return;
-    }
+    // The session cookie (if any) is sent automatically; just ask the
+    // server who, if anyone, it currently identifies.
     adminFetch('/me')
       .then((data) => {
-        if (!data.admin?.role) {
-          throw new Error('Invalid session');
-        }
+        if (!data.admin?.role) throw new Error('Invalid session');
         setAuthed(true);
         setAdmin(data.admin);
-        localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
       })
       .catch(() => {
-        localStorage.removeItem('menata-admin-token');
-        localStorage.removeItem('menata-admin-user');
+        setAuthed(false);
+        setAdmin(null);
       })
       .finally(() => setReady(true));
   }, []);

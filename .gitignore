@@ -44,7 +44,14 @@ Desktop.ini
 tmp/
 temp/
 
-# SQLite WAL sidecars (main DB is committed for deploy seed)
+# Runtime SQLite database. It holds live admin credentials, sessions and
+# any admin-entered content — never a source-controlled file. A missing
+# backend/menata.db is auto-created and seeded from seed-data.js on boot
+# (schema + public content only; admin credentials come from ADMIN_PASSWORD).
+backend/menata.db
+backend/menata.db-wal
+backend/menata.db-shm
+*.db
 *.db-wal
 *.db-shm
 

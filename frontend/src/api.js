@@ -9,27 +9,24 @@ export async function apiGet(path, lang) {
   return res.json();
 }
 
+// The admin session lives only in an HttpOnly, SameSite=Strict cookie set by
+// the server on login — it is never readable by JavaScript, so there is no
+// token for this code to hold or attach. `credentials: 'include'` is what
+// makes the browser send that cookie on same-origin admin requests.
 export function handleAdminAuthFailure() {
-  localStorage.removeItem('menata-admin-token');
   if (!window.location.pathname.startsWith('/admin/login')) {
     window.location.assign('/admin/login');
   }
 }
 
-export function adminAuthHeaders(extra = {}) {
-  const token = localStorage.getItem('menata-admin-token');
-  const headers = { ...extra };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-}
-
 export async function adminFetch(path, options = {}) {
-  const headers = adminAuthHeaders({ ...options.headers });
-  if (options.body && !(options.body instanceof FormData)) {
+  const headers = { ...options.headers };
+  const body = options.body;
+  if (body && !(body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(options.body);
+    options.body = JSON.stringify(body);
   }
-  const res = await fetch(`/api/admin${path}`, { ...options, headers });
+  const res = await fetch(`/api/admin${path}`, { ...options, headers, credentials: 'same-origin' });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) {
     handleAdminAuthFailure();
@@ -42,8 +39,8 @@ export async function adminFetch(path, options = {}) {
 export async function adminUpload(path, formData) {
   const res = await fetch(`/api/admin${path}`, {
     method: 'POST',
-    headers: adminAuthHeaders(),
-    body: formData
+    body: formData,
+    credentials: 'same-origin'
   });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) {

@@ -18,19 +18,15 @@ export default function Login({ onLogin }) {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ email, password })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(data.error || 'Email ose fjalëkalimi është i gabuar.');
       }
-      if (!data.token) {
-        throw new Error('Nuk u mor tokeni i hyrjes. Provoni përsëri.');
-      }
-      localStorage.setItem('menata-admin-token', data.token);
-      if (data.admin) {
-        localStorage.setItem('menata-admin-user', JSON.stringify(data.admin));
-      }
+      // The server sets the session as an HttpOnly cookie on this response —
+      // there is no token in the body for the client to store.
       onLogin(data.admin);
       navigate('/admin/dashboard', { replace: true });
     } catch (err) {

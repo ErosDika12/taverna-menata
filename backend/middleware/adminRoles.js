@@ -1,77 +1,60 @@
 const db = require('../db');
 const { verifyAdminToken } = require('./auth');
 
-function syncAdminFromToken(payload) {
-  if (!payload?.adminId || !payload?.email || !payload?.role) return null;
+const COOKIE_NAME = 'menata_admin_session';
 
-  const now = Date.now();
-  const existing = db.prepare('SELECT * FROM admins WHERE id = ?').get(payload.adminId);
-
-  if (existing) {
-    if (existing.status !== 'active') return null;
-    if (existing.role !== payload.role) return null;
-    return existing;
+function parseCookies(req) {
+  const header = req.headers.cookie;
+  if (!header) return {};
+  const out = {};
+  for (const part of header.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    const key = part.slice(0, eq).trim();
+    if (!key) continue;
+    try {
+      out[key] = decodeURIComponent(part.slice(eq + 1).trim());
+    } catch {
+      out[key] = part.slice(eq + 1).trim();
+    }
   }
-
-  // Serverless fallback: restore admin from signed JWT when row is missing (ephemeral DB).
-  if (payload.status && payload.status !== 'active') return null;
-
-  db.prepare(
-    `INSERT INTO admins (id, email, name, password_hash, role, status, created_at, updated_at)
-     VALUES (?, ?, ?, '', ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
-       email = excluded.email,
-       name = excluded.name,
-       role = excluded.role,
-       status = excluded.status,
-       updated_at = excluded.updated_at`
-  ).run(
-    payload.adminId,
-    payload.email,
-    payload.name || payload.email,
-    payload.role,
-    payload.status || 'active',
-    payload.iat || now,
-    now
-  );
-
-  return db.prepare('SELECT * FROM admins WHERE id = ?').get(payload.adminId);
+  return out;
 }
 
+function readToken(req) {
+  const cookies = parseCookies(req);
+  if (cookies[COOKIE_NAME]) return cookies[COOKIE_NAME];
+  // Legacy bearer-header support is intentionally NOT provided — the token
+  // now lives only in an HttpOnly cookie the browser controls, never in JS.
+  return null;
+}
+
+/**
+ * Authorization is derived ONLY from the current admins row. A valid,
+ * unexpired, unrevoked token proves which admin is making the request
+ * (`sid` -> `admin_id`); it is never trusted for role, status, email or
+ * name, and it can NEVER create or recreate an admin record. If the admin
+ * row is missing, suspended, or the session was revoked, this is a 401 —
+ * full stop, no fallback reconstruction from token claims.
+ */
 function getAdminFromToken(token) {
-  if (!token || !token.includes('.')) return null;
+  const verified = verifyAdminToken(token);
+  if (!verified) return null;
 
-  if (!verifyAdminToken(token)) return null;
-
-  const dot = token.indexOf('.');
-  const body = token.slice(0, dot);
-  let payload;
-  try {
-    payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
-  } catch {
-    return null;
-  }
-
-  if (!payload.adminId) return null;
-
-  const admin = db.prepare('SELECT * FROM admins WHERE id = ?').get(payload.adminId);
-  if (admin) {
-    if (admin.status !== 'active') return null;
-    if (admin.role !== payload.role) return null;
-    return admin;
-  }
-
-  return syncAdminFromToken(payload);
+  const admin = db.prepare('SELECT * FROM admins WHERE id = ?').get(verified.adminId);
+  if (!admin || admin.status !== 'active') return null;
+  return { admin, sid: verified.sid };
 }
 
 function attachAdmin(req, res, next) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = readToken(req);
   if (!token) return res.status(401).json({ error: 'Nuk jeni të kyçur.' });
 
-  const admin = getAdminFromToken(token);
-  if (!admin) return res.status(401).json({ error: 'Nuk jeni të kyçur.' });
+  const result = getAdminFromToken(token);
+  if (!result) return res.status(401).json({ error: 'Nuk jeni të kyçur.' });
 
-  req.admin = admin;
+  req.admin = result.admin;
+  req.sid = result.sid;
   next();
 }
 
@@ -83,4 +66,4 @@ function requireMainAdmin(req, res, next) {
   next();
 }
 
-module.exports = { attachAdmin, requireMainAdmin, getAdminFromToken, syncAdminFromToken };
+module.exports = { attachAdmin, requireMainAdmin, getAdminFromToken, COOKIE_NAME, parseCookies };

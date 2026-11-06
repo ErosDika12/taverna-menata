@@ -10,11 +10,48 @@ const app = express();
 const { importNotificationsRegistry } = require('./activity');
 importNotificationsRegistry();
 
+// Inline style attributes are used throughout the frontend for per-slide
+// transforms/offsets computed at runtime (MediaViewer drag/position math);
+// rewriting that to class toggles is out of scope for this remediation, so
+// style-src keeps 'unsafe-inline' as a narrow, documented exception. No
+// other directive allows inline or eval'd script.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  // The Contact page embeds a Google Maps iframe (maps.google.com); nothing
+  // else on the site uses frames, and the site itself refuses to be framed
+  // via frame-ancestors below.
+  "frame-src https://maps.google.com https://www.google.com",
+  "frame-ancestors 'none'"
+].join('; ');
+
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', CSP);
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  }
+  next();
+});
+
+// Sensitive-looking paths must 404, not fall through to the SPA's
+// index.html. This is a signal/hygiene fix — Vercel's static layer never
+// actually served these files — but it also protects the local/Railway
+// server, which does read straight off this filesystem.
+const SENSITIVE_PATH_RE = /(^\/\.|\/\.env|\/\.git|\.db(-wal|-shm)?$|\/backend\/|^\/package(-lock)?\.json$|^\/vercel\.json$|^\/railway\.json$|\.(sql|log|bak|yml|yaml)$)/i;
+app.use((req, res, next) => {
+  if (SENSITIVE_PATH_RE.test(req.path)) return res.status(404).type('text/plain').send('Not found');
   next();
 });
 

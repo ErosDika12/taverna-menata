@@ -1,29 +1,86 @@
 const { Router } = require('express');
 const db = require('../db');
-const { hashPassword, importAdminsRegistry, exportAdminsRegistry } = require('../db');
-const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
-const { requireMainAdmin } = require('../middleware/adminRoles');
+const { hashPassword, verifyPassword } = require('../password');
+const { requireAdmin, createAdminToken, revokeSession, revokeAllSessionsForAdmin } = require('../middleware/auth');
+const { requireMainAdmin, COOKIE_NAME } = require('../middleware/adminRoles');
 const { loginRateLimit } = require('../middleware/rateLimit');
+const { sameOriginGuard } = require('../middleware/csrf');
 const { logAdminActivity, formatNotificationRow, importNotificationsRegistry } = require('../activity');
-const { uploadImage, uploadThumb, uploadMenuImage, uploadVideo, uploadVideoThumb, toUrl } = require('../upload');
+const {
+  uploadImage,
+  uploadThumb,
+  uploadMenuImage,
+  uploadVideo,
+  uploadVideoThumb,
+  verifyImageMagicBytes,
+  verifyVideoMagicBytes,
+  optimizeGalleryImage,
+  optimizeMenuImage,
+  optimizeVideoThumb,
+  toUrl
+} = require('../upload');
 
 const router = Router();
 
-function handleUpload(middleware) {
+// Every admin response carries current, possibly sensitive state — never
+// let a CDN/browser cache it.
+router.use((_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
+
+// CSRF defense-in-depth for state-changing requests. Login/logout don't rely
+// on an existing session yet, but still shouldn't be driven cross-site.
+router.use(sameOriginGuard);
+
+function isSecureRequest(req) {
+  return req.secure || req.headers['x-forwarded-proto'] === 'https' || db.isProduction;
+}
+
+function setSessionCookie(req, res, token, exp) {
+  const parts = [
+    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Strict',
+    `Expires=${new Date(exp).toUTCString()}`
+  ];
+  if (isSecureRequest(req)) parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function clearSessionCookie(req, res) {
+  const parts = [`${COOKIE_NAME}=`, 'Path=/', 'HttpOnly', 'SameSite=Strict', 'Expires=Thu, 01 Jan 1970 00:00:00 GMT'];
+  if (isSecureRequest(req)) parts.push('Secure');
+  res.setHeader('Set-Cookie', parts.join('; '));
+}
+
+function handleUpload(...middlewares) {
   return (req, res, next) => {
-    middleware(req, res, (err) => {
-      if (err) return res.status(400).json({ error: err.message || 'Gabim në ngarkim.' });
-      next();
-    });
+    const run = (i) => {
+      if (i === 0) {
+        middlewares[0](req, res, (err) => {
+          if (err) return res.status(400).json({ error: err.message || 'Gabim në ngarkim.' });
+          run(1);
+        });
+        return;
+      }
+      if (i >= middlewares.length) return next();
+      middlewares[i](req, res, (err) => {
+        if (err) return res.status(400).json({ error: err.message || 'Gabim në ngarkim.' });
+        run(i + 1);
+      });
+    };
+    run(0);
   };
 }
 
-function findAdminByCredentials(email, password) {
-  importAdminsRegistry();
-  const admin = db.prepare('SELECT * FROM admins WHERE email = ? COLLATE NOCASE').get(email.trim());
-  if (!admin) return null;
-  if (admin.password_hash !== hashPassword(password)) return null;
-  return admin;
+// Generic, identical response for "no such email" and "wrong password" —
+// never confirm which one it was.
+const GENERIC_LOGIN_ERROR = 'Email ose fjalëkalimi është i gabuar.';
+
+function findAdminByEmail(email) {
+  return db.prepare('SELECT * FROM admins WHERE email = ? COLLATE NOCASE').get(email.trim());
 }
 
 router.post('/login', loginRateLimit, (req, res) => {
@@ -33,32 +90,37 @@ router.post('/login', loginRateLimit, (req, res) => {
     return res.status(400).json({ error: 'Shkruani email-in dhe fjalëkalimin.' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return res.status(400).json({ error: 'Email ose fjalëkalimi është i gabuar.' });
+    return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
   }
 
-  const admin = findAdminByCredentials(email, password);
-  if (!admin) {
-    return res.status(401).json({ error: 'Email ose fjalëkalimi është i gabuar.' });
-  }
-  if (admin.status === 'suspended') {
-    return res.status(403).json({ error: 'Llogaria juaj është pezulluar.' });
+  const admin = findAdminByEmail(email);
+  if (!admin) return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+
+  const { valid, legacy } = verifyPassword(password, admin.password_hash);
+  if (!valid) return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+
+  // Suspended accounts get the same generic error as a wrong password —
+  // this does not confirm to an anonymous caller that the email exists.
+  if (admin.status !== 'active') return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+
+  if (legacy) {
+    // Transparent, one-time migration off the old unsalted SHA-256 format.
+    const rehashed = hashPassword(password);
+    db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(rehashed, Date.now(), admin.id);
   }
 
-  const token = createAdminToken(admin);
-  try {
-    db.prepare('INSERT INTO admin_sessions (token, created_at) VALUES (?, ?)').run(token, Date.now());
-  } catch {
-    /* optional legacy store */
-  }
+  const { token, exp } = createAdminToken(admin.id);
+  setSessionCookie(req, res, token, exp);
   res.json({
-    token,
-    admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role, status: admin.status }
+    ok: true,
+    admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role, status: admin.status },
+    expiresAt: exp
   });
 });
 
 router.post('/logout', requireAdmin, (req, res) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  db.prepare('DELETE FROM admin_sessions WHERE token = ?').run(token);
+  revokeSession(req.sid);
+  clearSessionCookie(req, res);
   res.json({ ok: true });
 });
 
@@ -143,8 +205,8 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
   if (!email?.trim() || !name?.trim() || !password) {
     return res.status(400).json({ error: 'Plotësoni të gjitha fushat.' });
   }
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Fjalëkalimi duhet të ketë të paktën 6 karaktere.' });
+  if (password.length < 12) {
+    return res.status(400).json({ error: 'Fjalëkalimi duhet të ketë të paktën 12 karaktere.' });
   }
 
   const exists = db.prepare('SELECT id FROM admins WHERE email = ? COLLATE NOCASE').get(email.trim());
@@ -159,7 +221,6 @@ router.post('/admins', requireAdmin, requireMainAdmin, (req, res) => {
     .run(email.trim(), name.trim(), hashPassword(password), now, now);
 
   logAdminActivity(req.admin, 'settings', 'created admin', name.trim());
-  exportAdminsRegistry();
   res.json({ id: r.lastInsertRowid });
 });
 
@@ -172,8 +233,8 @@ router.put('/admins/:id/suspend', requireAdmin, requireMainAdmin, (req, res) => 
 
   const now = Date.now();
   db.prepare("UPDATE admins SET status = 'suspended', updated_at = ? WHERE id = ?").run(now, req.params.id);
+  revokeAllSessionsForAdmin(target.id); // suspension must kill any session already in flight
   logAdminActivity(req.admin, 'settings', 'suspended admin', target.name);
-  exportAdminsRegistry();
   res.json({ ok: true });
 });
 
@@ -184,7 +245,6 @@ router.put('/admins/:id/activate', requireAdmin, requireMainAdmin, (req, res) =>
   const now = Date.now();
   db.prepare("UPDATE admins SET status = 'active', updated_at = ? WHERE id = ?").run(now, req.params.id);
   logAdminActivity(req.admin, 'settings', 'activated admin', target.name);
-  exportAdminsRegistry();
   res.json({ ok: true });
 });
 
@@ -195,9 +255,8 @@ router.delete('/admins/:id', requireAdmin, requireMainAdmin, (req, res) => {
     return res.status(403).json({ error: 'Nuk mund të fshini administratorin kryesor.' });
   }
 
-  db.prepare('DELETE FROM admins WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM admins WHERE id = ?').run(req.params.id); // ON DELETE CASCADE drops sessions too
   logAdminActivity(req.admin, 'settings', 'deleted admin', target.name);
-  exportAdminsRegistry();
   res.json({ ok: true });
 });
 
@@ -234,25 +293,29 @@ router.put('/settings', requireAdmin, (req, res) => {
 
 router.put('/password', requireAdmin, requireMainAdmin, (req, res) => {
   const { current, next } = req.body;
-  if (req.admin.password_hash !== hashPassword(current)) {
+  const { valid } = verifyPassword(current, req.admin.password_hash);
+  if (!valid) {
     return res.status(401).json({ error: 'Fjalëkalimi aktual është i gabuar.' });
   }
-  if (!next || next.length < 6) {
-    return res.status(400).json({ error: 'Fjalëkalimi i ri duhet të ketë të paktën 6 karaktere.' });
+  if (!next || next.length < 12 || next === 'menata2024') {
+    return res.status(400).json({ error: 'Fjalëkalimi i ri duhet të ketë të paktën 12 karaktere dhe të mos jetë i parazgjedhur.' });
   }
 
   const hash = hashPassword(next);
   const now = Date.now();
   db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, now, req.admin.id);
   db.prepare(
-    "INSERT INTO settings (key, value) VALUES ('admin_password', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-  ).run(hash);
-  db.prepare(
     "INSERT INTO settings (key, value) VALUES ('admin_password_source', 'user') ON CONFLICT(key) DO UPDATE SET value = 'user'"
-  ).run('user');
-  bumpTokenVersion();
+  ).run();
+
+  // Every existing session for this admin — including the one making this
+  // request — is invalidated; the caller must log in again with the new
+  // password. This is what actually makes a password change meaningful.
+  revokeAllSessionsForAdmin(req.admin.id);
+  clearSessionCookie(req, res);
+
   logAdminActivity(req.admin, 'settings', 'changed password');
-  res.json({ ok: true });
+  res.json({ ok: true, reauthRequired: true });
 });
 
 // --- Menu categories ---
@@ -348,7 +411,7 @@ router.delete('/items/:id', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.post('/items/:id/image', requireAdmin, handleUpload(uploadMenuImage.single('image')), (req, res) => {
+router.post('/items/:id/image', requireAdmin, handleUpload(uploadMenuImage.single('image'), verifyImageMagicBytes, optimizeMenuImage), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const url = toUrl(req.file.filename, 'menu');
   const item = db.prepare('SELECT name FROM items WHERE id = ?').get(req.params.id);
@@ -362,11 +425,13 @@ router.get('/gallery', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM gallery ORDER BY created_at, sort, id').all());
 });
 
-router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image')), (req, res) => {
+router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image'), verifyImageMagicBytes, optimizeGalleryImage), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const { category, alt, alt_en } = req.body;
   const image = toUrl(req.file.filename, 'gallery');
-  const thumb = image;
+  // A genuinely smaller derivative — not a second reference to the full
+  // image — so the grid doesn't download the full-size file per cell.
+  const thumb = req.thumbFilename ? toUrl(req.thumbFilename, 'gallery/thumbs') : image;
   const max = db.prepare('SELECT COALESCE(MAX(sort), -1) AS m FROM gallery').get().m;
   const r = db
     .prepare(
@@ -402,7 +467,7 @@ router.get('/videos', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM videos ORDER BY created_at, sort, id').all());
 });
 
-router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video')), (req, res) => {
+router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video'), verifyVideoMagicBytes), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua video.' });
   const { category, title, title_en } = req.body;
   const src = toUrl(req.file.filename, 'videos');
@@ -416,7 +481,7 @@ router.post('/videos', requireAdmin, handleUpload(uploadVideo.single('video')), 
   res.json({ id: r.lastInsertRowid, src });
 });
 
-router.post('/videos/:id/thumb', requireAdmin, handleUpload(uploadVideoThumb.single('thumb')), (req, res) => {
+router.post('/videos/:id/thumb', requireAdmin, handleUpload(uploadVideoThumb.single('thumb'), verifyImageMagicBytes, optimizeVideoThumb), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
   const thumb = toUrl(req.file.filename, 'videos/thumbs');
   db.prepare('UPDATE videos SET thumb = ? WHERE id = ?').run(thumb, req.params.id);

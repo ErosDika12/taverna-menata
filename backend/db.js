@@ -1,8 +1,15 @@
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const Database = require('better-sqlite3');
 const seed = require('./seed-data');
+const { hashPassword } = require('./password');
+
+// Production = deployed on a real platform (Vercel/Railway) or NODE_ENV says so.
+// Local `node server.js` / `npm run dev` is never production, regardless of what
+// environment variables happen to be set on the developer's machine.
+const isProduction = Boolean(
+  process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production'
+);
 
 function resolveDbPath() {
   const bundled = path.join(__dirname, 'menata.db');
@@ -75,11 +82,6 @@ db.exec(`
     value TEXT NOT NULL
   );
 
-  CREATE TABLE IF NOT EXISTS admin_sessions (
-    token      TEXT PRIMARY KEY,
-    created_at INTEGER NOT NULL
-  );
-
   CREATE TABLE IF NOT EXISTS admins (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     email         TEXT NOT NULL UNIQUE,
@@ -89,6 +91,16 @@ db.exec(`
     status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
     created_at    INTEGER NOT NULL,
     updated_at    INTEGER NOT NULL
+  );
+
+  -- Sessions are the single source of truth for whether a signed token is
+  -- still valid. The token only carries a random session id (sid); it never
+  -- carries role/status/email. Deleting a row here revokes that session.
+  CREATE TABLE IF NOT EXISTS admin_sessions (
+    sid        TEXT PRIMARY KEY,
+    admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS admin_activity (
@@ -131,9 +143,23 @@ for (const sql of migrations) {
 }
 db.prepare('UPDATE admins SET updated_at = created_at WHERE updated_at IS NULL').run();
 
-function hashPassword(password) {
-  return crypto.createHash('sha256').update(password).digest('hex');
-}
+// Legacy shape from the pre-remediation token design (the bearer token itself
+// was the primary key). Replace it with the sid-based table above so no raw
+// session token is ever persisted.
+try {
+  const oldShape = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='admin_sessions'").get();
+  if (oldShape?.sql && /token\s+TEXT PRIMARY KEY/.test(oldShape.sql)) {
+    db.exec('DROP TABLE admin_sessions');
+    db.exec(`
+      CREATE TABLE admin_sessions (
+        sid        TEXT PRIMARY KEY,
+        admin_id   INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
+        created_at INTEGER NOT NULL,
+        expires_at INTEGER NOT NULL
+      );
+    `);
+  }
+} catch { /* best effort */ }
 
 function seedIfEmpty() {
   if (db.prepare('SELECT COUNT(*) AS n FROM categories').get().n > 0) return;
@@ -212,74 +238,66 @@ function reseed() {
     for (const [key, value] of Object.entries(seed.settingsEn || {})) {
       insertSetting.run(key, value);
     }
-
-    insertSetting.run('admin_password', hashPassword(process.env.ADMIN_PASSWORD || 'menata2024'));
-    insertSetting.run('admin_password_source', process.env.ADMIN_PASSWORD ? 'env' : 'default');
   })();
 
-  console.log('Database seeded with initial menu, gallery and settings.');
+  console.log('Database seeded with initial menu, gallery and settings (no admin credentials).');
 }
 
-function ensureAdminPassword(db) {
+// Local-dev-only convenience password. Never used when isProduction is true —
+// ensureBootstrapAdmin() throws instead of falling back to it in production.
+const LOCAL_DEV_PASSWORD = 'local-dev-admin-change-me';
+
+/**
+ * Create or fix up the main_admin account from ADMIN_PASSWORD.
+ *
+ * Production (Vercel/Railway/NODE_ENV=production) REQUIRES ADMIN_PASSWORD to
+ * be set and non-trivial; if it's missing or weak, this throws and the
+ * process must not come up serving traffic. There is no derived or
+ * hardcoded production fallback.
+ *
+ * Once an operator has changed the password via the admin UI
+ * (admin_password_source = 'user'), ADMIN_PASSWORD only matters for
+ * bootstrapping a brand-new deployment — it never overwrites that password.
+ */
+function ensureBootstrapAdmin() {
   const get = (key) => db.prepare('SELECT value FROM settings WHERE key = ?').get(key)?.value;
-  const upsert = db.prepare(
+  const upsertSetting = db.prepare(
     'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
   );
-  const defaultPw = process.env.ADMIN_PASSWORD || 'menata2024';
-  const defaultHash = hashPassword(defaultPw);
 
-  if (process.env.ADMIN_PASSWORD) {
-    upsert.run('admin_password', defaultHash);
-    upsert.run('admin_password_source', 'env');
-    return;
+  const envPassword = process.env.ADMIN_PASSWORD;
+  const mainAdmin = db.prepare("SELECT * FROM admins WHERE role = 'main_admin' ORDER BY id ASC LIMIT 1").get();
+  const source = get('admin_password_source');
+
+  if (mainAdmin && source === 'user') return; // operator already rotated it — never touch it here.
+
+  if (isProduction) {
+    if (!envPassword || envPassword === 'menata2024' || envPassword.length < 12) {
+      throw new Error(
+        'FATAL: ADMIN_PASSWORD is missing or too weak in production. Set a strong, unique ' +
+        'ADMIN_PASSWORD (12+ chars, not the old default) in the platform environment variables ' +
+        'before starting the server. Refusing to boot with an insecure or absent admin credential.'
+      );
+    }
   }
 
-  if (!get('admin_password')) {
-    upsert.run('admin_password', defaultHash);
-    upsert.run('admin_password_source', 'default');
-    return;
+  const password = envPassword || LOCAL_DEV_PASSWORD;
+  if (!envPassword && !isProduction) {
+    console.warn('[security] ADMIN_PASSWORD not set — using a local-dev-only placeholder password. Never do this in production.');
   }
 
-  // Keep default password until changed explicitly in admin Settings.
-  if (get('admin_password_source') !== 'user') {
-    upsert.run('admin_password', defaultHash);
-    upsert.run('admin_password_source', get('admin_password_source') || 'default');
-  }
-}
-
-function ensureAdminsTable() {
-  const count = db.prepare('SELECT COUNT(*) AS n FROM admins').get().n;
-  if (count > 0) return;
-
-  const pwRow = db.prepare("SELECT value FROM settings WHERE key = 'admin_password'").get();
-  const defaultHash = pwRow?.value || hashPassword(process.env.ADMIN_PASSWORD || 'menata2024');
+  const hash = hashPassword(password);
   const now = Date.now();
 
-  db.prepare(
-    `INSERT INTO admins (email, name, password_hash, role, status, created_at, updated_at)
-     VALUES (?, ?, ?, 'main_admin', 'active', ?, ?)`
-  ).run('admin@menata.local', 'Main Admin', defaultHash, now, now);
-}
-
-function ensureMainAdminAccount() {
-  const defaultHash = hashPassword(process.env.ADMIN_PASSWORD || 'menata2024');
-  const now = Date.now();
-  let main = db.prepare("SELECT * FROM admins WHERE role = 'main_admin' ORDER BY id ASC LIMIT 1").get();
-
-  if (!main) {
-    ensureAdminsTable();
-    main = db.prepare("SELECT * FROM admins WHERE role = 'main_admin' ORDER BY id ASC LIMIT 1").get();
-    if (!main) return;
-  }
-
-  const source = db.prepare("SELECT value FROM settings WHERE key = 'admin_password_source'").get()?.value;
-  const passwordHash = source === 'user' ? main.password_hash : defaultHash;
-
-  if (main.email !== 'admin@menata.local' || main.password_hash !== passwordHash) {
+  if (!mainAdmin) {
     db.prepare(
-      "UPDATE admins SET email = 'admin@menata.local', password_hash = ?, updated_at = ? WHERE id = ?"
-    ).run(passwordHash, now, main.id);
+      `INSERT INTO admins (email, name, password_hash, role, status, created_at, updated_at)
+       VALUES (?, ?, ?, 'main_admin', 'active', ?, ?)`
+    ).run('admin@menata.local', 'Main Admin', hash, now, now);
+  } else {
+    db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, now, mainAdmin.id);
   }
+  upsertSetting.run('admin_password_source', 'env');
 }
 
 function migrateAdminRolesSchema() {
@@ -369,67 +387,19 @@ function migrateCategoryNotes() {
   }
 }
 
-function exportAdminsRegistry() {
-  const admins = db
-    .prepare('SELECT id, email, name, password_hash, role, status, created_at, updated_at FROM admins')
-    .all();
+// Remove any leftover SENSITIVE data from the pre-remediation design, which
+// stored password hashes and raw session tokens inside `settings` and was
+// then committed to the (public) repo via the seed database. That mechanism
+// (admin_registry / MENATA_ADMIN_REGISTRY / token-based account recreation)
+// is removed outright — see the final security report for the multi-admin-
+// on-ephemeral-Vercel limitation this leaves. (admin_notifications_registry
+// is NOT touched here: it only ever held non-sensitive notification text,
+// never a credential or session token, so it's kept for serverless
+// persistence of the notification feed.)
+function purgeLegacySecretSettings() {
   db.prepare(
-    "INSERT INTO settings (key, value) VALUES ('admin_registry', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-  ).run(JSON.stringify(admins));
-}
-
-function importAdminsRegistry() {
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'admin_registry'").get();
-  if (!row?.value) return;
-
-  let admins;
-  try {
-    admins = JSON.parse(row.value);
-  } catch {
-    return;
-  }
-  if (!Array.isArray(admins)) return;
-
-  const upsert = db.prepare(
-    `INSERT INTO admins (id, email, name, password_hash, role, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(id) DO UPDATE SET
-       email = excluded.email,
-       name = excluded.name,
-       password_hash = CASE WHEN excluded.password_hash != '' THEN excluded.password_hash ELSE admins.password_hash END,
-       role = excluded.role,
-       status = excluded.status,
-       updated_at = excluded.updated_at`
-  );
-
-  db.transaction(() => {
-    for (const admin of admins) {
-      if (!admin?.email || !admin?.role) continue;
-      upsert.run(
-        admin.id,
-        admin.email,
-        admin.name || admin.email,
-        admin.password_hash || '',
-        admin.role,
-        admin.status || 'active',
-        admin.created_at || Date.now(),
-        admin.updated_at || admin.created_at || Date.now()
-      );
-    }
-  })();
-}
-
-function importAdminsFromEnv() {
-  const raw = process.env.MENATA_ADMIN_REGISTRY;
-  if (!raw) return;
-  try {
-    db.prepare(
-      "INSERT INTO settings (key, value) VALUES ('admin_registry', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-    ).run(raw);
-    importAdminsRegistry();
-  } catch {
-    /* ignore malformed env */
-  }
+    "DELETE FROM settings WHERE key IN ('admin_registry', 'admin_password', 'admin_token_version')"
+  ).run();
 }
 
 seedIfEmpty();
@@ -439,13 +409,9 @@ const { ensureMenuStructure } = require('./ensure-menu-structure');
 const { ensureMenuImages } = require('./ensure-menu-images');
 const { ensureGalleryMedia } = require('./ensure-gallery-media');
 ensureI18n(db);
-ensureAdminPassword(db);
+purgeLegacySecretSettings();
 migrateAdminRolesSchema();
-ensureAdminsTable();
-ensureMainAdminAccount();
-importAdminsFromEnv();
-importAdminsRegistry();
-exportAdminsRegistry();
+ensureBootstrapAdmin();
 migrateOpeningHours();
 migrateCategoryNotes();
 ensureMenuStructure(db);
@@ -457,6 +423,4 @@ if (require.main === module) {
 }
 
 module.exports = db;
-module.exports.hashPassword = hashPassword;
-module.exports.exportAdminsRegistry = exportAdminsRegistry;
-module.exports.importAdminsRegistry = importAdminsRegistry;
+module.exports.isProduction = isProduction;
