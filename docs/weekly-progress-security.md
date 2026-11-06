@@ -292,5 +292,35 @@ from it at least once before relying on it.
 
 ## Commits
 
-(Filled in after the work in this session was committed and pushed — see
-the final report delivered in the conversation for the exact commit SHAs.)
+- `3d25f08` — Harden admin authentication and remove exposed runtime credentials
+- `9fe98cf` — Improve navigation, media audio and image performance
+- `520f6a8` — Add this progress log
+
+## Round 2 verification (after the above was already pushed)
+
+Re-ran every security regression against the local server, plus a few
+checks not covered the first time:
+
+- Old default login, forged-old-secret token, tampered tokens, suspended
+  session, token-based-recreation attempt → all still correctly rejected.
+- **Logout invalidation:** confirmed directly — the exact same session
+  cookie that worked before `/logout` gets 401 immediately after.
+- **Password-change invalidation:** confirmed directly — the exact same
+  session cookie that worked before a password change gets 401 immediately
+  after, even when "changing" to the same password.
+- **Cookie attributes:** confirmed `HttpOnly; SameSite=Strict` are present
+  on the session cookie. `Secure` is correctly absent on local
+  `http://localhost` and will be present automatically once deployed under
+  HTTPS (the code adds it whenever the request is production or already
+  HTTPS).
+- **Image performance:** confirmed the public Gallery grid fetches the real
+  thumbnail file (max 82 KB), not the full photo — largest full photo on
+  disk is 565 KB, nothing over 1 MB exists today. Opening a Gallery video
+  makes 0 video network requests before you tap it, and the tapped video
+  is ready to play in ~500 ms — it is not waiting behind other thumbnails.
+- **npm audit, final:** backend 0/0/0/0. frontend: 0 Critical, 1 High
+  (`vite`, dev-only build tool — never shipped to users), 3 Moderate
+  (`esbuild` dev-only, `react-router`/`react-router-dom` open-redirect —
+  not reachable because every link/redirect in this app is a hardcoded
+  internal path, never built from user input). None left unexplained.
+- `npm run build`: pass.
