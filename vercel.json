@@ -32,10 +32,14 @@
   "rewrites": [
     { "source": "/api/:path*", "destination": "/api" },
     { "source": "/uploads/:path*", "destination": "/api" },
-    {
-      "source": "/(\\.env(.*)|\\.git/(.*)|backend/(.*)|package(-lock)?\\.json|vercel\\.json|railway\\.json)",
-      "destination": "/api"
-    },
+    { "source": "/.env", "destination": "/api" },
+    { "source": "/.env/:path*", "destination": "/api" },
+    { "source": "/.git/:path*", "destination": "/api" },
+    { "source": "/backend/:path*", "destination": "/api" },
+    { "source": "/package.json", "destination": "/api" },
+    { "source": "/package-lock.json", "destination": "/api" },
+    { "source": "/vercel.json", "destination": "/api" },
+    { "source": "/railway.json", "destination": "/api" },
     { "source": "/((?!api|uploads|assets|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
