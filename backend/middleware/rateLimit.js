@@ -22,28 +22,80 @@ function clientIp(req) {
   return req.socket?.remoteAddress || req.ip || 'unknown';
 }
 
-function hit(store, key, windowMs, maxAttempts) {
-  const now = Date.now();
-  let record = store.get(key);
-  if (!record || now - record.start > windowMs) {
-    record = { start: now, count: 0 };
-    store.set(key, record);
-  }
-  record.count += 1;
-  return record.count <= maxAttempts;
+function normalizeEmail(req) {
+  return String(req.body?.email || '').trim().toLowerCase().slice(0, 254);
 }
 
+function getRecord(store, key, windowMs) {
+  const now = Date.now();
+  const record = store.get(key);
+  if (!record || now - record.start > windowMs) return null; // expired or never recorded
+  return record;
+}
+
+function msUntilReset(record, windowMs) {
+  return Math.max(0, windowMs - (Date.now() - record.start));
+}
+
+/**
+ * Only FAILED login attempts count toward the lockout — this middleware
+ * just checks the current state, it never increments anything. A burst of
+ * successful logins (e.g. this account being used for routine admin work,
+ * or test scripts) must never trip the limiter; only wrong-password/
+ * wrong-email attempts should. See recordLoginFailure/recordLoginSuccess.
+ */
 function loginRateLimit(req, res, next) {
   const ip = clientIp(req);
-  const email = String(req.body?.email || '').trim().toLowerCase().slice(0, 254);
+  const email = normalizeEmail(req);
 
-  const ipOk = hit(loginAttemptsByIp, ip, LOGIN_WINDOW_MS, LOGIN_MAX_ATTEMPTS_PER_IP);
-  const emailOk = email ? hit(loginAttemptsByEmail, email, LOGIN_WINDOW_MS, LOGIN_MAX_ATTEMPTS_PER_EMAIL) : true;
+  const ipRecord = getRecord(loginAttemptsByIp, ip, LOGIN_WINDOW_MS);
+  const emailRecord = email ? getRecord(loginAttemptsByEmail, email, LOGIN_WINDOW_MS) : null;
 
-  if (!ipOk || !emailOk) {
-    return res.status(429).json({ error: 'Shumë përpjekje. Provoni përsëri më vonë.' });
+  const ipBlocked = ipRecord && ipRecord.count >= LOGIN_MAX_ATTEMPTS_PER_IP;
+  const emailBlocked = emailRecord && emailRecord.count >= LOGIN_MAX_ATTEMPTS_PER_EMAIL;
+
+  if (ipBlocked || emailBlocked) {
+    const retryMs = Math.max(
+      ipBlocked ? msUntilReset(ipRecord, LOGIN_WINDOW_MS) : 0,
+      emailBlocked ? msUntilReset(emailRecord, LOGIN_WINDOW_MS) : 0
+    );
+    res.setHeader('Retry-After', String(Math.ceil(retryMs / 1000)));
+    return res.status(429).json({ error: 'Shumë përpjekje. Provoni përsëri më vonë.', retryAfterSeconds: Math.ceil(retryMs / 1000) });
   }
   next();
+}
+
+/** Call on a failed login (wrong password, unknown email, suspended account). */
+function recordLoginFailure(req) {
+  const ip = clientIp(req);
+  const email = normalizeEmail(req);
+  const now = Date.now();
+
+  for (const [store, key] of [[loginAttemptsByIp, ip], ...(email ? [[loginAttemptsByEmail, email]] : [])]) {
+    const existing = store.get(key);
+    if (!existing || now - existing.start > LOGIN_WINDOW_MS) {
+      store.set(key, { start: now, count: 1 });
+    } else {
+      existing.count += 1;
+    }
+  }
+}
+
+/**
+ * Call on a successful login. Clears this email's failure counter outright
+ * (the legitimate owner just proved who they are) and the IP's too — a
+ * shared IP (office Wi-Fi, etc.) having one successful login shouldn't
+ * leave a stale failure count sitting there either. This is NOT a
+ * whitelist/bypass: it only ever resets a counter in response to a
+ * correctly authenticated request that already passed the password check;
+ * it grants no access on its own and an attacker who can't authenticate
+ * never reaches this function.
+ */
+function recordLoginSuccess(req) {
+  const ip = clientIp(req);
+  const email = normalizeEmail(req);
+  loginAttemptsByIp.delete(ip);
+  if (email) loginAttemptsByEmail.delete(email);
 }
 
 // NOTE (serverless limitation): these are in-memory, per-instance counters.
@@ -53,4 +105,4 @@ function loginRateLimit(req, res, next) {
 // combined with per-email throttling, but it is not a substitute for an
 // external, persistent rate limiter (e.g. Vercel Firewall / a KV-backed
 // limiter) if stronger guarantees are needed later.
-module.exports = { loginRateLimit, clientIp };
+module.exports = { loginRateLimit, recordLoginFailure, recordLoginSuccess, clientIp };

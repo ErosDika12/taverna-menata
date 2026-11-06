@@ -3,7 +3,7 @@ const db = require('../db');
 const { hashPassword, verifyPassword } = require('../password');
 const { requireAdmin, createAdminToken, revokeSession, revokeAllSessionsForAdmin } = require('../middleware/auth');
 const { requireMainAdmin, COOKIE_NAME } = require('../middleware/adminRoles');
-const { loginRateLimit } = require('../middleware/rateLimit');
+const { loginRateLimit, recordLoginFailure, recordLoginSuccess } = require('../middleware/rateLimit');
 const { sameOriginGuard } = require('../middleware/csrf');
 const { logAdminActivity, formatNotificationRow, importNotificationsRegistry } = require('../activity');
 const {
@@ -90,18 +90,33 @@ router.post('/login', loginRateLimit, (req, res) => {
     return res.status(400).json({ error: 'Shkruani email-in dhe fjalëkalimin.' });
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    recordLoginFailure(req);
     return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
   }
 
   const admin = findAdminByEmail(email);
-  if (!admin) return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  if (!admin) {
+    recordLoginFailure(req);
+    return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  }
 
   const { valid, legacy } = verifyPassword(password, admin.password_hash);
-  if (!valid) return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  if (!valid) {
+    recordLoginFailure(req);
+    return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  }
 
   // Suspended accounts get the same generic error as a wrong password —
   // this does not confirm to an anonymous caller that the email exists.
-  if (admin.status !== 'active') return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  if (admin.status !== 'active') {
+    recordLoginFailure(req);
+    return res.status(401).json({ error: GENERIC_LOGIN_ERROR });
+  }
+
+  // A correct password just proved who this is — only now does it make
+  // sense to clear any failure count that was building up for this
+  // account/IP (e.g. the admin mistyping it a couple of times earlier).
+  recordLoginSuccess(req);
 
   if (legacy) {
     // Transparent, one-time migration off the old unsalted SHA-256 format.
