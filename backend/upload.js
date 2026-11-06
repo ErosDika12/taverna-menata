@@ -3,6 +3,7 @@ const path = require('path');
 const multer = require('multer');
 
 function uploadsRoot() {
+  if (process.env.DATA_DIR) return path.join(process.env.DATA_DIR, 'uploads');
   return process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, 'uploads');
 }
 

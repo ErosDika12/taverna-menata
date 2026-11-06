@@ -6,13 +6,16 @@ const seed = require('./seed-data');
 
 function resolveDbPath() {
   const bundled = path.join(__dirname, 'menata.db');
-  if (!process.env.VERCEL) return bundled;
+  // DATA_DIR points to a persistent disk (e.g. a Railway volume); on Vercel only /tmp is writable.
+  const dataDir = process.env.DATA_DIR || (process.env.VERCEL ? '/tmp' : null);
+  if (!dataDir) return bundled;
 
-  const tmp = path.join('/tmp', 'menata.db');
-  if (!fs.existsSync(tmp) && fs.existsSync(bundled)) {
-    fs.copyFileSync(bundled, tmp);
+  fs.mkdirSync(dataDir, { recursive: true });
+  const target = path.join(dataDir, 'menata.db');
+  if (!fs.existsSync(target) && fs.existsSync(bundled)) {
+    fs.copyFileSync(bundled, target);
   }
-  return tmp;
+  return target;
 }
 
 const db = new Database(resolveDbPath());
