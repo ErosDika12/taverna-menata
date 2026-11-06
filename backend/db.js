@@ -286,8 +286,16 @@ function ensureBootstrapAdmin() {
       `INSERT INTO admins (email, name, password_hash, role, status, created_at, updated_at)
        VALUES (?, ?, ?, 'main_admin', 'active', ?, ?)`
     ).run('admin@menata.local', 'Main Admin', hash, now, now);
-  } else {
-    db.prepare('UPDATE admins SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, now, mainAdmin.id);
+  } else if (mainAdmin.password_hash !== hash) {
+    // The env password actually changed since last boot (an operator rotated
+    // it) — bump token_version too, so every token issued under the old
+    // password is dead immediately, the same way an in-app password change
+    // or logout works, not just "eventually" once something else notices.
+    db.prepare('UPDATE admins SET password_hash = ?, token_version = token_version + 1, updated_at = ? WHERE id = ?').run(
+      hash,
+      now,
+      mainAdmin.id
+    );
   }
   upsertSetting.run('admin_password_source', 'env');
 }
