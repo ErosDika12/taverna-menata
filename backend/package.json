@@ -9,9 +9,11 @@
     "dev": "node --watch server.js",
     "reseed": "node db.js",
     "apply-i18n": "node -e \"require('./db'); require('./ensure-i18n').ensureI18n(require('./db'));\"",
-    "media-audit": "node ../scripts/media-audit.js"
+    "media-audit": "node ../scripts/media-audit.js",
+    "backup": "node backup.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1164.0",
     "better-sqlite3": "^12.11.1",
     "express": "^4.22.3",
     "multer": "^1.4.5-lts.1",

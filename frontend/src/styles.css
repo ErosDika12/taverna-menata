@@ -794,7 +794,7 @@ main {
   border-radius: var(--radius);
   overflow: hidden;
   background: var(--cream);
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   touch-action: manipulation;
   box-shadow: var(--shadow);
   transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
@@ -889,7 +889,7 @@ main {
 .gallery-grid-mixed .video-card {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   padding: 0;
   border: none;
   border-radius: var(--radius);
@@ -1512,7 +1512,7 @@ main {
 
 .home-gallery-grid .gallery-cell {
   margin-bottom: 0;
-  aspect-ratio: 1;
+  aspect-ratio: 4 / 5;
   min-width: 0;
   width: 100%;
   overflow: hidden;
@@ -1699,7 +1699,7 @@ main {
 .menu-product-media {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 5;
   min-height: 220px;
   background: var(--cream);
   overflow: hidden;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { adminFetch, adminUpload } from '../api';
+import ImageCropper from './ImageCropper';
 
 const blankCategory = () => ({ name: '', name_en: '', type: 'food', note: '', note_en: '' });
 
@@ -24,6 +25,7 @@ export default function MenuAdmin() {
   const [form, setForm] = useState(null);
   const [newCat, setNewCat] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [rawImage, setRawImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const formRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -435,7 +437,11 @@ export default function MenuAdmin() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={(e) => uploadItemImage(form.id, e.target.files?.[0])}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = '';
+                  if (file) setRawImage({ itemId: form.id, file });
+                }}
               />
             </label>
           )}
@@ -454,6 +460,17 @@ export default function MenuAdmin() {
         </form>
       )}
         </>
+      )}
+
+      {rawImage && (
+        <ImageCropper
+          file={rawImage.file}
+          onCancel={() => setRawImage(null)}
+          onDone={(file) => {
+            setRawImage(null);
+            uploadItemImage(rawImage.itemId, file);
+          }}
+        />
       )}
     </div>
   );

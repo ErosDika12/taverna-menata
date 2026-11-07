@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminFetch, adminUpload } from '../api';
+import ImageCropper from './ImageCropper';
 
 const cats = [
   { value: 'food', label: 'Ushqimi' },
@@ -17,6 +18,25 @@ export default function GalleryAdmin() {
   const [editVideo, setEditVideo] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [rawPhoto, setRawPhoto] = useState(null);
+  const [croppedPhoto, setCroppedPhoto] = useState(null);
+  const [croppedPreview, setCroppedPreview] = useState('');
+
+  useEffect(() => {
+    if (!croppedPhoto) {
+      setCroppedPreview('');
+      return undefined;
+    }
+    const url = URL.createObjectURL(croppedPhoto);
+    setCroppedPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [croppedPhoto]);
+
+  function pickPhoto(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) setRawPhoto(file);
+  }
 
   async function load() {
     const [p, v] = await Promise.all([adminFetch('/gallery'), adminFetch('/videos')]);
@@ -50,10 +70,16 @@ export default function GalleryAdmin() {
 
   async function uploadPhoto(e) {
     e.preventDefault();
+    if (!croppedPhoto) {
+      setMsg('Zgjidhni një foto.');
+      return;
+    }
     await run(async () => {
       const fd = new FormData(e.target);
+      fd.set('image', croppedPhoto);
       await adminUpload('/gallery', fd);
       e.target.reset();
+      setCroppedPhoto(null);
       await load();
       setMsg('Foto u ngarkua.');
     });
@@ -138,8 +164,13 @@ export default function GalleryAdmin() {
             <h2>Ngarko foto</h2>
             <label>
               Foto
-              <input type="file" name="image" accept="image/*" required />
+              <input type="file" accept="image/*" onChange={pickPhoto} />
             </label>
+            {croppedPreview && (
+              <div className="admin-item-preview">
+                <img src={croppedPreview} alt="" />
+              </div>
+            )}
             <label>
               Kategoria
               <select name="category" defaultValue="food">
@@ -301,6 +332,17 @@ export default function GalleryAdmin() {
         </>
       )}
         </>
+      )}
+
+      {rawPhoto && (
+        <ImageCropper
+          file={rawPhoto}
+          onCancel={() => setRawPhoto(null)}
+          onDone={(file) => {
+            setCroppedPhoto(file);
+            setRawPhoto(null);
+          }}
+        />
       )}
     </div>
   );

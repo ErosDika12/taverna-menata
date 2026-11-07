@@ -145,11 +145,18 @@ const WEB_MAX_EDGE = 2000;
 const WEB_QUALITY = 82;
 const THUMB_MAX_EDGE = 480;
 const THUMB_QUALITY = 70;
+// Menu and gallery photos all share one 4:5 frame (the admin crops them to it in the browser;
+// this is the server-side guarantee in case an uncropped image arrives).
+const PHOTO_WIDTH = 1080;
+const PHOTO_HEIGHT = 1350;
 
-async function reencode(srcPath, destPath, maxEdge, quality) {
+async function reencode(srcPath, destPath, maxEdge, quality, { portrait = false } = {}) {
+  const resize = portrait
+    ? { width: PHOTO_WIDTH, height: PHOTO_HEIGHT, fit: 'cover', position: 'centre' }
+    : { width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true };
   await sharp(srcPath)
     .rotate() // apply EXIF orientation, then...
-    .resize({ width: maxEdge, height: maxEdge, fit: 'inside', withoutEnlargement: true })
+    .resize(resize)
     .jpeg({ quality, mozjpeg: true })
     .toFile(destPath); // ...metadata is dropped by not calling withMetadata()
 }
@@ -161,7 +168,7 @@ async function reencode(srcPath, destPath, maxEdge, quality) {
  * When `withThumb` is true, also writes a small thumbnail next to it and
  * sets req.thumbFilename so the route can store its own URL.
  */
-function optimizeImage({ withThumb = false } = {}) {
+function optimizeImage({ withThumb = false, portrait = false } = {}) {
   return async (req, res, next) => {
     const file = req.file;
     if (!file) return next();
@@ -171,8 +178,11 @@ function optimizeImage({ withThumb = false } = {}) {
     const webPath = path.join(dir, `${base}.jpg`);
 
     try {
-      await reencode(file.path, webPath, WEB_MAX_EDGE, WEB_QUALITY);
-      if (file.path !== webPath) fs.unlinkSync(file.path);
+      // sharp can't read and write the same file, which happens whenever the upload is already a .jpg.
+      const tmpPath = path.join(dir, `${base}.tmp.jpg`);
+      await reencode(file.path, tmpPath, WEB_MAX_EDGE, WEB_QUALITY, { portrait });
+      fs.unlinkSync(file.path);
+      fs.renameSync(tmpPath, webPath);
       file.filename = `${base}.jpg`;
       file.path = webPath;
 
@@ -201,8 +211,8 @@ module.exports = {
   uploadVideoThumb: multer({ storage: imageStorage('videos/thumbs'), limits: { fileSize: 4 * 1024 * 1024 }, fileFilter: imageFilter }),
   verifyImageMagicBytes: verifyMagicBytes('image'),
   verifyVideoMagicBytes: verifyMagicBytes('video'),
-  optimizeGalleryImage: optimizeImage({ withThumb: true }),
-  optimizeMenuImage: optimizeImage({ withThumb: false }),
+  optimizeGalleryImage: optimizeImage({ withThumb: true, portrait: true }),
+  optimizeMenuImage: optimizeImage({ withThumb: false, portrait: true }),
   optimizeVideoThumb: optimizeImage({ withThumb: false }),
   toUrl: (filename, subdir) => `/uploads/${subdir}/${filename}`
 };
