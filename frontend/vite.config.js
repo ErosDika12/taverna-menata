@@ -7,6 +7,12 @@ import react from '@vitejs/plugin-react';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsRoot = path.resolve(__dirname, '../backend/uploads');
 const backend = process.env.VITE_API_URL || 'http://localhost:4000';
+// Public address used in the static share tags (og:url / og:image) of index.html.
+const siteUrl = (process.env.SITE_URL || 'https://taverna-menata-production.up.railway.app').replace(/\/$/, '');
+
+// Keep the browser's Host header so the backend's same-origin (CSRF) check
+// matches the Origin header; a string target would rewrite Host to the backend.
+const apiProxy = { '/api': { target: backend, changeOrigin: false } };
 
 const CONTENT_TYPES = {
   '.jpg': 'image/jpeg',
@@ -63,21 +69,24 @@ function copyUploadsToDist() {
   };
 }
 
+function injectSiteUrl() {
+  return {
+    name: 'inject-site-url',
+    transformIndexHtml: (html) => html.replaceAll('__SITE_URL__', siteUrl)
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), serveLocalUploads(), copyUploadsToDist()],
+  plugins: [react(), serveLocalUploads(), copyUploadsToDist(), injectSiteUrl()],
   server: {
     host: '0.0.0.0',
     port: 5173,
-    proxy: {
-      '/api': backend
-      // /uploads is served from backend/uploads on disk (existing project photos)
-    }
+    // /uploads is served from backend/uploads on disk (existing project photos)
+    proxy: apiProxy
   },
   preview: {
     host: '0.0.0.0',
     port: 4173,
-    proxy: {
-      '/api': backend
-    }
+    proxy: apiProxy
   }
 });

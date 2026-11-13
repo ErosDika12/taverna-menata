@@ -58,5 +58,3 @@ backend/menata.db-shm
 # Test / coverage
 coverage/
 .nyc_output/
-.vercel
-.env*

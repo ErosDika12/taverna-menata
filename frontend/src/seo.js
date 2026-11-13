@@ -1,6 +1,9 @@
 /** Per-page SEO copy — Albanian default, English alternate */
 
-export const SITE_URL = import.meta.env.VITE_SITE_URL || 'https://taverna-menata.vercel.app';
+// The same build runs on Railway and Vercel, so default to whichever domain the visitor is on.
+export const SITE_URL =
+  import.meta.env.VITE_SITE_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : 'https://taverna-menata-production.up.railway.app');
 
 export const PAGE_SEO = {
   sq: {
