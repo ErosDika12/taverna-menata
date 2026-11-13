@@ -133,6 +133,11 @@ const migrations = [
   'ALTER TABLE items ADD COLUMN available INTEGER NOT NULL DEFAULT 1',
   'ALTER TABLE gallery ADD COLUMN alt_en TEXT',
   'ALTER TABLE gallery ADD COLUMN created_at INTEGER',
+  // Responsive gallery pipeline (legacy rows keep NULL and fall back to image/thumb).
+  'ALTER TABLE gallery ADD COLUMN orientation TEXT',
+  'ALTER TABLE gallery ADD COLUMN width INTEGER',
+  'ALTER TABLE gallery ADD COLUMN height INTEGER',
+  'ALTER TABLE gallery ADD COLUMN variants TEXT',
   'ALTER TABLE videos ADD COLUMN created_at INTEGER',
   'ALTER TABLE admins ADD COLUMN updated_at INTEGER',
   'ALTER TABLE admins ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1',

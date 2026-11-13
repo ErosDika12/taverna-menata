@@ -62,12 +62,25 @@ router.get('/menu', (req, res) => {
   );
 });
 
+function parseVariants(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
 function photoRow(p, l) {
   return {
     id: p.id,
     type: 'photo',
     image: p.image,
     thumb: p.thumb,
+    orientation: p.orientation || null,
+    width: p.width || null,
+    height: p.height || null,
+    variants: parseVariants(p.variants),
     category: p.category,
     created_at: p.created_at,
     alt: pick(p, 'alt', l) || 'Taverna Menata'

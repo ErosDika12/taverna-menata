@@ -211,7 +211,6 @@ module.exports = {
   uploadVideoThumb: multer({ storage: imageStorage('videos/thumbs'), limits: { fileSize: 4 * 1024 * 1024 }, fileFilter: imageFilter }),
   verifyImageMagicBytes: verifyMagicBytes('image'),
   verifyVideoMagicBytes: verifyMagicBytes('video'),
-  optimizeGalleryImage: optimizeImage({ withThumb: true, portrait: true }),
   optimizeMenuImage: optimizeImage({ withThumb: false, portrait: true }),
   optimizeVideoThumb: optimizeImage({ withThumb: false }),
   toUrl: (filename, subdir) => `/uploads/${subdir}/${filename}`

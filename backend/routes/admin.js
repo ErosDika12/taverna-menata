@@ -1,5 +1,8 @@
+const fs = require('fs');
+const path = require('path');
 const { Router } = require('express');
 const db = require('../db');
+const { processGalleryPhoto } = require('../gallery-media');
 const { hashPassword, verifyPassword } = require('../password');
 const { requireAdmin, createAdminToken, bumpTokenVersion } = require('../middleware/auth');
 const { requireMainAdmin, COOKIE_NAME } = require('../middleware/adminRoles');
@@ -14,10 +17,10 @@ const {
   uploadVideoThumb,
   verifyImageMagicBytes,
   verifyVideoMagicBytes,
-  optimizeGalleryImage,
   optimizeMenuImage,
   optimizeVideoThumb,
-  toUrl
+  toUrl,
+  uploadsRoot
 } = require('../upload');
 
 const router = Router();
@@ -444,21 +447,48 @@ router.get('/gallery', requireAdmin, (_req, res) => {
   res.json(db.prepare('SELECT * FROM gallery ORDER BY created_at, sort, id').all());
 });
 
-router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image'), verifyImageMagicBytes, optimizeGalleryImage), (req, res) => {
+router.post('/gallery', requireAdmin, handleUpload(uploadImage.single('image'), verifyImageMagicBytes), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Nuk u ngarkua foto.' });
-  const { category, alt, alt_en } = req.body;
-  const image = toUrl(req.file.filename, 'gallery');
-  // A genuinely smaller derivative — not a second reference to the full
-  // image — so the grid doesn't download the full-size file per cell.
-  const thumb = req.thumbFilename ? toUrl(req.thumbFilename, 'gallery/thumbs') : image;
+  const { category, alt, alt_en, format, crop } = req.body;
+
+  // The server decides every output size; the browser only names the format and crop.
+  const root = uploadsRoot();
+  const baseName = path.basename(req.file.filename, path.extname(req.file.filename));
+  let result;
+  try {
+    result = await processGalleryPhoto({
+      srcPath: req.file.path,
+      outDir: path.join(root, 'gallery'),
+      originalsDir: path.join(root, '..', 'originals'),
+      baseName,
+      format,
+      cropRaw: crop
+    });
+  } catch {
+    result = { ok: false, status: 500, error: 'Fotoja nuk u përpunua. Provoni një foto tjetër.', error_en: 'The photo could not be processed. Please try another.' };
+  }
+  if (!result.ok) {
+    try { fs.unlinkSync(req.file.path); } catch { /* already moved or removed */ }
+    return res.status(result.status).json({ error: result.error, error_en: result.error_en });
+  }
+
+  // `image` is the large derivative (kept for older clients), `thumb` the small one.
+  const image = toUrl(result.variants.large, 'gallery');
+  const thumb = toUrl(result.variants.small, 'gallery');
+  const variants = JSON.stringify({
+    small: toUrl(result.variants.small, 'gallery'),
+    medium: toUrl(result.variants.medium, 'gallery'),
+    large: image
+  });
   const max = db.prepare('SELECT COALESCE(MAX(sort), -1) AS m FROM gallery').get().m;
   const r = db
     .prepare(
-      'INSERT INTO gallery (image, thumb, category, alt, alt_en, sort, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      `INSERT INTO gallery (image, thumb, category, alt, alt_en, sort, created_at, orientation, width, height, variants)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(image, thumb, category || 'food', alt || '', alt_en || null, max + 1, Date.now());
+    .run(image, thumb, category || 'food', alt || '', alt_en || null, max + 1, Date.now(), result.orientation, result.width, result.height, variants);
   logAdminActivity(req.admin, 'gallery', 'uploaded photo', alt || category);
-  res.json({ id: r.lastInsertRowid, image, thumb });
+  res.json({ id: r.lastInsertRowid, image, thumb, orientation: result.orientation });
 });
 
 router.put('/gallery/:id', requireAdmin, (req, res) => {
