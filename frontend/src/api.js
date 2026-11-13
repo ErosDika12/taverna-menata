@@ -47,6 +47,10 @@ export async function adminUpload(path, formData) {
     handleAdminAuthFailure();
     throw new Error('LOGIN_REQUIRED');
   }
-  if (!res.ok) throw new Error(data.error || 'Gabim.');
+  if (!res.ok) {
+    const err = new Error(data.error || 'Gabim.');
+    if (data.error_en) err.error_en = data.error_en;
+    throw err;
+  }
   return data;
 }

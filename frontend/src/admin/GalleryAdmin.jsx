@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { adminFetch, adminUpload } from '../api';
-import ImageCropper from './ImageCropper';
+import ImageCropper, { FORMATS } from './ImageCropper';
 
 const cats = [
   { value: 'food', label: 'Ushqimi' },
@@ -19,18 +19,9 @@ export default function GalleryAdmin() {
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rawPhoto, setRawPhoto] = useState(null);
-  const [croppedPhoto, setCroppedPhoto] = useState(null);
-  const [croppedPreview, setCroppedPreview] = useState('');
-
-  useEffect(() => {
-    if (!croppedPhoto) {
-      setCroppedPreview('');
-      return undefined;
-    }
-    const url = URL.createObjectURL(croppedPhoto);
-    setCroppedPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [croppedPhoto]);
+  // { file, format, crop } once the Admin has chosen a format and a crop.
+  const [pending, setPending] = useState(null);
+  const [msgError, setMsgError] = useState(false);
 
   function pickPhoto(e) {
     const file = e.target.files?.[0];
@@ -46,11 +37,13 @@ export default function GalleryAdmin() {
 
   function showError(err) {
     if (err.message === 'LOGIN_REQUIRED') return;
-    setMsg(err.message);
+    setMsgError(true);
+    setMsg(err.error_en ? `${err.message} ${err.error_en}` : err.message);
   }
 
   async function run(action) {
     setMsg('');
+    setMsgError(false);
     setBusy(true);
     try {
       await action();
@@ -70,16 +63,19 @@ export default function GalleryAdmin() {
 
   async function uploadPhoto(e) {
     e.preventDefault();
-    if (!croppedPhoto) {
+    if (!pending) {
       setMsg('Zgjidhni një foto.');
       return;
     }
     await run(async () => {
       const fd = new FormData(e.target);
-      fd.set('image', croppedPhoto);
+      // The original file goes up; the server crops and derives every size.
+      fd.set('image', pending.file);
+      fd.set('format', pending.format);
+      fd.set('crop', JSON.stringify(pending.crop));
       await adminUpload('/gallery', fd);
       e.target.reset();
-      setCroppedPhoto(null);
+      setPending(null);
       await load();
       setMsg('Foto u ngarkua.');
     });
@@ -142,7 +138,7 @@ export default function GalleryAdmin() {
     <div className="admin-page">
       <h1>Galeria</h1>
       {msg && !msg.includes('LOGIN') && (
-        <p className={msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>
+        <p className={msgError || msg.includes('Gabim') || msg.includes('error') ? 'admin-error' : 'admin-msg'}>{msg}</p>
       )}
 
       {loading ? (
@@ -166,9 +162,14 @@ export default function GalleryAdmin() {
               Foto
               <input type="file" accept="image/*" onChange={pickPhoto} />
             </label>
-            {croppedPreview && (
+            {pending && (
               <div className="admin-item-preview">
-                <img src={croppedPreview} alt="" />
+                <p className="admin-hint">
+                  Formati: {FORMATS[pending.format].label}. Pjesa e zgjedhur është gati për ngarkim.
+                </p>
+                <button type="button" className="btn btn-outline" onClick={() => setRawPhoto(pending.file)}>
+                  Ndrysho pjesën
+                </button>
               </div>
             )}
             <label>
@@ -338,8 +339,8 @@ export default function GalleryAdmin() {
         <ImageCropper
           file={rawPhoto}
           onCancel={() => setRawPhoto(null)}
-          onDone={(file) => {
-            setCroppedPhoto(file);
+          onDone={({ format, crop }) => {
+            setPending({ file: rawPhoto, format, crop });
             setRawPhoto(null);
           }}
         />
