@@ -2948,3 +2948,47 @@ main {
 @media (min-width: 800px) {
   .menu-top-btn { bottom: 24px; right: 24px; }
 }
+
+/* Gallery cards: a white frame in the same language as the Menu cards.
+   Each card keeps its photo's own orientation (4:5 or 4:3) and object-fit
+   contain never crops or stretches it. Scoped to the Gallery page only. */
+.gallery-grid.gallery-grid--cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 800px) {
+  .gallery-grid.gallery-grid--cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+}
+
+.gallery-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.gallery-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: calc(var(--radius) - 4px);
+  background: var(--surface);
+}
+
+/* Legacy cards without a fixed ratio keep the photo's natural height. */
+.gallery-card:not([style*="aspect-ratio"]) img {
+  height: auto;
+}
