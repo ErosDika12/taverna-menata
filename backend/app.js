@@ -101,6 +101,14 @@ const dist = path.join(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(path.join(dist, 'index.html'))) {
   // Vite emits content-hashed filenames under /assets, so they can be cached forever.
   app.use('/assets', express.static(path.join(dist, 'assets'), { maxAge: '1y', immutable: true, fallthrough: true }));
+  // The Admin SPA shell is served explicitly, before the generic static/fallback
+  // handlers, with no-store set on the response itself. sendFile() would otherwise
+  // write its own Cache-Control, and cacheControl:false stops it from doing so.
+  const adminShell = path.join(dist, 'index.html');
+  app.get(['/admin', '/admin/*'], (_req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.sendFile(adminShell, { cacheControl: false, lastModified: false, etag: false });
+  });
   app.use(express.static(dist, { index: 'index.html' }));
   app.get(/^\/(?!api|uploads).*/, (_req, res) => {
     res.sendFile(path.join(dist, 'index.html'));
