@@ -324,3 +324,147 @@ checks not covered the first time:
   not reachable because every link/redirect in this app is a hardcoded
   internal path, never built from user input). None left unexplained.
 - `npm run build`: pass.
+
+
+---
+
+## Railway migration groundwork and Gallery pipeline (this session)
+
+Status key: DONE = verified by test; PARTIAL = built or unit-tested, not yet
+verified end to end; BLOCKED = needs access this session does not have;
+NOT STARTED = not done.
+
+### A. Admin responses are never cached
+**OWNER:** Claude (requested by Eros)
+**STATUS:** PARTIAL — verified locally, not yet on Railway.
+**WHAT WAS DONE:** `/admin` (the Admin shell) and every `/api/admin/*`
+response send `Cache-Control: no-store`. Hashed build files under `/assets/`
+get a one-year immutable cache.
+**HOW IT WORKS:** one Express middleware on `['/admin', '/api/admin']`
+(backend/app.js) sets the header before any route runs.
+**WHY:** Cloudflare and browsers must never store Admin pages or data.
+**ALTERNATIVES:** a Cloudflare cache-bypass rule. Not chosen, because the
+origin should be correct on its own.
+**TESTS:** local server — `/admin`, `/admin/gallery` and `/api/admin/me`
+(401) all return `no-store`; `/assets/*.css` returns `immutable`. On Railway
+the live `/admin` still returns `max-age=0` at the time of writing.
+**FILES:** backend/app.js
+**COMMIT:** fc9faaa
+
+### B. Gallery uploads: fixed 4:5 / 4:3 crop and responsive WebP derivatives
+**OWNER:** Claude (requested by Eros)
+**STATUS:** PARTIAL — pipeline unit-tested; full HTTP upload not tested.
+**WHAT WAS DONE:** new backend/gallery-media.js. The Admin uploads one source
+plus a crop. The server re-decodes it, applies EXIF rotation, checks the crop,
+and writes three WebP sizes:
+- Portrait 4:5: 360×450, 720×900, 1080×1350
+- Landscape 4:3: 480×360, 960×720, 1440×1080
+
+Sources smaller than 900×1125 (portrait) or 1200×900 (landscape) are rejected
+with a bilingual message and are never upscaled. Output carries no EXIF or
+GPS. The untouched source moves to `DATA_DIR/originals`, which is not served
+publicly. The gallery table gains `orientation`, `width`, `height` and
+`variants` columns (additive migrations; old rows keep working).
+**WHY:** the old code forced every gallery photo into a 1080×1350 portrait
+crop, which cut landscape photos. Phone visitors also downloaded full-size
+files for small cards.
+**ALTERNATIVES:** AVIF (not generated — WebP only, no JPEG fallback; current
+browsers and iOS 14+ support WebP). Attention-based auto-cropping (not done —
+the Admin positions the crop by hand).
+**TESTS:** pipeline test script, 23/23 pass — correct sizes and WebP output
+for both orientations, no EXIF, low-resolution rejected (422, both
+languages), disguised file rejected, bad ratio rejected, mismatched format
+rejected, out-of-range crop rejected, unknown format rejected, original moved
+out of the public path.
+**NOT TESTED:** a real HTTP upload through `/api/admin/gallery`. Local admin
+login failed with the default password (not investigated; no credentials were
+changed), and running a server against a temporary data directory was denied
+by the sandbox.
+**FILES:** backend/gallery-media.js, backend/routes/admin.js,
+backend/routes/public.js, backend/db.js, backend/upload.js
+**COMMIT:** f593054
+
+### C. Admin cropper: fixed frames, no zoom control
+**OWNER:** Claude (requested by Eros)
+**STATUS:** PARTIAL — builds; not tested in a browser.
+**WHAT WAS DONE:** the cropper offers Portrait 4:5 and Landscape 4:3 only. The
+natural orientation is preselected, and a format the photo can't support is
+disabled. The zoom slider is removed; the Admin only repositions. The upload
+sends the original file with `format` and `crop` fractions, and the server
+does the crop. The client pre-checks resolution and shows the bilingual
+low-resolution message before any upload. Server errors carry `error_en`
+through `adminUpload`.
+**FILES:** frontend/src/admin/ImageCropper.jsx,
+frontend/src/admin/GalleryAdmin.jsx, frontend/src/api.js
+**COMMIT:** 514f68a
+
+### D. Public Gallery: white cards, srcset, Back-to-Top
+**OWNER:** Claude (requested by Eros)
+**STATUS:** PARTIAL — builds; not tested in a browser at any viewport.
+**WHAT WAS DONE:** each photo sits in a white framed card matching the Menu
+(border, rounded corners, subtle shadow). Each card keeps its own orientation
+through `aspect-ratio` 4/5 or 4/3 with `object-fit: contain`, so nothing is
+cropped or stretched. Legacy photos keep their natural height. The grid uses
+`srcset` and `sizes` (`50vw` on phones, `33vw` from 800px), so a 390px phone
+fetches the 360px or 480px file. The viewer gets the 720/960px derivative.
+Back-to-Top reuses the Menu's button and appears after 600px of scrolling.
+Styles are scoped to `.gallery-grid--cards`, so the home preview is unchanged.
+**FILES:** frontend/src/pages/Gallery.jsx, frontend/src/styles.css
+**COMMIT:** 7925416
+
+### E. Existing gallery photos normalised to 4:5 / 4:3
+**OWNER:** Claude
+**STATUS:** NOT STARTED.
+**WHY NOT:** the 55 current photos are seed files. Production has its own rows
+on the Railway volume, so a backfill must run there, not in the repo. Legacy
+rows keep working in the meantime.
+**NEXT STEP:** a dry-run script that classifies each photo (portrait,
+landscape, or unsafe) and writes derivatives plus originals, then Eros runs it
+on Railway after a backup.
+
+### F. Railway persistent volume and DATA_DIR
+**OWNER:** Eros (control-plane access needed)
+**STATUS:** BLOCKED — no Railway access in this session.
+**WHAT IS KNOWN FROM CODE:** `DATA_DIR` is read in backend/db.js and
+backend/upload.js. The database lives at `DATA_DIR/menata.db`, uploads at
+`DATA_DIR/uploads`, and originals at `DATA_DIR/originals`. Without `DATA_DIR`
+the paths fall back to the repository folder, which is ephemeral on Railway.
+**STILL NEEDED:** confirm `DATA_DIR` points at a mounted Railway Volume, then
+test that uploads and rows survive a restart and a redeploy.
+
+### G. R2 backups
+**OWNER:** Eros
+**STATUS:** BLOCKED — code present (backend/backup.js, commit 3c178db) but no
+credentials are available, so runtime backups are not verified. The module
+stays off unless all four `R2_*` variables are set.
+
+### H. Cloudflare DNS, proxy, SSL, canonical domain
+**STATUS:** BLOCKED — Cloudflare/DNS administrator access required.
+
+### I. Progressive loading and mobile measurements
+**STATUS:** PARTIAL. Native `loading="lazy"` plus `srcset` are in place. Nothing
+has been measured, so no LCP, CLS, Lighthouse or transferred-bytes numbers are
+reported.
+
+### J. Vercel
+**STATUS:** untouched. Nothing was deployed to Vercel, and it has not been
+deleted.
+
+### Deployment status
+- Local HEAD and `origin/main`: `7925416` at the time of writing.
+- Railway was still serving an older bundle (`assets/index-B0LM_DGL.js`) with
+  `max-age=0` on `/admin`. Either the redeploy hasn't happened yet or Railway
+  does not auto-deploy from `main`; this needs checking in the Railway
+  dashboard.
+- Luana's commits (`6284218`, `6a09372`) were kept. This work was rebased on
+  top of them, not force-pushed.
+
+### Remaining issues
+1. Browser QA at 320, 375, 390, 430, 768, 1024 and desktop is not done.
+2. A real HTTP upload of a portrait and a landscape photo is not tested.
+3. Local admin login with the default password fails. Not investigated.
+4. Railway does not show the new commit yet.
+5. Persistence across restart and redeploy is not verified.
+6. Cloudflare and R2 runtime checks are blocked on access.
+7. Existing photos are not normalised (section E).
+8. No Lighthouse or mobile performance numbers yet.
