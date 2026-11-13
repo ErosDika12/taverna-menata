@@ -424,7 +424,11 @@ on Railway after a backup.
 
 ### F. Railway persistent volume and DATA_DIR
 **OWNER:** Eros (control-plane access needed)
-**STATUS:** BLOCKED — no Railway access in this session.
+**STATUS:** REPORTED WORKING BY OWNER (Eros, Albanian message): the service
+runs with `DATA_DIR=/data` on a Railway Volume mounted at `/data`, so the
+database and uploads persist across restarts. This session did not verify it
+(no Railway access), so it is not marked DONE here. Remaining check: a
+test upload that survives a redeploy.
 **WHAT IS KNOWN FROM CODE:** `DATA_DIR` is read in backend/db.js and
 backend/upload.js. The database lives at `DATA_DIR/menata.db`, uploads at
 `DATA_DIR/uploads`, and originals at `DATA_DIR/originals`. Without `DATA_DIR`
@@ -434,9 +438,10 @@ test that uploads and rows survive a restart and a redeploy.
 
 ### G. R2 backups
 **OWNER:** Eros
-**STATUS:** BLOCKED — code present (backend/backup.js, commit 3c178db) but no
-credentials are available, so runtime backups are not verified. The module
-stays off unless all four `R2_*` variables are set.
+**STATUS:** REPORTED WORKING BY OWNER: weekly backups to the Cloudflare R2
+bucket `taverna-menata-backups`, with the first backup completed. The R2
+variables are set on Railway. Not verified from this session. Still to
+confirm: a restore test.
 
 ### H. Cloudflare DNS, proxy, SSL, canonical domain
 **STATUS:** BLOCKED — Cloudflare/DNS administrator access required.
@@ -468,3 +473,23 @@ deleted.
 6. Cloudflare and R2 runtime checks are blocked on access.
 7. Existing photos are not normalised (section E).
 8. No Lighthouse or mobile performance numbers yet.
+
+### Deployment update (owner report, later the same day)
+- Railway is set up with a persistent volume at `/data` (`DATA_DIR=/data`).
+  The owner reports the database no longer resets.
+- Weekly R2 backups run to `taverna-menata-backups`; the first one completed.
+- Open problems, reported by the owner:
+  1. Auto-deploy from GitHub is not connected, because the repository is
+     under a different account than the Railway project. Fix: in Railway,
+     open the service's Source settings and connect the GitHub repository
+     that holds `main` (`ErosDika12/taverna-menata`), using an account that
+     has access to it.
+  2. The latest manual redeploy failed at "Build image" after about 31 seconds.
+     Not yet diagnosed. This session cannot read Railway build logs. A local
+     clean install of `frontend` (`npm ci`) succeeds. The backend clean install
+     could not complete locally because a running test server locked a `sharp`
+     DLL; that is a local issue, not a lockfile error. Next step: read the
+     Railway build log for the first error line.
+- Latest pushed commit is `8affd2c` (Admin shell `no-store`). It is not confirmed
+  deployed: the live site still serves `assets/index-B0LM_DGL.js`, and `/admin`
+  still returns `max-age=0`.
