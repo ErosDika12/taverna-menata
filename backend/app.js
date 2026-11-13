@@ -75,6 +75,13 @@ app.use('/api', (_req, res, next) => {
   next();
 });
 app.use('/api', publicRoutes);
+// Admin responses (API and the /admin shell) must never be stored by browsers
+// or shared caches such as Cloudflare: they can carry per-user data.
+app.use(['/admin', '/api/admin'], (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
+
 app.use('/api/admin', (_req, res, next) => {
   const orig = res.json.bind(res);
   res.json = (body) => {
@@ -92,6 +99,8 @@ app.use((err, _req, res, _next) => {
 
 const dist = path.join(__dirname, '..', 'frontend', 'dist');
 if (fs.existsSync(path.join(dist, 'index.html'))) {
+  // Vite emits content-hashed filenames under /assets, so they can be cached forever.
+  app.use('/assets', express.static(path.join(dist, 'assets'), { maxAge: '1y', immutable: true, fallthrough: true }));
   app.use(express.static(dist, { index: 'index.html' }));
   app.get(/^\/(?!api|uploads).*/, (_req, res) => {
     res.sendFile(path.join(dist, 'index.html'));
