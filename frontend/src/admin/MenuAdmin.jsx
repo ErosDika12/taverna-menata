@@ -3,6 +3,37 @@ import { useSearchParams } from 'react-router-dom';
 import { adminFetch, adminUpload } from '../api';
 import ImageCropper from './ImageCropper';
 
+// Menu cards are 4:5; the cropper returns the chosen area as fractions of the photo.
+const MENU_PHOTO = { width: 1080, height: 1350 };
+
+async function cropToMenuPhoto(file, crop) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = MENU_PHOTO.width;
+    canvas.height = MENU_PHOTO.height;
+    canvas.getContext('2d').drawImage(
+      img,
+      crop.x * img.naturalWidth,
+      crop.y * img.naturalHeight,
+      crop.w * img.naturalWidth,
+      crop.h * img.naturalHeight,
+      0,
+      0,
+      MENU_PHOTO.width,
+      MENU_PHOTO.height
+    );
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (!blob) throw new Error('Fotoja nuk u pre. Provoni përsëri.');
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 const blankCategory = () => ({ name: '', name_en: '', type: 'food', note: '', note_en: '' });
 
 const blankItem = (categoryId) => ({
@@ -465,10 +496,16 @@ export default function MenuAdmin() {
       {rawImage && (
         <ImageCropper
           file={rawImage.file}
+          formats={['portrait']}
           onCancel={() => setRawImage(null)}
-          onDone={(file) => {
+          onDone={async ({ crop }) => {
+            const { itemId, file } = rawImage;
             setRawImage(null);
-            uploadItemImage(rawImage.itemId, file);
+            try {
+              uploadItemImage(itemId, await cropToMenuPhoto(file, crop));
+            } catch (err) {
+              showError(err);
+            }
           }}
         />
       )}

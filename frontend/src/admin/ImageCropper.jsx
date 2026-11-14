@@ -24,7 +24,7 @@ export function formatAllowed(width, height, key) {
  * at its natural scale. The crop is returned as fractions of the photo; the
  * server does the final crop and resize.
  */
-export default function ImageCropper({ file, onCancel, onDone }) {
+export default function ImageCropper({ file, onCancel, onDone, formats = Object.keys(FORMATS) }) {
   const [src, setSrc] = useState('');
   const [natural, setNatural] = useState(null);
   const [format, setFormat] = useState(null);
@@ -42,16 +42,15 @@ export default function ImageCropper({ file, onCancel, onDone }) {
       const w = img.naturalWidth;
       const h = img.naturalHeight;
       setNatural({ w, h });
-      const portraitOk = formatAllowed(w, h, 'portrait');
-      const landscapeOk = formatAllowed(w, h, 'landscape');
-      if (!portraitOk && !landscapeOk) {
+      const usable = formats.filter((key) => formatAllowed(w, h, key));
+      if (!usable.length) {
         setError(LOW_RES_MSG);
         setErrorEn(LOW_RES_MSG_EN);
         setFormat(null);
         return;
       }
       const preferred = w > h ? 'landscape' : 'portrait';
-      setFormat(formatAllowed(w, h, preferred) ? preferred : preferred === 'portrait' ? 'landscape' : 'portrait');
+      setFormat(usable.includes(preferred) ? preferred : usable[0]);
     };
     img.onerror = () => setError('Fotoja nuk u lexua. Provoni një foto tjetër.');
     img.src = url;
@@ -88,7 +87,7 @@ export default function ImageCropper({ file, onCancel, onDone }) {
       <div className="cropper-dialog">
         <h2>Zgjidhni formatin dhe pjesën</h2>
         <div className="cropper-formats" role="group" aria-label="Formati i fotos">
-          {Object.entries(FORMATS).map(([key, f]) => {
+          {formats.map((key) => [key, FORMATS[key]]).map(([key, f]) => {
             const allowed = natural ? formatAllowed(natural.w, natural.h, key) : false;
             return (
               <button
