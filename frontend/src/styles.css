@@ -2741,26 +2741,28 @@ main {
   overflow: hidden;
 }
 
+/* Same 4:5 frame as the menu cards, sized so it never exceeds ~54% of the screen height. */
 .mv-card-media {
-  display: flex;
-  justify-content: center;
-  min-height: 0;
+  align-self: center;
+  width: min(100%, calc(min(54dvh, 520px) * 4 / 5));
+  aspect-ratio: 4 / 5;
+  flex-shrink: 0;
   border-radius: 14px;
   overflow: hidden;
+  background: var(--cream);
 }
 
 .mv-card-media .mv-media {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: min(54dvh, 520px);
-  object-fit: contain;
+  height: 100%;
+  object-fit: cover;
   border-radius: 14px;
 }
 
 .mv-card-media .mv-placeholder {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
   background: var(--cream);
 }
 
